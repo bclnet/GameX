@@ -3,8 +3,9 @@
 // PORT-STATUS: done
 //
 // PARTIAL PORT: only `AppOpenGLControl`. The Godot, O3de, Ogre, Sdl, Stride,
-// Unity and Unreal controls wait on their OpenX engines, none of which has a
-// Rust host yet.
+// Unity and Unreal controls wait on a host. Their OpenX files under
+// `engines/wpf-control` are placeholders (`NOT PORTED — WPF has no Rust
+// counterpart`), so a wrapper around those files would not draw.
 //
 // C#'s `OpenGLRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type)`
 // reads the control's bound properties; here they're the arguments.

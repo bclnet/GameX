@@ -14,8 +14,15 @@ use std::sync::Arc;
 /// Boxed future alias — `Task<T>` with no external futures crate.
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum SourcePath { Str(String), Int(u64) }
+/// C# `object path`. `Str` and `Int` compare by value. `Obj` is the loaded
+/// object itself (the key `ObjectRenderer` passes), and compares by identity,
+/// as a C# reference does.
+#[derive(Clone)]
+pub enum SourcePath {
+    Str(String),
+    Int(u64),
+    Obj(Arc<dyn Any + Send + Sync>),
+}
 impl From<String> for SourcePath {
     fn from(s: String) -> Self { SourcePath::Str(s) }
 }
@@ -24,6 +31,36 @@ impl From<&str> for SourcePath {
 }
 impl From<u64> for SourcePath {
     fn from(v: u64) -> Self { SourcePath::Int(v) }
+}
+impl PartialEq for SourcePath {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (SourcePath::Str(a), SourcePath::Str(b)) => a == b,
+            (SourcePath::Int(a), SourcePath::Int(b)) => a == b,
+            (SourcePath::Obj(a), SourcePath::Obj(b)) => Arc::ptr_eq(a, b),
+            _ => false,
+        }
+    }
+}
+impl Eq for SourcePath {}
+impl Hash for SourcePath {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            SourcePath::Str(s) => s.hash(state),
+            SourcePath::Int(i) => i.hash(state),
+            SourcePath::Obj(o) => (Arc::as_ptr(o) as *const () as usize).hash(state),
+        }
+    }
+}
+impl fmt::Debug for SourcePath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SourcePath::Str(s) => write!(f, "Str({s:?})"),
+            SourcePath::Int(i) => write!(f, "Int({i})"),
+            SourcePath::Obj(o) => write!(f, "Obj({:p})", Arc::as_ptr(o)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

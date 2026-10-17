@@ -15,10 +15,15 @@
 //   * C# `object` (paths, options, tags, assets): `meta::Tag`.
 //   * `GetAsset<T>` returns the asset as a `Tag`; callers match on it.
 //
-// Not yet in openx's Rust port, so done differently here:
-//   * `GenericPoolX` (reader pooling): `GetReader` opens a fresh reader.
-//   * `FileSystem.Open(path, "w")`: `GetWriter` fails with `Unsupported`.
-//   * `Log`: `eprintln!`.
+// `GenericPoolX.ActionAsync` / `FuncAsync` release the reader when the task is
+// created, not when it finishes. A checkout here is held until drop, including
+// across `.await`. `SinglePool` is not used: its `Release` disposes the only
+// instance. A missing writer file is `NotFound` (C# stores a null pool and
+// throws later). A filesystem with no `openWrite` is still `Unsupported`.
+// A reader that cannot be owned falls back to `open()`.
+// `tag` is a `Mutex` and `useReader` is an `AtomicBool`: C# assigns both
+// through the shared archive. `baseOpening` clones `tag` out of the lock
+// before `read`.
 
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, HashSet};
@@ -29,7 +34,9 @@ use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard, OnceLock, RwLock, Weak};
 use std::task::{Context, Poll, Wake, Waker};
 
-use openx_vfx::vfx::{DirectoryFileSystem, FileSystem, VfsRead};
+use openx_poly::log::Log;
+use openx_poly::pool::GenericPool;
+use openx_vfx::vfx::{DirectoryFileSystem, FileSystem, VfsRead, VfsWrite};
 
 use crate::family::{Family, FamilyGame, FamilyGameEdition};
 use crate::formats::stream::PakBinaryCanStream;
@@ -114,7 +121,8 @@ pub struct Binary {
     pub edition: Option<Arc<FamilyGameEdition>>,
     pub binPath: String,
     pub name: String,
-    pub tag: Tag,
+    /// C# `object Tag`, assigned through the shared archive (`Binary_Zip`).
+    pub tag: Mutex<Tag>,
     pub valid: AtomicBool,
     // Archive
     pub pathFinders: HashMap<TypeId, PathFinder>,
@@ -135,7 +143,7 @@ impl Binary {
             edition: state.edition,
             binPath: state.path,
             name,
-            tag: state.tag,
+            tag: Mutex::new(state.tag),
             valid: AtomicBool::new(true),
             pathFinders: HashMap::new(),
             assetFactoryFunc: None,
@@ -216,7 +224,7 @@ pub trait ArchiveExt: Archive {
         let watch = std::time::Instant::now();
         getResult(self.opening())?;
         base.setStatus(BinaryStat::Opened);
-        eprintln!("Opened[{}]: {} @ {}ms", base.game.id, base.name, watch.elapsed().as_millis());
+        Log::info(&format!("Opened[{}]: {} @ {}ms", base.game.id, base.name, watch.elapsed().as_millis()));
         if let Some(items) = items {
             let manager = manager.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "manager"))?;
             items.extend(self.getMetaItems(manager)?);
@@ -269,7 +277,7 @@ impl dyn Archive {
     /// An empty archive.
     pub fn empty() -> Arc<dyn Archive> {
         static EMPTY: LazyLock<Arc<dyn Archive>> = LazyLock::new(|| {
-            let mut base = Binary::new(BinaryState::new(Arc::new(DirectoryFileSystem::new("")), FamilyGame::empty(), None, None, Tag::None));
+            let mut base = Binary::new(BinaryState::new(Arc::new(DirectoryFileSystem::new("", None)), FamilyGame::empty(), None, None, Tag::None));
             base.name = "Empty".into();
             newArchive(EmptyArchive { base })
         });
@@ -289,8 +297,19 @@ macro_rules! archiveSource {
     ($t:ty) => {
         impl openx_poly::core::ISource for $t {
             fn getAssetAny<'a>(&'a self, path: &'a openx_poly::core::SourcePath, option: Option<&'a (dyn std::any::Any + Sync)>) -> openx_poly::core::BoxFuture<'a, Result<Box<dyn std::any::Any + Send + Sync>, std::io::Error>> {
+                // C# returns the object when the path already is that object.
+                // `ObjectModelManager` does not use this arm: boxing the `Arc` here
+                // would hide the concrete `TypeId`. See `SourcePath::Obj`.
+                if let openx_poly::core::SourcePath::Obj(obj) = path {
+                    let obj = obj.clone();
+                    return Box::pin(async move { Ok(Box::new(obj) as Box<dyn std::any::Any + Send + Sync>) });
+                }
                 Box::pin(async move {
-                    let path = match path { openx_poly::core::SourcePath::Str(s) => $crate::meta::Tag::Str(s.clone()), openx_poly::core::SourcePath::Int(i) => $crate::meta::Tag::Int(*i as i64) };
+                    let path = match path {
+                        openx_poly::core::SourcePath::Str(s) => $crate::meta::Tag::Str(s.clone()),
+                        openx_poly::core::SourcePath::Int(i) => $crate::meta::Tag::Int(*i as i64),
+                        openx_poly::core::SourcePath::Obj(_) => unreachable!("Obj is returned above"),
+                    };
                     let asset = $crate::binary::getResult($crate::binary::Archive::getAsset(self, &path, &$crate::meta::Tag::None, true))?;
                     Ok(Box::new(asset) as Box<dyn std::any::Any + Send + Sync>)
                 })
@@ -328,7 +347,8 @@ pub struct BinaryArchive {
     pub arcBinary: Option<Arc<dyn ArcBinary>>,
     // options
     pub retainInPool: i32,
-    pub useReader: bool,
+    /// C# `bool`, assigned through the shared archive (`Binary_Zip` sets it false in `Read`).
+    pub useReader: AtomicBool,
     pub useWriter: bool,
     pub useFileId: bool,
     // state
@@ -347,8 +367,46 @@ pub struct BinaryArchive {
     pub pathSkip: usize,
     pub atEnd: AtomicBool,
     pub virt: Option<Box<dyn BinaryArchiveVirtual>>,
+    readers: Mutex<HashMap<String, Arc<GenericPool<Box<dyn VfsRead + Send>>>>>,
+    writers: Mutex<HashMap<String, Arc<GenericPool<Box<dyn VfsWrite + Send>>>>>,
 }
 archiveSource!(BinaryArchive);
+
+/// A pooled reader. Drop seeks to 0 and releases it. A failed seek drops it.
+struct PooledReader {
+    inner: Option<Box<dyn VfsRead + Send>>,
+    pool: Arc<GenericPool<Box<dyn VfsRead + Send>>>,
+}
+
+impl Read for PooledReader {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { self.inner.as_mut().unwrap().read(buf) }
+}
+impl Seek for PooledReader {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> { self.inner.as_mut().unwrap().seek(pos) }
+}
+impl Drop for PooledReader {
+    fn drop(&mut self) {
+        let Some(mut r) = self.inner.take() else { return };
+        if r.seek(SeekFrom::Start(0)).is_ok() { self.pool.release(r); }
+    }
+}
+
+/// A pooled writer. `Seek` runs on drop, which is where C# resets.
+struct PooledWriter {
+    inner: Option<Box<dyn VfsWrite + Send>>,
+    pool: Arc<GenericPool<Box<dyn VfsWrite + Send>>>,
+}
+
+impl Write for PooledWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.inner.as_mut().unwrap().write(buf) }
+    fn flush(&mut self) -> io::Result<()> { self.inner.as_mut().unwrap().flush() }
+}
+impl Drop for PooledWriter {
+    fn drop(&mut self) {
+        let Some(mut w) = self.inner.take() else { return };
+        if w.seek(SeekFrom::Start(0)).is_ok() { self.pool.release(w); }
+    }
+}
 
 impl BinaryArchive {
     pub fn new(parent: Option<Arc<dyn Archive>>, state: BinaryState, arcBinary: Option<Arc<dyn ArcBinary>>) -> Self {
@@ -356,7 +414,7 @@ impl BinaryArchive {
             base: Binary::new(state),
             arcBinary,
             retainInPool: 10,
-            useReader: true,
+            useReader: AtomicBool::new(true),
             useWriter: true,
             useFileId: false,
             fileMask: None,
@@ -371,6 +429,8 @@ impl BinaryArchive {
             pathSkip: 0,
             atEnd: AtomicBool::new(false),
             virt: None,
+            readers: Mutex::new(HashMap::new()),
+            writers: Mutex::new(HashMap::new()),
         }
     }
 
@@ -390,20 +450,62 @@ impl BinaryArchive {
         match &self.virt { Some(v) => v.getReader(self, path), None => self.baseGetReader(path) }
     }
     pub fn baseGetReader(&self, path: Option<&str>) -> io::Result<Option<Box<dyn VfsRead + '_>>> {
-        let path = path.unwrap_or(&self.base.binPath);
-        Ok(if self.base.vfx.fileExists(path) { self.base.vfx.open(path) } else { None })
+        let path = path.unwrap_or(&self.base.binPath).to_string();
+        let pool = {
+            let mut map = self.readers.lock().unwrap_or_else(|p| p.into_inner());
+            if let Some(pool) = map.get(&path).cloned() { Some(pool) }
+            else if self.base.vfx.fileExists(&path) {
+                let pool = Arc::new(self.readerPool(&path));
+                map.insert(path.clone(), pool.clone());
+                Some(pool)
+            }
+            else { None }
+        };
+        let Some(pool) = pool else { return Ok(None); };
+        if let Some(r) = pool.tryTake() { return Ok(Some(Box::new(PooledReader { inner: Some(r), pool }))); }
+        if let Some(r) = self.base.vfx.openOwned(&path) { return Ok(Some(Box::new(PooledReader { inner: Some(r), pool }))); }
+        Ok(self.base.vfx.open(&path))
+    }
+
+    fn readerPool(&self, path: &str) -> GenericPool<Box<dyn VfsRead + Send>> {
+        let vfx = self.base.vfx.clone();
+        let path = path.to_string();
+        // Checkout calls `openOwned` itself. `get` is the C# factory, used when the pool is asked directly.
+        GenericPool::new(move || vfx.openOwned(&path).unwrap_or_else(|| Box::new(Cursor::new(Vec::new())) as Box<dyn VfsRead + Send>))
+            .withReset(|r| { let _ = r.seek(SeekFrom::Start(0)); })
+            .withRetain(self.retainInPool.max(0) as usize)
     }
 
     /// Gets the binary writer.
     pub fn getWriter(&self, path: Option<&str>) -> io::Result<Box<dyn Write + '_>> {
-        Err(Error::new(ErrorKind::Unsupported, "openx_vfx FileSystem has no write mode"))
+        let path = path.unwrap_or(&self.base.binPath).to_string();
+        if let Some(pool) = self.writers.lock().unwrap_or_else(|p| p.into_inner()).get(&path).cloned() {
+            if let Some(w) = pool.tryTake() { return Ok(Box::new(PooledWriter { inner: Some(w), pool })); }
+            if let Some(w) = self.base.vfx.openWrite(&path) { return Ok(Box::new(PooledWriter { inner: Some(w), pool })); }
+        }
+        if !self.base.vfx.fileExists(&path) { return Err(Error::new(ErrorKind::NotFound, path)); }
+        let Some(w) = self.base.vfx.openWrite(&path) else {
+            return Err(Error::new(ErrorKind::Unsupported, "openx_vfx FileSystem has no write mode"));
+        };
+        let pool = Arc::new(self.writerPool(&path));
+        self.writers.lock().unwrap_or_else(|p| p.into_inner()).insert(path, pool.clone());
+        Ok(Box::new(PooledWriter { inner: Some(w), pool }))
+    }
+
+    fn writerPool(&self, path: &str) -> GenericPool<Box<dyn VfsWrite + Send>> {
+        let vfx = self.base.vfx.clone();
+        let path = path.to_string();
+        GenericPool::new(move || vfx.openWrite(&path).unwrap_or_else(|| Box::new(Cursor::new(Vec::new())) as Box<dyn VfsWrite + Send>))
+            .withReset(|w| { let _ = w.seek(SeekFrom::Start(0)); })
+            .withRetain(self.retainInPool.max(0) as usize)
     }
 
     // #endregion
 
     pub fn baseOpening(&self) -> Task<'_, ()> {
         Box::pin(async move {
-            self.read(&self.base.tag).await?;
+            let tag = self.base.tag.lock().unwrap_or_else(|p| p.into_inner()).clone();
+            self.read(&tag).await?;
             self.process().await?;
             self.base.valid.store(self.files.read().unwrap().is_some(), Ordering::Relaxed);
             self.base.count.store(self.filesByPath.read().unwrap().as_ref().map_or(0, |s| s.len()) as i32, Ordering::Relaxed);
@@ -418,6 +520,8 @@ impl BinaryArchive {
         *self.filesRawSet.write().unwrap() = None;
         *self.filesById.write().unwrap() = None;
         *self.filesByPath.write().unwrap() = None;
+        // C# disposes `Readers` only. `Writers` stays.
+        self.readers.lock().unwrap_or_else(|p| p.into_inner()).clear();
         ok(())
     }
 
@@ -469,7 +573,7 @@ impl BinaryArchive {
     pub fn baseRead<'a>(&'a self, tag: &'a Tag) -> Task<'a, ()> {
         Box::pin(async move {
             let arcBinary = self.arcBinary()?;
-            if !self.useReader { return arcBinary.read(self, None, tag).await; }
+            if !self.useReader.load(Ordering::Relaxed) { return arcBinary.read(self, None, tag).await; }
             let mut r = self.getReader(None)?.ok_or_else(|| Error::new(ErrorKind::NotFound, self.base.binPath.clone()))?;
             arcBinary.read(self, Some(&mut *r), tag).await
         })
@@ -482,7 +586,7 @@ impl BinaryArchive {
     pub fn baseReadData<'a>(&'a self, file: &'a Arc<FileSource>, option: &'a Tag) -> Task<'a, Option<Stream>> {
         Box::pin(async move {
             let arcBinary = self.arcBinary()?;
-            if !self.useReader { return arcBinary.readData(self, None, file, option).await; }
+            if !self.useReader.load(Ordering::Relaxed) { return arcBinary.readData(self, None, file, option).await; }
             let mut r = self.getReader(None)?.ok_or_else(|| Error::new(ErrorKind::NotFound, self.base.binPath.clone()))?;
             arcBinary.readData(self, Some(&mut *r), file, option).await
         })
@@ -553,14 +657,14 @@ impl Archive for BinaryArchive {
                 if let Some(arc) = arc { return match next { Some(next) => arc.getSource(&Tag::Str(next), true), None => Ok((Some(arc), None)) }; }
                 let files = self.byPath(&s.replace('\\', "/"));
                 if files.len() == 1 { return Ok((Some(self.base.this()), Some(files[0].clone()))); }
-                eprintln!("ERROR.GetSource: {s} @ {}", files.len());
+                Log::info(&format!("ERROR.GetSource: {s} @ {}", files.len()));
                 if throwOnError { return Err(Error::new(ErrorKind::NotFound, if files.is_empty() { format!("File not found: {s}") } else { format!("More then one file found: {s}") })); }
                 Ok((None, None))
             }
             Tag::Int(i) => {
                 let files = self.filesById.read().unwrap().as_ref().and_then(|z| z.get(&(*i as i32)).cloned()).unwrap_or_default();
                 if files.len() == 1 { return Ok((Some(self.base.this()), Some(files[0].clone()))); }
-                eprintln!("ERROR.GetSource: {i} @ {}", files.len());
+                Log::info(&format!("ERROR.GetSource: {i} @ {}", files.len()));
                 if throwOnError { return Err(Error::new(ErrorKind::NotFound, if files.is_empty() { format!("File not found: {i}") } else { format!("More then one file found: {i}") })); }
                 Ok((None, None))
             }
@@ -601,7 +705,7 @@ impl Archive for BinaryArchive {
                 let value = assetFactory(&mut data, f.clone(), self).await;
                 let atEnd = (|| -> io::Result<bool> { let pos = data.stream_position()?; Ok(pos == data.seek(SeekFrom::End(0))?) })();
                 self.atEnd.store(atEnd.unwrap_or(false), Ordering::Relaxed);
-                return value.inspect_err(|e| eprintln!("ERROR: {e}"));
+                return value.inspect_err(|e| Log::error(&e.to_string()));
             }
             Ok(Tag::stream(data))
         })
@@ -636,7 +740,7 @@ impl ManyArchive {
         s.base.assetFactoryFunc = basis.base().assetFactoryFunc;
         s.base.name = name.to_string();
         s.pathSkip = pathSkip;
-        s.useReader = false;
+        s.useReader.store(false, Ordering::Relaxed);
         s.virt = Some(Box::new(ManyArchive { paths }));
         newArchive(s)
     }
@@ -797,7 +901,7 @@ impl dyn ArcBinary {
 
     /// handles an exception.
     pub fn handleException(source: &Tag, option: &Tag, message: &str) {
-        eprintln!("{message}");
+        Log::info(message);
     }
 }
 
@@ -853,4 +957,56 @@ pub trait ITransformAsset: Send + Sync {
     fn canTransformAsset(&self, src: &Tag, transformTo: &dyn Archive) -> bool;
     /// Transforms the file object asynchronous.
     fn transformAsset<'a>(&'a self, src: Tag, transformTo: &'a dyn Archive) -> Task<'a, Tag>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicUsize;
+
+    struct CountFs { opens: Arc<AtomicUsize>, writes: Arc<AtomicUsize> }
+    impl FileSystem for CountFs {
+        fn glob(&self, _: &str, _: &str) -> Vec<String> { vec![] }
+        fn fileExists(&self, path: &str) -> bool { path == "a.bin" }
+        fn fileInfo(&self, _: &str) -> Option<openx_vfx::vfx::FileInfo> { None }
+        fn open(&self, _: &str) -> Option<Box<dyn VfsRead + '_>> { None }
+        fn openOwned(&self, path: &str) -> Option<Box<dyn VfsRead + Send>> {
+            if path != "a.bin" { return None; }
+            self.opens.fetch_add(1, Ordering::SeqCst);
+            Some(Box::new(Cursor::new(b"abc".to_vec())))
+        }
+        fn openWrite(&self, path: &str) -> Option<Box<dyn VfsWrite + Send>> {
+            if path != "a.bin" { return None; }
+            self.writes.fetch_add(1, Ordering::SeqCst);
+            Some(Box::new(Cursor::new(Vec::<u8>::new())))
+        }
+    }
+
+    #[test]
+    fn readerAndWriterPoolsOpenOnce() {
+        let opens = Arc::new(AtomicUsize::new(0));
+        let writes = Arc::new(AtomicUsize::new(0));
+        let arc = BinaryArchive::new(None, BinaryState::new(Arc::new(CountFs { opens: opens.clone(), writes: writes.clone() }), FamilyGame::empty(), None, Some("a.bin"), Tag::None), None);
+        {
+            let mut r = arc.getReader(None).unwrap().unwrap();
+            let mut buf = [0u8; 3];
+            r.read_exact(&mut buf).unwrap();
+            assert_eq!(&buf, b"abc");
+        }
+        {
+            let mut r = arc.getReader(None).unwrap().unwrap();
+            let mut buf = [0u8; 3];
+            r.read_exact(&mut buf).unwrap();
+            assert_eq!(&buf, b"abc");
+        }
+        assert_eq!(opens.load(Ordering::SeqCst), 1);
+        {
+            arc.getWriter(None).unwrap().write_all(b"xy").unwrap();
+        }
+        {
+            arc.getWriter(None).unwrap().write_all(b"z").unwrap();
+        }
+        assert_eq!(writes.load(Ordering::SeqCst), 1);
+        assert!(arc.getWriter(Some("missing")).is_err());
+    }
 }

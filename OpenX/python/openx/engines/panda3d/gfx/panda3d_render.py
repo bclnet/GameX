@@ -39,7 +39,7 @@ class TextureRenderer(Renderer):
         self.source: ISource = source
         self.obj: object = obj
         self.boundingBox: AABB = AABB(-1., -1., -1., 1., 1., 1.)
-        self.frameDelay: int = 0
+        self.frameDelay: float = 0
 
     def start(self):
         # self.gfxModel.textureManager.deleteTexture(self.obj)
@@ -54,7 +54,7 @@ class TextureRenderer(Renderer):
     #     obj: ITextureFrames = self.obj
     #     if not self.gfxModel or not obj or not obj.hasFrames(): return
     #     self.frameDelay += deltaTime
-    #     if self.frameDelay <= obj.fps or not obj.decodeFrame(): return
+    #     if self.frameDelay <= obj.fps or not obj.nextFrame(): return
     #     self.frameDelay = 0 # reset delay between frames
     #     self.gfxModel.textureManager.reloadTexture(obj)
 

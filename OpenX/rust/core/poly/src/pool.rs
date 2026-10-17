@@ -22,6 +22,8 @@ use std::collections::HashMap;
 
 use glam::{Vec3, Vec4};
 
+pub use crate::generic_pool::{GenericPool, StaticPool};
+
 /// A loosely-typed value from a parsed key-value tree.
 #[derive(Debug, Clone, PartialEq)]
 pub enum KV {

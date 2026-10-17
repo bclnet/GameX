@@ -1,36 +1,22 @@
 // PORT-SOURCE: Sfx/OpenX.Sfx/Sfx.cs
-// PORT-SHA: 749113bf668ce72a
+// PORT-SHA: 661f48a68e400f2d
 // PORT-STATUS: done
 //
-// The audio abstraction: a builder that turns decoded audio into a backend
-// handle, and a manager that caches the results. Same shape as `gfx`'s
-// `TextureManager`, so it uses the same `Backend`-with-associated-types
-// approach rather than an open generic parameter.
+// Same shape as `TextureManager`: `create(source, path)` loads the asset and
+// the builder turns that tag into a backend handle. C# `Create` blocks on
+// `Load(...).Result`, which deadlocks a thread with a `SynchronizationContext`
+// (WPF, Unity). `create` is async instead, as `TextureManager::create` is, and
+// a failed load is the original error rather than an `AggregateException`.
 //
-// ================= `.Result` ON AN ASYNC CALL IS A DEADLOCK =================
-//
-//     public (Audio aud, object tag) CreateAudio(ISource source, object path) {
-//         ...
-//         var tag = LoadAudio(source, path).Result;
-//
-// `CreateAudio` is synchronous and blocks on a `Task` with `.Result`. On any
-// thread with a `SynchronizationContext` — the WPF dispatcher thread and the
-// Unity main thread both qualify, and this solution ships backends for both —
-// the awaited continuation needs that same thread to resume, which `.Result` is
-// occupying. **The application hangs.** It only appears to work on a plain
-// thread-pool thread.
-//
-// `.Result` also wraps any load failure in an `AggregateException` rather than
-// surfacing the original.
-//
-// The port splits the two properly: `create` takes already-decoded audio and is
-// synchronous, and loading is the caller's business — so there is no blocking
-// wait to deadlock on. If a caller wants to load and build in one step, it
-// awaits the load itself and then calls `create`.
+// Kept from C#: a failed load leaves its task, so the next `create` fails the
+// same way without loading again. `delete` removes the cache entry and leaves
+// an in-flight preload. `Debug.Assert` is `debug_assert`.
 
 use std::any::Any;
 use std::collections::HashMap;
+use std::io::Error;
 use std::sync::Arc;
+use openx_poly::core::{BoxFuture, SourceKey, SourcePath, SourceRef};
 
 /// C# `interface IOpenSfx`.
 pub trait IOpenSfx {}
@@ -38,199 +24,215 @@ pub trait IOpenSfx {}
 /// C# `IOpenSfx[]`: each slot is the backend's object as `Any`, as `openx_gfx::gfx::IOpenGfxs`.
 pub type IOpenSfxs = Vec<Option<Arc<dyn Any + Send + Sync>>>;
 
-/// The backend's handle types. Mirrors `openx_gfx::gfx::Backend`.
+/// C# `object` when the audio handle or the loaded tag is an opaque reference.
+pub type AnyArc = Arc<dyn Any + Send + Sync>;
+
+/// The backend's handle type. C# threads it through as the `Audio` type parameter.
 pub trait SfxBackend {
-    /// C# `Audio` — the backend's buffer/source handle.
     type Audio: Clone;
 }
 
-/// C# `abstract class AudioBuilderBase<Audio>`.
+/// C# `abstract class AudioBuilder<B_Audio>`.
 pub trait AudioBuilder<B: SfxBackend> {
-    /// C# `CreateAudio(ISource source, object path)`.
+    /// C# `Create(ISource source, object path)`. `path` is the loaded tag, not the cache key.
     ///
-    /// Takes the decoded payload rather than a source and a path: the C#
-    /// signature implied the builder did the loading, but it received an
-    /// already-loaded `tag` at every call site.
-    fn create(&mut self, decoded: &Audio) -> B::Audio;
+    /// `Result` is C#'s throw: `SystemAudioBuilder` throws `NotImplementedException`,
+    /// and the Explorer logs that the way `AudioPlayer.Load` catches.
+    fn create(&mut self, source: &SourceRef, path: &(dyn Any + Send + Sync)) -> Result<B::Audio, Error>;
 
-    /// C# `DeleteAudio(ISource source, Audio audio)`. The `source` parameter is
-    /// unused in every implementation, so it is dropped.
-    fn delete(&mut self, audio: &B::Audio);
+    /// C# `Delete(ISource source, B_Audio audio)`.
+    fn delete(&mut self, source: &SourceRef, audio: &B::Audio);
 }
 
-/// Decoded PCM plus its format — the payload the C# passed around as `object`.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Audio {
-    pub channels: u16,
-    pub sampleRate: u32,
-    pub bitsPerSample: u16,
-    pub data: Vec<u8>,
+type LoadTask = BoxFuture<'static, Result<AnyArc, Error>>;
+
+fn load_any(source: &SourceRef, path: &SourcePath) -> LoadTask {
+    let source = source.clone();
+    let path = path.clone();
+    Box::pin(async move {
+        let obj = source.getAssetAny(&path, None).await?;
+        Ok(Arc::from(obj))
+    })
 }
 
-impl Audio {
-    /// Duration in seconds, or `None` if the header describes no frames.
-    pub fn durationSecs(&self) -> Option<f64> {
-        let bytesPerFrame =
-            self.channels as usize * (self.bitsPerSample as usize / 8);
-        if bytesPerFrame == 0 || self.sampleRate == 0 {
-            return None;
-        }
-        Some(self.data.len() as f64 / bytesPerFrame as f64 / self.sampleRate as f64)
-    }
-}
+fn key(source: &SourceRef, path: &SourcePath) -> SourceKey { (source.clone(), path.clone()) }
 
 /// C# `class AudioManager<Audio>`.
-///
-/// Beyond the `.Result` deadlock in the module header:
-///
-///   * `LoadAudio` guards with `Log.Assert(!CachedAudios.ContainsKey(key))`,
-///     whose body is empty — the check does nothing.
-///   * `DeleteAudio` removes the cache entry but leaves any in-flight
-///     `PreloadTasks` entry behind, so a preload that completes after a delete
-///     leaks its task and can never be collected.
-///   * `PreloadTasks` is only ever cleaned up on the success path of
-///     `LoadAudio`; a failed load leaves the entry wedged, and every later
-///     attempt awaits the same faulted task.
 pub struct AudioManager<B: SfxBackend, AB: AudioBuilder<B>> {
     builder: AB,
-    cached: HashMap<String, B::Audio>,
+    cached: HashMap<SourceKey, (B::Audio, AnyArc)>,
+    tasks: HashMap<SourceKey, LoadTask>,
 }
 
 impl<B: SfxBackend, AB: AudioBuilder<B>> AudioManager<B, AB> {
     pub fn new(builder: AB) -> Self {
-        Self { builder, cached: HashMap::new() }
+        Self { builder, cached: HashMap::new(), tasks: HashMap::new() }
     }
 
-    /// C# `CreateAudio(ISource, object path)`, minus the blocking load.
-    pub fn create(&mut self, path: &str, decoded: &Audio) -> B::Audio {
-        if let Some(a) = self.cached.get(path) {
-            return a.clone();
+    /// C# `Create(ISource source, object path)`.
+    pub async fn create(&mut self, source: &SourceRef, path: &SourcePath) -> Result<(B::Audio, AnyArc), Error> {
+        let key = key(source, path);
+        if let Some(c) = self.cached.get(&key) { return Ok(c.clone()); }
+        let tag = self.load(&key).await?;
+        let obj = self.builder.create(source, &*tag)?;
+        self.cached.insert(key, (obj.clone(), tag.clone()));
+        Ok((obj, tag))
+    }
+
+    /// C# `Preload(ISource source, object path)`.
+    pub fn preload(&mut self, source: &SourceRef, path: &SourcePath) {
+        let key = key(source, path);
+        if self.cached.contains_key(&key) { return; }
+        self.tasks.entry(key).or_insert_with(|| load_any(source, path));
+    }
+
+    /// C# `Delete(ISource source, object path)`. An in-flight preload is left in `tasks`.
+    pub fn delete(&mut self, source: &SourceRef, path: &SourcePath) {
+        let key = key(source, path);
+        let Some((aud, _)) = self.cached.remove(&key) else { return; };
+        self.builder.delete(source, &aud);
+    }
+
+    async fn load(&mut self, key: &SourceKey) -> Result<AnyArc, Error> {
+        debug_assert!(!self.cached.contains_key(key));
+        self.preload(&key.0, &key.1);
+        let task = self.tasks.remove(key).expect("preload registers the task");
+        match task.await {
+            Ok(obj) => Ok(obj),
+            Err(e) => {
+                // C# removes the task only after `await` returns. A fault stays, and the next load awaits it again.
+                let (kind, msg) = (e.kind(), e.to_string());
+                self.tasks.insert(key.clone(), Box::pin(std::future::ready(Err(Error::new(kind, msg.clone())))));
+                Err(Error::new(kind, msg))
+            }
         }
-        let a = self.builder.create(decoded);
-        self.cached.insert(path.to_string(), a.clone());
-        a
-    }
-
-    /// Already-cached handle, if any — lets a caller skip decoding entirely.
-    pub fn get(&self, path: &str) -> Option<&B::Audio> {
-        self.cached.get(path)
-    }
-
-    /// C# `DeleteAudio(ISource, object path)`.
-    pub fn delete(&mut self, path: &str) {
-        if let Some(a) = self.cached.remove(path) {
-            self.builder.delete(&a);
-        }
-    }
-
-    /// Release everything. No C# equivalent; its cache only ever grew.
-    pub fn clear(&mut self) {
-        for a in self.cached.values() {
-            self.builder.delete(a);
-        }
-        self.cached.clear();
-    }
-
-    pub fn len(&self) -> usize {
-        self.cached.len()
-    }
-
-    pub fn isEmpty(&self) -> bool {
-        self.cached.is_empty()
     }
 }
 
-// NOT PORTED: `IOpenSfx` (empty marker) and `IOpenSfx<Audio>` (an
-// `AudioManager` property plus a `CreateAudio` that duplicates the manager's).
-// A backend owns an `AudioManager` as a field; the marker adds nothing Rust
-// needs. Also not ported: `PreloadAudio`, which exists only to prime the
-// `PreloadTasks` map that the deadlock above depends on. Callers that want
-// eager loading spawn it themselves and call `create` when it lands.
+/// C# `interface IOpenSfx<Audio> : IOpenSfx`.
+pub trait IOpenSfxAudio<B: SfxBackend>: IOpenSfx {
+    type Builder: AudioBuilder<B>;
+    fn audioManager(&mut self) -> &mut AudioManager<B, Self::Builder>;
+    fn createAudio<'a>(&'a mut self, source: &'a SourceRef, path: &'a SourcePath) -> BoxFuture<'a, Result<(B::Audio, Option<AnyArc>), Error>>;
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::future::Future;
+    use std::io::ErrorKind;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+    use openx_poly::core::ISource;
+
+    fn block_on<F: Future>(f: F) -> F::Output {
+        fn raw() -> RawWaker { RawWaker::new(std::ptr::null(), &VTABLE) }
+        static VTABLE: RawWakerVTable = RawWakerVTable::new(|_| raw(), |_| {}, |_| {}, |_| {});
+        let waker = unsafe { Waker::from_raw(raw()) };
+        let mut cx = Context::from_waker(&waker);
+        let mut f = std::pin::pin!(f);
+        loop {
+            if let Poll::Ready(v) = f.as_mut().poll(&mut cx) { return v; }
+        }
+    }
 
     struct Test;
-    impl SfxBackend for Test {
-        type Audio = u32;
-    }
+    impl SfxBackend for Test { type Audio = u32; }
 
     #[derive(Default)]
-    struct Counting {
-        next: u32,
-        creates: u32,
-        deletes: u32,
-    }
+    struct Counting { next: u32, creates: u32, deletes: u32 }
 
     impl AudioBuilder<Test> for Counting {
-        fn create(&mut self, _d: &Audio) -> u32 {
+        fn create(&mut self, _source: &SourceRef, path: &(dyn Any + Send + Sync)) -> Result<u32, Error> {
+            assert!(path.downcast_ref::<String>().is_some(), "the builder receives the loaded tag");
             self.next += 1;
             self.creates += 1;
-            self.next
+            Ok(self.next)
         }
-        fn delete(&mut self, _a: &u32) {
-            self.deletes += 1;
+        fn delete(&mut self, _source: &SourceRef, _audio: &u32) { self.deletes += 1; }
+    }
+
+    struct Boom;
+    impl AudioBuilder<Test> for Boom {
+        fn create(&mut self, _source: &SourceRef, _path: &(dyn Any + Send + Sync)) -> Result<u32, Error> {
+            Err(Error::new(ErrorKind::Unsupported, "NotImplementedException"))
+        }
+        fn delete(&mut self, _source: &SourceRef, _audio: &u32) {}
+    }
+
+    struct FakeSource { loads: Arc<AtomicU32> }
+    impl ISource for FakeSource {
+        fn getAssetAny<'a>(&'a self, path: &'a SourcePath, _option: Option<&'a (dyn Any + Sync)>) -> BoxFuture<'a, Result<Box<dyn Any + Send + Sync>, Error>> {
+            self.loads.fetch_add(1, Ordering::Relaxed);
+            let path = path.clone();
+            Box::pin(async move {
+                match &path {
+                    SourcePath::Str(s) if s.ends_with(".wav") => Ok(Box::new(s.clone()) as Box<dyn Any + Send + Sync>),
+                    _ => Err(Error::new(ErrorKind::NotFound, format!("{path:?}"))),
+                }
+            })
         }
     }
 
-    fn pcm() -> Audio {
-        Audio {
-            channels: 2,
-            sampleRate: 44100,
-            bitsPerSample: 16,
-            data: vec![0; 44100 * 4], // one second of stereo 16-bit
-        }
+    fn source() -> (SourceRef, Arc<AtomicU32>) {
+        let loads = Arc::new(AtomicU32::new(0));
+        (SourceRef::new(FakeSource { loads: loads.clone() }), loads)
     }
 
     #[test]
-    fn cacheHitsByPath() {
+    fn cacheHitsBySourceAndPath() {
+        let (src, loads) = source();
+        let (other, _) = source();
         let mut m = AudioManager::<Test, _>::new(Counting::default());
-        let a = m.create("shot.wav", &pcm());
-        let b = m.create("shot.wav", &pcm());
+        let (a, tag) = block_on(m.create(&src, &"shot.wav".into())).unwrap();
+        let (b, _) = block_on(m.create(&src, &"shot.wav".into())).unwrap();
         assert_eq!(a, b);
+        assert_eq!(tag.downcast_ref::<String>().unwrap(), "shot.wav");
         assert_eq!(m.builder.creates, 1);
+        assert_eq!(loads.load(Ordering::Relaxed), 1);
+        block_on(m.create(&other, &"shot.wav".into())).unwrap();
+        assert_eq!(m.builder.creates, 2, "the key includes the source");
     }
 
     #[test]
     fn deleteReleasesTheHandle() {
+        let (src, _) = source();
         let mut m = AudioManager::<Test, _>::new(Counting::default());
-        m.create("a.wav", &pcm());
-        m.delete("a.wav");
+        block_on(m.create(&src, &"a.wav".into())).unwrap();
+        m.delete(&src, &"a.wav".into());
         assert_eq!(m.builder.deletes, 1);
-        assert!(m.isEmpty());
-        // Deleting again is a no-op, not a panic.
-        m.delete("a.wav");
+        m.delete(&src, &"a.wav".into());
         assert_eq!(m.builder.deletes, 1);
+        block_on(m.create(&src, &"a.wav".into())).unwrap();
+        assert_eq!(m.builder.creates, 2);
     }
 
     #[test]
-    fn clearReleasesEverything() {
+    fn preloadDoesNotReloadACachedPath() {
+        let (src, loads) = source();
         let mut m = AudioManager::<Test, _>::new(Counting::default());
-        m.create("a.wav", &pcm());
-        m.create("b.wav", &pcm());
-        m.clear();
-        assert_eq!(m.builder.deletes, 2);
-        assert!(m.isEmpty());
+        block_on(m.create(&src, &"a.wav".into())).unwrap();
+        m.preload(&src, &"a.wav".into());
+        assert_eq!(loads.load(Ordering::Relaxed), 1);
     }
 
     #[test]
-    fn durationFromPcmHeader() {
-        assert!((pcm().durationSecs().unwrap() - 1.0).abs() < 1e-9);
-    }
-
-    #[test]
-    fn degenerateHeadersDoNotDivideByZero() {
-        let bad = Audio { channels: 0, sampleRate: 44100, bitsPerSample: 16, data: vec![0; 8] };
-        assert!(bad.durationSecs().is_none());
-        let bad2 = Audio { channels: 2, sampleRate: 0, bitsPerSample: 16, data: vec![0; 8] };
-        assert!(bad2.durationSecs().is_none());
-    }
-
-    #[test]
-    fn getDoesNotBuild() {
+    fn failedLoadStaysWedged() {
+        let (src, loads) = source();
         let mut m = AudioManager::<Test, _>::new(Counting::default());
-        assert!(m.get("nope.wav").is_none());
+        assert!(block_on(m.create(&src, &"missing.ogg".into())).is_err());
+        assert!(block_on(m.create(&src, &"missing.ogg".into())).is_err());
+        assert_eq!(loads.load(Ordering::Relaxed), 1, "the faulted task is awaited again");
         assert_eq!(m.builder.creates, 0);
+    }
+
+    #[test]
+    fn builderErrorIsNotCached() {
+        let (src, loads) = source();
+        let mut m = AudioManager::<Test, _>::new(Boom);
+        let err = block_on(m.create(&src, &"a.wav".into())).unwrap_err();
+        assert!(err.to_string().contains("NotImplementedException"));
+        assert!(block_on(m.create(&src, &"a.wav".into())).is_err());
+        assert_eq!(loads.load(Ordering::Relaxed), 2, "Create throws before the cache write, so the next call loads again");
     }
 }

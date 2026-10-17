@@ -5,16 +5,16 @@
 //
 // Alcohol 120% `.mds` descriptor, paired with an `.mdf` data file.
 //
-// Ported: the descriptor types and `Parse`, which builds the sessions, tracks
-// and TOC entries. Not yet ported: `LoadResults`, `LoadMdsPath`, `MountBlobs`,
+// Ported: the descriptor types, `Parse`, `LoadResults` and `LoadMdsPath`.
+// `LoadMdsPath` does not fill `RawTOCEntries`. Not yet ported: `MountBlobs`,
 // `EmitRawTOCEntry` and `LoadMdsToDisc`, which need `Disc`, `Blob_Raw`,
 // `RawTOCEntry`, `SubchannelQ`, `SS_Gap` and `Synthesize_DiscTOCFromRawTOCEntries`
-// from `disc.rs` first.
+// from `disc.rs`. Those types are not in the Rust tree, so this file stays partial.
 //
 // Not checked against a real `.mds` file. C# exceptions are `io::Error`s.
 
 use std::collections::BTreeMap;
-use std::io::{Error, ErrorKind, Read, Result, Seek, SeekFrom};
+use std::io::{Cursor, Error, ErrorKind, Read, Result, Seek, SeekFrom};
 use std::path::Path;
 
 use openx_poly::prelude::BinaryReaderExt;
@@ -378,6 +378,40 @@ impl MdsFormat {
         }
         Ok(file)
     }
+
+    /// C# `LoadMdsPath`. A parse error becomes the failure string. C# catches
+    /// only `InvalidOperationException`; `parse` already returns those as `io::Error`.
+    /// `RawTOCEntries` is left empty.
+    pub fn loadMdsPath(vfx: &dyn crate::vfx::FileSystem, path: &str) -> LoadResults {
+        let mut ret = LoadResults { mdsPath: path.to_string(), ..Default::default() };
+        if !vfx.fileExists(path) {
+            ret.failureException = Some("Malformed MDS format: nonexistent MDS file!".into());
+            return ret;
+        }
+        let Some(mut s) = vfx.open(path) else {
+            ret.failureException = Some("Malformed MDS format: nonexistent MDS file!".into());
+            return ret;
+        };
+        let mut data = Vec::new();
+        if let Err(e) = s.read_to_end(&mut data) {
+            ret.failureException = Some(e.to_string());
+            return ret;
+        }
+        match Self::parse(&mut Cursor::new(data), path) {
+            Ok(file) => { ret.parsedMDSFile = Some(file); ret.valid = true; }
+            Err(e) => ret.failureException = Some(e.to_string()),
+        }
+        ret
+    }
+}
+
+/// C# `MdsFormat.LoadResults`. `LoadMdsPath` does not fill the raw TOC.
+#[derive(Debug, Default)]
+pub struct LoadResults {
+    pub parsedMDSFile: Option<AFile>,
+    pub valid: bool,
+    pub failureException: Option<String>,
+    pub mdsPath: String,
 }
 
 #[cfg(test)]
@@ -443,5 +477,20 @@ mod tests {
         let mut v = synth(0, &[]);
         v[16] = 2;
         assert!(MdsFormat::parse(&mut Cursor::new(v), "x.mds").is_err());
+    }
+
+    #[test]
+    fn loadMdsPathReadsAVirtualDescriptor() {
+        use crate::vfx::{FileSystem, VirtualFileSystem};
+        use std::collections::HashMap;
+        let mut files = HashMap::new();
+        files.insert("game.mds".into(), synth(0, &[block(9, 9), block(1, 150)]));
+        let vfx = VirtualFileSystem::new(files);
+        let loaded = MdsFormat::loadMdsPath(&vfx, "game.mds");
+        assert!(loaded.valid, "{:?}", loaded.failureException);
+        assert_eq!(loaded.parsedMDSFile.unwrap().tracks.len(), 1);
+        let missing = MdsFormat::loadMdsPath(&vfx, "nope.mds");
+        assert!(!missing.valid);
+        assert!(missing.failureException.unwrap().contains("nonexistent"));
     }
 }

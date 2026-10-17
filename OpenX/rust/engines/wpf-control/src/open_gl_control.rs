@@ -7,8 +7,9 @@
 // `createRenderer` closure instead, as `AppOpenGLControl` does. C# creates the
 // renderer when a property changes; a GL call needs eframe's context, so here
 // `onSourceChanged` runs on the first frame drawn. `Value is ITextureSelect`
-// can't be asked of the closure's value, so `Select(Id)` isn't called.
-// `HandleInput` is commented out in the C#, as here.
+// can't be asked of the closure's value; `TextureRenderer` calls `select(0)`
+// itself, which is the only live call (`Id` starts at 0). `HandleInput` is
+// commented out in the C#, as here.
 
 use std::io::Error;
 use std::sync::{Arc, Mutex};

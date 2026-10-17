@@ -78,7 +78,7 @@ public class TextureRenderer : EginRenderer {
     readonly int Vao;
     public bool Background;
     public AABB BoundingBox => new(-1f, -1f, -1f, 1f, 1f, 1f);
-    int FrameDelay;
+    float FrameDelay;
 
     public TextureRenderer(IOpenGfx[] gfx, ISource source, object obj, Range level, bool background = false) {
         GfxModel = (OpenGLGfxModel)gfx[GfX.XModel];
@@ -143,7 +143,7 @@ public class TextureRenderer : EginRenderer {
 
     public override void Update(float deltaTime) {
         if (Obj is not ITextureFrames obj || GfxModel == null || !obj.HasFrames) return;
-        FrameDelay += (int)deltaTime;
+        FrameDelay += deltaTime;
         if (FrameDelay <= obj.Fps || !obj.NextFrame()) return;
         FrameDelay = 0; // reset delay between frames
         GfxModel.TextureManager.Reload(Source, obj, Level);

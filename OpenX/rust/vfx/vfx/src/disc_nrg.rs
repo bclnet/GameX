@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn ragged_cue_chunks_are_rejected_not_read_past() {
         // The C# steps i += 8 with no multiple-of-8 check.
-        let mut c = Cursor::new(Vec::new());
+        let mut c = Cursor::new(Vec::<u8>::new());
         let data = vec![0u8; 12]; // not a multiple of 8
         let e = NrgFile::parse_cue("CUES", 12, &data).unwrap_err();
         assert!(matches!(e, NrgError::RaggedChunk { entry: 8, .. }));

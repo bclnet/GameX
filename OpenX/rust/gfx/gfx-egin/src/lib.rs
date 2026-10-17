@@ -2,8 +2,9 @@
 //!
 //! `egin_render` (AABB + Camera) and `egin_animate` (skeletal animation) are
 //! both ported and **verified numerically against the C# test suite's own
-//! assertions** — see their test modules. `egin_particle` (693 live lines) is
-//! partly ported; its header lists what is left.
+//! assertions** — see their test modules. `egin_particle` is ported, including
+//! the initializers, operators and `IParticleRenderer`. Nothing in this crate
+//! implements `IParticleSystem`.
 //!
 //! The matrix-convention note at the top of `egin_render` is the important
 //! reading for anyone extending this crate: System.Numerics is row-vector /

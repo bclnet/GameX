@@ -13,6 +13,10 @@ gamex = { path = "../../core/gamex" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
 openx = { path = "../../../OpenX/rust/core/openx" }
 openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }
+openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }
 bytemuck = { workspace = true, features = ["min_const_generics"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "gif", "tiff"] }
 flate2 = "1"
+# 4.2.0 is the last 4.x that builds on rustc 1.75. Later 4.x needs 1.82.
+# Default features pull C libraries (bzip2, lzma, zstd). Store needs none of them.
+zip = { version = "=4.2.0", default-features = false, features = ["deflate-flate2", "deflate64", "aes-crypto"] }

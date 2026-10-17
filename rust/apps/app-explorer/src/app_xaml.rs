@@ -44,9 +44,10 @@ impl App {
 
     pub fn application_Startup(e: Vec<String>) -> i32 {
         Self::app();
-        // C# finds archive types by reflection; Rust's family crates register theirs.
+        // C# finds archive types and explorer apps by reflection; Rust's family crates register theirs.
         gamex_uncore::uncore::register();
         gamex_arkane::arkane::register();
+        gamex_cig_explorer::register();
         if let Err(e) = loadFamilies(option().family.map(|s| vec![s.to_string()]), true) { return Self::runError(e.to_string()); }
         let shell = AppShell::new();
         let args = Self::args.map(|s| s.iter().map(|s| s.to_string()).collect()).unwrap_or(e);

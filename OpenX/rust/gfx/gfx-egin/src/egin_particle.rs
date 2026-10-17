@@ -8,12 +8,11 @@
 // particle-system KV blobs — which is what `openx_poly`' `KV` enum
 // exists for, so it is used here instead of an untyped map.
 //
-// PARTIAL PORT. The core is done: `Particle`, `ParticleBag`, the four trait
-// families, both emitters, the number/vector providers, and the operators that
-// carry real logic (`Decay`, `FadeAndKill`, `BasicMovement`). The remaining ~20
-// concrete initializers and operators (`CreateWithinSphere`, `RingWave`,
-// `RandomColor`, `OscillateScalar`, ...) are each a few lines of arithmetic over
-// KV keys, all following the same two shapes; they are listed at the bottom.
+// The concrete initializers and operators are ported. `System.Random` is a
+// small xorshift (`Rng` below): `openx-phy2`'s `LazyRandom` grows without bound,
+// which this crate was told not to copy. Each `Rng::new` takes the next seed,
+// so two initializers built together don't share a sequence. `IParticleRenderer`
+// is the draw trait; the OpenGL sprite and trail renderers implement it.
 //
 // ===================== FIVE C#-SIDE BUGS ==================================
 //
@@ -52,6 +51,8 @@
 // emitter silently never fires; and `Particle.GetRotationMatrix` composes only
 // `Rotation.Z` and `Rotation.Y`, ignoring `Rotation.X` entirely.
 
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU32, Ordering};
 use glam::{Mat4, Vec3};
 use openx_poly::pool::KV;
 
@@ -155,6 +156,25 @@ impl Particle {
         }
         Some((1.0 - self.lifetime / self.constantLifetime).clamp(0.0, 1.0))
     }
+
+    /// C# `GetScalar`. An unlisted field is `0`.
+    pub fn getScalar(&self, field: ParticleField) -> f32 {
+        match field {
+            ParticleField::Alpha => self.alpha,
+            ParticleField::AlphaAlternate => self.alphaAlternate,
+            ParticleField::Radius => self.radius,
+            _ => 0.0,
+        }
+    }
+
+    /// C# `GetVector`. An unlisted field is `Vector3.Zero`.
+    pub fn getVector(&self, field: ParticleField) -> Vec3 {
+        match field {
+            ParticleField::Position => self.position,
+            ParticleField::PositionPrevious => self.positionPrevious,
+            _ => Vec3::ZERO,
+        }
+    }
 }
 
 /// C# `class ParticleBag(int initialCapacity, bool growable)`.
@@ -244,9 +264,23 @@ impl ParticleBag {
 }
 
 /// C# `class ParticleSystemRenderState`.
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ParticleSystemRenderState {
     pub lifetime: f32,
+    controlPoints: HashMap<i32, Vec3>,
+}
+
+impl ParticleSystemRenderState {
+    /// C# `GetControlPoint`. A missing point is `Vector3.Zero`.
+    pub fn getControlPoint(&self, cp: i32) -> Vec3 {
+        self.controlPoints.get(&cp).copied().unwrap_or(Vec3::ZERO)
+    }
+
+    /// C# `SetControlPoint`, which returns `this` for chaining.
+    pub fn setControlPoint(&mut self, cp: i32, value: Vec3) -> &mut Self {
+        self.controlPoints.insert(cp, value);
+        self
+    }
 }
 
 /// C# `interface INumberProvider`.
@@ -287,7 +321,7 @@ impl VectorProvider for LiteralVectorProvider {
 /// The C# `Start(Action particleEmitCallback)` stores a callback and invokes it
 /// per particle. `update` returns the count to emit instead, so the emitter does
 /// not need to own a closure over the system that owns it.
-pub trait ParticleEmitter {
+pub trait ParticleEmitter: Send {
     fn start(&mut self);
     fn stop(&mut self);
     /// How many particles to emit this frame.
@@ -429,12 +463,12 @@ impl ParticleEmitter for InstantaneousEmitter {
 ///
 /// Mutates only — see bug 1 for why the C#'s dual mutate-and-return signature
 /// is not reproduced.
-pub trait ParticleInitializer {
+pub trait ParticleInitializer: Send {
     fn initialize(&mut self, particle: &mut Particle, state: &ParticleSystemRenderState);
 }
 
 /// C# `interface IParticleOperator`.
-pub trait ParticleOperator {
+pub trait ParticleOperator: Send {
     fn update(
         &mut self,
         particles: &mut [Particle],
@@ -543,23 +577,475 @@ impl ParticleOperator for FadeAndKill {
     }
 }
 
-// NOT YET PORTED, all from this file: the initializers `CreateWithinSphere`,
-// `InitialVelocityNoise`, `OffsetVectorToVector`, `PositionOffset`,
-// `RandomAlpha`, `RandomColor`, `RandomLifeTime`, `RandomRadius`,
-// `RandomRotation`, `RandomRotationSpeed`, `RandomSequence`,
-// `RandomTrailLength`, `RemapParticleCountToScalar`, `RingWave`; and the
-// operators `ColorInterpolate`, `FadeInSimple`, `FadeOutSimple`,
-// `InterpolateRadius`, `OscillateScalar`, `SpinUpdate`. Each is a handful of
-// lines reading `m_fl*` keys and writing one or two `Particle` fields, all
-// following `ParticleInitializer` or `ParticleOperator` above. The randomised
-// ones need an RNG decision first — `openx-phy2`'s `LazyRandom` has the
-// unbounded-growth problem noted in PORTING.md, so this crate should take
-// `rand` or a small xorshift rather than copy it.
-//
-// Also not ported: `IParticleRenderer` and `ParticleField` (renderer-side, need
-// a real backend), and the three separate `ParticleExtensions` static classes —
-// the C# declares that name three times in one file, each a different set of
-// KV-reading helpers, which `KV`'s accessors now cover.
+/// C# `enum ParticleField`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i64)]
+pub enum ParticleField {
+    Position = 0,
+    PositionPrevious = 2,
+    Radius = 3,
+    Roll = 4,
+    Alpha = 7,
+    Yaw = 12,
+    AlphaAlternate = 16,
+}
+
+impl ParticleField {
+    fn fromRaw(v: i64) -> Option<Self> {
+        Some(match v {
+            0 => Self::Position,
+            2 => Self::PositionPrevious,
+            3 => Self::Radius,
+            4 => Self::Roll,
+            7 => Self::Alpha,
+            12 => Self::Yaw,
+            16 => Self::AlphaAlternate,
+            _ => return None,
+        })
+    }
+}
+
+/// Stand-in for `System.Random`. `NextDouble` is `[0, 1)`. `nextInt` is C#
+/// `Random.Next(min, max)`: `max` is exclusive, and `min >= max` throws.
+struct Rng(u32);
+
+impl Rng {
+    fn new() -> Self {
+        static NEXT: AtomicU32 = AtomicU32::new(0xA3C59AC3);
+        let x = NEXT.fetch_add(0x9E3779B9, Ordering::Relaxed);
+        Self(if x == 0 { 1 } else { x })
+    }
+
+    fn nextU32(&mut self) -> u32 {
+        let mut x = self.0;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        self.0 = if x == 0 { 1 } else { x };
+        self.0
+    }
+
+    fn nextDouble(&mut self) -> f32 {
+        (self.nextU32() as f64 / (u32::MAX as f64 + 1.0)) as f32
+    }
+
+    fn nextInt(&mut self, min: i32, max: i32) -> i32 {
+        if min >= max { panic!("ArgumentOutOfRangeException: {min} >= {max}"); }
+        let span = (max - min) as u32;
+        min + (self.nextU32() % span) as i32
+    }
+}
+
+fn kvF32(kv: &KV, key: &str, default: f32) -> f32 { kv.get(key).and_then(KV::asF32).unwrap_or(default) }
+fn kvI64(kv: &KV, key: &str, default: i64) -> i64 { kv.get(key).and_then(KV::asI64).unwrap_or(default) }
+fn kvBool(kv: &KV, key: &str, default: bool) -> bool { kv.get(key).and_then(KV::asBool).unwrap_or(default) }
+fn kvVec3(kv: &KV, key: &str, default: Vec3) -> Vec3 { kv.get(key).and_then(KV::asVec3).unwrap_or(default) }
+
+fn kvColor(kv: &KV, key: &str, default: Vec3) -> Vec3 {
+    kv.get(key).and_then(KV::asI64Array).filter(|v| v.len() >= 3)
+        .map(|v| Vec3::new(v[0] as f32, v[1] as f32, v[2] as f32) / 255.0)
+        .unwrap_or(default)
+}
+
+/// C# `InitialVelocityNoise.Simplex1D` and its two helpers. The integer literal
+/// is multiplied as a float, so the low bits are already gone in C#.
+fn pseudoRandom(t: f32) -> f32 { ((1013904223517.0f32 * t) % 1664525.0) / 1664525.0 }
+fn cosineInterpolate(start: f32, end: f32, mu: f32) -> f32 {
+    let mu2 = (1.0 - (mu * std::f32::consts::PI).cos()) / 2.0;
+    start * (1.0 - mu2) + end * mu2
+}
+fn simplex1D(t: f32) -> f32 {
+    cosineInterpolate(pseudoRandom(t.floor()), pseudoRandom(t.ceil()), t % 1.0)
+}
+
+const PI_OVER_180: f32 = std::f32::consts::PI / 180.0;
+
+/// C# `CreateWithinSphere`.
+pub struct CreateWithinSphere {
+    random: Rng,
+    radiusMin: f32, radiusMax: f32, speedMin: f32, speedMax: f32,
+    localMin: Vec3, localMax: Vec3,
+}
+impl CreateWithinSphere {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            random: Rng::new(),
+            radiusMin: kvF32(kv, "m_fRadiusMin", 0.0), radiusMax: kvF32(kv, "m_fRadiusMax", 0.0),
+            speedMin: kvF32(kv, "m_fSpeedMin", 0.0), speedMax: kvF32(kv, "m_fSpeedMax", 0.0),
+            localMin: kvVec3(kv, "m_LocalCoordinateSystemSpeedMin", Vec3::ZERO),
+            localMax: kvVec3(kv, "m_LocalCoordinateSystemSpeedMax", Vec3::ZERO),
+        }
+    }
+}
+impl ParticleInitializer for CreateWithinSphere {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let randomVector = Vec3::new(self.random.nextDouble() * 2.0 - 1.0, self.random.nextDouble() * 2.0 - 1.0, self.random.nextDouble() * 2.0 - 1.0);
+        let direction = randomVector / randomVector.length();
+        let distance = self.radiusMin + (self.random.nextDouble() * (self.radiusMax - self.radiusMin));
+        let speed = self.speedMin + (self.random.nextDouble() * (self.speedMax - self.speedMin));
+        // One random for the whole local-speed vector, as in the C#.
+        let local = self.localMin + (self.random.nextDouble() * (self.localMax - self.localMin));
+        particle.position += direction * distance;
+        particle.velocity = (direction * speed) + local;
+    }
+}
+
+/// C# `InitialVelocityNoise`. Only literal providers exist; `NextNumber` on a
+/// literal is the value, so it is read once here.
+pub struct InitialVelocityNoise { outputMin: Vec3, outputMax: Vec3, noiseScale: f32 }
+impl InitialVelocityNoise {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            outputMin: kvVec3(kv, "m_vecOutputMin", Vec3::ZERO),
+            outputMax: kvVec3(kv, "m_vecOutputMax", Vec3::ONE),
+            noiseScale: kvF32(kv, "m_flNoiseScale", 1.0),
+        }
+    }
+}
+impl ParticleInitializer for InitialVelocityNoise {
+    fn initialize(&mut self, particle: &mut Particle, state: &ParticleSystemRenderState) {
+        let t = state.lifetime * self.noiseScale;
+        let r = Vec3::new(simplex1D(t), simplex1D(t + 101723.0), simplex1D(t + 555557.0));
+        particle.velocity = self.outputMin + (r * (self.outputMax - self.outputMin));
+    }
+}
+
+/// C# `OffsetVectorToVector`.
+pub struct OffsetVectorToVector { random: Rng, inputField: ParticleField, outputField: ParticleField, offsetMin: Vec3, offsetMax: Vec3 }
+impl OffsetVectorToVector {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            random: Rng::new(),
+            inputField: ParticleField::fromRaw(kvI64(kv, "m_nFieldInput", 0)).unwrap_or(ParticleField::Position),
+            outputField: ParticleField::fromRaw(kvI64(kv, "m_nFieldOutput", 0)).unwrap_or(ParticleField::Position),
+            offsetMin: kvVec3(kv, "m_vecOutputMin", Vec3::ZERO),
+            offsetMax: kvVec3(kv, "m_vecOutputMax", Vec3::ONE),
+        }
+    }
+}
+impl ParticleInitializer for OffsetVectorToVector {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let input = particle.getVector(self.inputField);
+        let offset = Vec3::new(
+            self.offsetMin.x + self.random.nextDouble() * (self.offsetMax.x - self.offsetMin.x),
+            self.offsetMin.y + self.random.nextDouble() * (self.offsetMax.y - self.offsetMin.y),
+            self.offsetMin.z + self.random.nextDouble() * (self.offsetMax.z - self.offsetMin.z),
+        );
+        let sum = input + offset;
+        if self.outputField == ParticleField::Position { particle.position += sum; }
+        else if self.outputField == ParticleField::PositionPrevious { particle.positionPrevious = sum; }
+    }
+}
+
+/// C# `PositionOffset`.
+pub struct PositionOffset { random: Rng, offsetMin: Vec3, offsetMax: Vec3 }
+impl PositionOffset {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self { random: Rng::new(), offsetMin: kvVec3(kv, "m_OffsetMin", Vec3::ZERO), offsetMax: kvVec3(kv, "m_OffsetMax", Vec3::ZERO) }
+    }
+}
+impl ParticleInitializer for PositionOffset {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let distance = self.offsetMax - self.offsetMin;
+        let offset = self.offsetMin + distance * Vec3::new(self.random.nextDouble(), self.random.nextDouble(), self.random.nextDouble());
+        particle.position += offset;
+    }
+}
+
+/// C# `RandomAlpha`. `Random.Next(min, max)` throws when the two are equal,
+/// which the defaults (255, 255) are.
+pub struct RandomAlpha { random: Rng, alphaMin: i32, alphaMax: i32 }
+impl RandomAlpha {
+    pub fn fromKv(kv: &KV) -> Self {
+        let mut alphaMin = kvI64(kv, "m_nAlphaMin", 255) as i32;
+        let mut alphaMax = kvI64(kv, "m_nAlphaMax", 255) as i32;
+        if alphaMin > alphaMax { std::mem::swap(&mut alphaMin, &mut alphaMax); }
+        Self { random: Rng::new(), alphaMin, alphaMax }
+    }
+}
+impl ParticleInitializer for RandomAlpha {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let alpha = self.random.nextInt(self.alphaMin, self.alphaMax) as f32 / 255.0;
+        particle.constantAlpha = alpha;
+        particle.alpha = alpha;
+    }
+}
+
+/// C# `RandomColor`. One `NextDouble` lerps the whole color.
+pub struct RandomColor { random: Rng, colorMin: Vec3, colorMax: Vec3 }
+impl RandomColor {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self { random: Rng::new(), colorMin: kvColor(kv, "m_ColorMin", Vec3::ONE), colorMax: kvColor(kv, "m_ColorMax", Vec3::ONE) }
+    }
+}
+impl ParticleInitializer for RandomColor {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let t = self.random.nextDouble();
+        particle.constantColor = self.colorMin + (t * (self.colorMax - self.colorMin));
+        particle.color = particle.constantColor;
+    }
+}
+
+/// C# `RandomLifeTime`.
+pub struct RandomLifeTime { random: Rng, lifetimeMin: f32, lifetimeMax: f32 }
+impl RandomLifeTime {
+    pub fn fromKv(kv: &KV) -> Self { Self { random: Rng::new(), lifetimeMin: kvF32(kv, "m_fLifetimeMin", 0.0), lifetimeMax: kvF32(kv, "m_fLifetimeMax", 0.0) } }
+}
+impl ParticleInitializer for RandomLifeTime {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let lifetime = self.lifetimeMin + ((self.lifetimeMax - self.lifetimeMin) * self.random.nextDouble());
+        particle.constantLifetime = lifetime;
+        particle.lifetime = lifetime;
+    }
+}
+
+/// C# `RandomRadius`.
+pub struct RandomRadius { random: Rng, radiusMin: f32, radiusMax: f32 }
+impl RandomRadius {
+    pub fn fromKv(kv: &KV) -> Self { Self { random: Rng::new(), radiusMin: kvF32(kv, "m_flRadiusMin", 0.0), radiusMax: kvF32(kv, "m_flRadiusMax", 0.0) } }
+}
+impl ParticleInitializer for RandomRadius {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        particle.constantRadius = self.radiusMin + (self.random.nextDouble() * (self.radiusMax - self.radiusMin));
+        particle.radius = particle.constantRadius;
+    }
+}
+
+/// C# `RandomRotation`. Field 4 writes roll (Z); field 12 writes yaw (Y).
+pub struct RandomRotation { random: Rng, degreesMin: f32, degreesMax: f32, degreesOffset: f32, fieldOutput: i64, randomlyFlipDirection: bool }
+impl RandomRotation {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            random: Rng::new(),
+            degreesMin: kvF32(kv, "m_flDegreesMin", 0.0), degreesMax: kvF32(kv, "m_flDegreesMax", 360.0),
+            degreesOffset: kvF32(kv, "m_flDegrees", 0.0), fieldOutput: kvI64(kv, "m_nFieldOutput", 4),
+            randomlyFlipDirection: kvBool(kv, "m_bRandomlyFlipDirection", false),
+        }
+    }
+}
+impl ParticleInitializer for RandomRotation {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let mut degrees = self.degreesOffset + self.degreesMin + (self.random.nextDouble() * (self.degreesMax - self.degreesMin));
+        if self.randomlyFlipDirection && self.random.nextDouble() > 0.5 { degrees *= -1.0; }
+        if self.fieldOutput == 4 { particle.rotation.z = degrees * PI_OVER_180; }
+        else if self.fieldOutput == 12 { particle.rotation.y = degrees * PI_OVER_180; }
+    }
+}
+
+/// C# `RandomRotationSpeed`. Yaw writes X and roll writes Z — not the axes
+/// `RandomRotation` uses.
+pub struct RandomRotationSpeed { random: Rng, fieldOutput: ParticleField, randomlyFlipDirection: bool, degrees: f32, degreesMin: f32, degreesMax: f32 }
+impl RandomRotationSpeed {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            random: Rng::new(),
+            fieldOutput: ParticleField::fromRaw(kvI64(kv, "m_nFieldOutput", ParticleField::Roll as i64)).unwrap_or(ParticleField::Roll),
+            randomlyFlipDirection: kvBool(kv, "m_bRandomlyFlipDirection", true),
+            degrees: kvF32(kv, "m_flDegrees", 0.0), degreesMin: kvF32(kv, "m_flDegreesMin", 0.0), degreesMax: kvF32(kv, "m_flDegreesMax", 360.0),
+        }
+    }
+}
+impl ParticleInitializer for RandomRotationSpeed {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let mut value = PI_OVER_180 * (self.degrees + self.degreesMin + (self.random.nextDouble() * (self.degreesMax - self.degreesMin)));
+        if self.randomlyFlipDirection && self.random.nextDouble() > 0.5 { value *= -1.0; }
+        if self.fieldOutput == ParticleField::Yaw { particle.rotationSpeed = Vec3::new(value, 0.0, 0.0); }
+        else if self.fieldOutput == ParticleField::Roll { particle.rotationSpeed = Vec3::new(0.0, 0.0, value); }
+    }
+}
+
+/// C# `RandomSequence`.
+pub struct RandomSequence { random: Rng, sequenceMin: i32, sequenceMax: i32, shuffle: bool, counter: i32 }
+impl RandomSequence {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self { random: Rng::new(), sequenceMin: kvI64(kv, "m_nSequenceMin", 0) as i32, sequenceMax: kvI64(kv, "m_nSequenceMax", 0) as i32, shuffle: kvBool(kv, "m_bShuffle", false), counter: 0 }
+    }
+}
+impl ParticleInitializer for RandomSequence {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        particle.sequence = if self.shuffle { self.random.nextInt(self.sequenceMin, self.sequenceMax + 1) }
+        else { self.sequenceMin + if self.sequenceMax > self.sequenceMin { let n = self.counter; self.counter += 1; n % (self.sequenceMax - self.sequenceMin) } else { 0 } };
+    }
+}
+
+/// C# `RandomTrailLength`.
+pub struct RandomTrailLength { random: Rng, minLength: f32, maxLength: f32 }
+impl RandomTrailLength {
+    pub fn fromKv(kv: &KV) -> Self { Self { random: Rng::new(), minLength: kvF32(kv, "m_flMinLength", 0.1), maxLength: kvF32(kv, "m_flMaxLength", 0.1) } }
+}
+impl ParticleInitializer for RandomTrailLength {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        particle.trailLength = self.minLength + (self.random.nextDouble() * (self.maxLength - self.minLength));
+    }
+}
+
+/// C# `RemapParticleCountToScalar`. Only output field 3 (radius) is handled.
+/// A zero input span divides through, as in the C#.
+pub struct RemapParticleCountToScalar { fieldOutput: i64, inputMin: i64, inputMax: i64, outputMin: f32, outputMax: f32, scaleInitialRange: bool }
+impl RemapParticleCountToScalar {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            fieldOutput: kvI64(kv, "m_nFieldOutput", 3), inputMin: kvI64(kv, "m_nInputMin", 0), inputMax: kvI64(kv, "m_nInputMax", 10),
+            outputMin: kvF32(kv, "m_flOutputMin", 0.0), outputMax: kvF32(kv, "m_flOutputMax", 1.0), scaleInitialRange: kvBool(kv, "m_bScaleInitialRange", false),
+        }
+    }
+}
+impl ParticleInitializer for RemapParticleCountToScalar {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let particleCount = self.inputMax.min(self.inputMin.max(particle.particleCount as i64));
+        let t = (particleCount - self.inputMin) as f32 / (self.inputMax - self.inputMin) as f32;
+        let output = self.outputMin + (t * (self.outputMax - self.outputMin));
+        if self.fieldOutput == 3 {
+            particle.radius = if self.scaleInitialRange { particle.radius * output } else { output };
+        }
+    }
+}
+
+/// C# `RingWave`.
+pub struct RingWave { random: Rng, evenDistribution: bool, initialRadius: f32, thickness: f32, particlesPerOrbit: f32, orbitCount: f32 }
+impl RingWave {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            random: Rng::new(), evenDistribution: kvBool(kv, "m_bEvenDistribution", false),
+            initialRadius: kvF32(kv, "m_flInitialRadius", 0.0), thickness: kvF32(kv, "m_flThickness", 0.0),
+            particlesPerOrbit: kvF32(kv, "m_flParticlesPerOrbit", -1.0), orbitCount: 0.0,
+        }
+    }
+    fn nextAngle(&mut self) -> f32 {
+        if self.evenDistribution {
+            let offset = self.orbitCount / self.particlesPerOrbit;
+            self.orbitCount = (self.orbitCount + 1.0) % self.particlesPerOrbit;
+            offset * 2.0 * std::f32::consts::PI
+        } else { 2.0 * std::f32::consts::PI * self.random.nextDouble() }
+    }
+}
+impl ParticleInitializer for RingWave {
+    fn initialize(&mut self, particle: &mut Particle, _state: &ParticleSystemRenderState) {
+        let radius = self.initialRadius + (self.random.nextDouble() * self.thickness);
+        let angle = self.nextAngle();
+        particle.position += radius * Vec3::new(angle.cos(), angle.sin(), 0.0);
+    }
+}
+
+/// C# `ColorInterpolate`.
+pub struct ColorInterpolate { colorFade: Vec3, fadeStartTime: f32, fadeEndTime: f32 }
+impl ColorInterpolate {
+    pub fn fromKv(kv: &KV) -> Self { Self { colorFade: kvColor(kv, "m_ColorFade", Vec3::ONE), fadeStartTime: kvF32(kv, "m_flFadeStartTime", 0.0), fadeEndTime: kvF32(kv, "m_flFadeEndTime", 1.0) } }
+}
+impl ParticleOperator for ColorInterpolate {
+    fn update(&mut self, particles: &mut [Particle], _frameTime: f32, _state: &ParticleSystemRenderState) {
+        for p in particles.iter_mut() {
+            let time = 1.0 - (p.lifetime / p.constantLifetime);
+            if time >= self.fadeStartTime && time <= self.fadeEndTime {
+                let t = (time - self.fadeStartTime) / (self.fadeEndTime - self.fadeStartTime);
+                p.color = ((1.0 - t) * p.constantColor) + (t * self.colorFade);
+            }
+        }
+    }
+}
+
+/// C# `FadeInSimple`.
+pub struct FadeInSimple { fadeInTime: f32 }
+impl FadeInSimple { pub fn fromKv(kv: &KV) -> Self { Self { fadeInTime: kvF32(kv, "m_flFadeInTime", 0.25) } } }
+impl ParticleOperator for FadeInSimple {
+    fn update(&mut self, particles: &mut [Particle], _frameTime: f32, _state: &ParticleSystemRenderState) {
+        for p in particles.iter_mut() {
+            let time = 1.0 - (p.lifetime / p.constantLifetime);
+            if time <= self.fadeInTime { p.alpha = (time / self.fadeInTime) * p.constantAlpha; }
+        }
+    }
+}
+
+/// C# `FadeOutSimple`.
+pub struct FadeOutSimple { fadeOutTime: f32 }
+impl FadeOutSimple { pub fn fromKv(kv: &KV) -> Self { Self { fadeOutTime: kvF32(kv, "m_flFadeOutTime", 0.25) } } }
+impl ParticleOperator for FadeOutSimple {
+    fn update(&mut self, particles: &mut [Particle], _frameTime: f32, _state: &ParticleSystemRenderState) {
+        for p in particles.iter_mut() {
+            let timeLeft = p.lifetime / p.constantLifetime;
+            if timeLeft <= self.fadeOutTime { p.alpha = (timeLeft / self.fadeOutTime) * p.constantAlpha; }
+        }
+    }
+}
+
+/// C# `InterpolateRadius`.
+pub struct InterpolateRadius { startTime: f32, endTime: f32, startScale: f32, endScale: f32 }
+impl InterpolateRadius {
+    pub fn fromKv(kv: &KV) -> Self { Self { startTime: kvF32(kv, "m_flStartTime", 0.0), endTime: kvF32(kv, "m_flEndTime", 1.0), startScale: kvF32(kv, "m_flStartScale", 1.0), endScale: kvF32(kv, "m_flEndScale", 1.0) } }
+}
+impl ParticleOperator for InterpolateRadius {
+    fn update(&mut self, particles: &mut [Particle], _frameTime: f32, _state: &ParticleSystemRenderState) {
+        for p in particles.iter_mut() {
+            let time = 1.0 - (p.lifetime / p.constantLifetime);
+            if time >= self.startTime && time <= self.endTime {
+                let t = (time - self.startTime) / (self.endTime - self.startTime);
+                p.radius = p.constantRadius * ((self.startScale * (1.0 - t)) + (self.endScale * t));
+            }
+        }
+    }
+}
+
+/// C# `OscillateScalar`. The removal of stale rate entries is commented out there.
+pub struct OscillateScalar {
+    random: Rng, outputField: ParticleField, rateMin: f32, rateMax: f32, frequencyMin: f32, frequencyMax: f32,
+    oscillationMultiplier: f32, oscillationOffset: f32, proportional: bool,
+    particleRates: HashMap<i32, f32>, particleFrequencies: HashMap<i32, f32>,
+}
+impl OscillateScalar {
+    pub fn fromKv(kv: &KV) -> Self {
+        Self {
+            random: Rng::new(),
+            outputField: ParticleField::fromRaw(kvI64(kv, "m_nField", ParticleField::Alpha as i64)).unwrap_or(ParticleField::Alpha),
+            rateMin: kvF32(kv, "m_RateMin", 0.0), rateMax: kvF32(kv, "m_RateMax", 0.0),
+            frequencyMin: kvF32(kv, "m_FrequencyMin", 1.0), frequencyMax: kvF32(kv, "m_FrequencyMax", 1.0),
+            oscillationMultiplier: kvF32(kv, "m_flOscMult", 2.0), oscillationOffset: kvF32(kv, "m_flOscAdd", 0.5),
+            proportional: kvBool(kv, "m_bProportionalOp", true),
+            particleRates: HashMap::new(), particleFrequencies: HashMap::new(),
+        }
+    }
+    fn rate(&mut self, id: i32) -> f32 {
+        if let Some(v) = self.particleRates.get(&id).copied() { return v; }
+        let v = self.rateMin + (self.random.nextDouble() * (self.rateMax - self.rateMin));
+        self.particleRates.insert(id, v);
+        v
+    }
+    fn frequency(&mut self, id: i32) -> f32 {
+        if let Some(v) = self.particleFrequencies.get(&id).copied() { return v; }
+        let v = self.frequencyMin + (self.random.nextDouble() * (self.frequencyMax - self.frequencyMin));
+        self.particleFrequencies.insert(id, v);
+        v
+    }
+}
+impl ParticleOperator for OscillateScalar {
+    fn update(&mut self, particles: &mut [Particle], frameTime: f32, _state: &ParticleSystemRenderState) {
+        for p in particles.iter_mut() {
+            let rate = self.rate(p.particleCount);
+            let frequency = self.frequency(p.particleCount);
+            let t = if self.proportional { 1.0 - (p.lifetime / p.constantLifetime) } else { p.lifetime };
+            let delta = ((t * frequency * self.oscillationMultiplier) + self.oscillationOffset) * std::f32::consts::PI;
+            let delta = delta.sin();
+            if self.outputField == ParticleField::Radius { p.radius += delta * rate * frameTime; }
+            else if self.outputField == ParticleField::Alpha { p.alpha += delta * rate * frameTime; }
+            else if self.outputField == ParticleField::AlphaAlternate { p.alphaAlternate += delta * rate * frameTime; }
+        }
+    }
+}
+
+/// C# `SpinUpdate`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SpinUpdate;
+impl ParticleOperator for SpinUpdate {
+    fn update(&mut self, particles: &mut [Particle], frameTime: f32, _state: &ParticleSystemRenderState) {
+        for p in particles.iter_mut() { p.rotation += p.rotationSpeed * frameTime; }
+    }
+}
+
+/// C# `interface IParticleRenderer`.
+pub trait IParticleRenderer: Send {
+    fn render(&mut self, particles: &ParticleBag, viewProjection: Mat4, modelView: Mat4);
+    fn setRenderMode(&mut self, renderMode: Option<&str>);
+    fn supportedRenderModes(&self) -> Vec<String>;
+}
 
 #[cfg(test)]
 mod tests {
@@ -755,6 +1241,31 @@ mod tests {
         let m = p.transformationMatrix();
         // A unit point at +X should land at position + radius.
         assert!((m.transform_point3(Vec3::X) - Vec3::new(7.0, 0.0, 0.0)).length() < 1e-5);
+    }
+
+    #[test]
+    fn spin_update_adds_rotation_speed() {
+        let mut p = Particle::default();
+        p.rotationSpeed = Vec3::new(0.0, 0.0, 2.0);
+        SpinUpdate.update(std::slice::from_mut(&mut p), 0.5, &ParticleSystemRenderState::default());
+        assert!((p.rotation.z - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn remap_count_writes_radius_for_field_three() {
+        let mut op = RemapParticleCountToScalar::fromKv(&kv(&[("m_nInputMax", KV::Int(10)), ("m_flOutputMax", KV::Float(1.0))]));
+        let mut p = Particle::default();
+        p.particleCount = 10;
+        op.initialize(&mut p, &ParticleSystemRenderState::default());
+        assert!((p.radius - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn control_point_zero_is_the_origin_until_set() {
+        let mut s = ParticleSystemRenderState::default();
+        assert_eq!(s.getControlPoint(0), Vec3::ZERO);
+        s.setControlPoint(0, Vec3::new(1.0, 2.0, 3.0));
+        assert_eq!(s.getControlPoint(0), Vec3::new(1.0, 2.0, 3.0));
     }
 
     #[test]

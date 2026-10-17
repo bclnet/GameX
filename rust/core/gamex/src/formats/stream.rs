@@ -6,8 +6,9 @@
 // archive: `.set` names the files, `.meta` marks which are compressed or
 // encrypted, `.raw` lists raw files.
 //
-// `StreamArchive`'s network host (`NetworkHost`) isn't in openx's Rust port, so
-// only its local-folder form is here.
+// `NetworkHost` is ported (`openx_vfx::vfx_network`). `GetArchive` still throws
+// before a `StreamArchive` is built for an http resource, as the C# line that
+// would construct one is commented out. Only the local-folder form is here.
 //
 // ===================== C#-SIDE BUGS, KEPT ================================
 //
@@ -24,6 +25,7 @@
 use std::collections::HashSet;
 use std::io::{self, Error, ErrorKind, Read, Write};
 use std::path::Path;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use openx_vfx::vfx::VfsRead;
@@ -166,14 +168,14 @@ pub struct StreamArchive;
 impl StreamArchive {
     pub fn new(parent: Option<Arc<dyn Archive>>, state: BinaryState) -> Arc<BinaryArchive> {
         let mut s = BinaryArchive::new(parent, state, Some(Arc::new(PakBinaryCanStream)));
-        s.useReader = false;
+        s.useReader.store(false, Ordering::Relaxed);
         s.virt = Some(Box::new(StreamArchive));
         newArchive(s)
     }
 
     pub fn fromParent(parent: &Arc<BinaryArchive>, state: BinaryState) -> Arc<BinaryArchive> {
         let mut s = BinaryArchive::new(Some(parent.base.this()), state, Some(Arc::new(PakBinaryCanStream)));
-        s.useReader = false;
+        s.useReader.store(false, Ordering::Relaxed);
         s.setFiles(parent.files());
         s.virt = Some(Box::new(StreamArchive));
         newArchive(s)
@@ -256,7 +258,7 @@ mod tests {
         std::fs::write(arc.join(".set"), "C:/arc/.set\nC:/arc/a.txt\r\nC:/arc/sub/b.bin\n").unwrap();
         std::fs::write(arc.join("a.txt"), "hello").unwrap();
         std::fs::write(arc.join("sub/b.bin"), [1u8, 0, 2]).unwrap();
-        let state = BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
+        let state = BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir, None)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
         let archive = StreamArchive::new(None, state);
         let mut items: Vec<MetaItem> = vec![];
         archive.open(Some(&mut items), Some(&Manager)).unwrap();
@@ -292,7 +294,7 @@ mod tests {
         let dir = folder("write");
         let arc = dir.join("arc");
         std::fs::write(arc.join(".set"), "C:/arc/.set\nC:/arc/a.txt\nC:/arc/b.txt\n").unwrap();
-        let state = || BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
+        let state = || BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir, None)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
         let archive = StreamArchive::new(None, state());
         archive.open(None, None).unwrap();
         archive.params.lock().unwrap().insert("k".into(), "v".into());
@@ -309,7 +311,7 @@ mod tests {
         let dir = folder("empty");
         let arc = dir.join("arc");
         std::fs::write(arc.join(".set"), "").unwrap();
-        let state = BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
+        let state = BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir, None)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
         assert!(StreamArchive::new(None, state).open(None, None).is_err());
         std::fs::remove_dir_all(&dir).unwrap();
     }

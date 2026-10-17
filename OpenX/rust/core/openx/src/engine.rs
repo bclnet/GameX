@@ -8,8 +8,8 @@
 // address, as C# compares references. `EngineX`, a static class, is a module;
 // its mutable statics sit behind one lock.
 //
-// `Engine.Activate` sets `Log.Func = LogFunc` in C#; OpenX's Rust `Log` is
-// parked in `openx-poly/_`, so there is nothing to set yet. `InTestHost` sniffs
+// `Engine.Activate` sets `Log.Func = LogFunc`. `Log` starts as stderr, which is
+// also the default `logFunc`, so a log before activate still prints. `InTestHost` sniffs
 // for a `testhost` assembly in C#; Rust has no test host to find, so it is
 // `cfg!(test)`, true only in this crate's own tests.
 //
@@ -52,7 +52,7 @@ impl Engine {
 
     /// Activates the engine.
     pub fn activate(&self) {
-        //Log.Func = LogFunc;
+        openx_poly::log::Log::setFunc(self.logFunc);
     }
 
     /// Deactivates the engine.

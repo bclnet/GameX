@@ -2,14 +2,30 @@
 // PORT-SHA: 26b9cbb734746358
 // PORT-STATUS: partial
 //
-// Ported: Binary_Bik, Binary_Fsb, Binary_Iif, Binary_Img, Binary_Msg, Binary_Pal, Binary_Pcx,
-// Binary_Raw, Binary_Snd, Binary_Tga, Binary_Txt, Binary_Xga, Binary_TestTri.
+// Ported: Binary_Bik, Binary_Dds, Binary_Fsb, Binary_Iif, Binary_Img, Binary_Msg, Binary_Pal, Binary_Pcx,
+// Binary_Plist, Binary_Raw, Binary_Snd, Binary_Tga, Binary_Txt, Binary_Xga, Binary_Zip, Binary_TestTri.
 //
 // Not ported:
-// - Binary_Dds: needs `DDS_HEADER.Read`, still commented out in openx-gfx's gfx_texture.rs.
-// - Binary_Plist: needs `formats/apple/plist_reader.rs` (a todo stub) and an `ArcBinary`.
-// - Binary_Zip: needs a zip crate (System.IO.Compression + SharpZipLib with its `Key` property).
-// - Binary_Engine: needs `ICellDatabase` and `CellManager.IQueryFunc`, not in gamex's Rust port.
+// - Binary_Engine: `ICellDatabase` is `openx::manager::CellDatabase`. `IQueryFunc` (`GetQuery`) is still unported, and nothing boxes an `Arc<dyn CellDatabase>` into `Tag::Any` yet.
+//
+// Binary_Zip: `zip` 4.2.0 (`ZipArchive`) stands in for both `System.IO.Compression.ZipArchive`
+// (null key) and SharpZipLib `ZipFile` (any other key). The bytes are copied out of the borrowed
+// reader. C# `new ZipArchive(stream, Read)` takes that stream (`leaveOpen` is false) and disposes
+// it with the archive. A string key is `ZipFile.Password`, passed as UTF-8 to `by_index_decrypt`.
+// A `byte[]` key is SharpZipLib's private `Key` (the traditional cipher key, not a password). The
+// crate cannot set that, so an encrypted entry then returns `NotSupportedException: ZipFile.Key`
+// instead of decrypting. `!CanRead` is not reachable: an opened `zip` reader implements `Read`.
+// The commented `catch` and the commented `Write` / `WriteData` stay out. Uncore does not register
+// `.zip`. Python's `Binary_Zip` is a smaller `zipfile` reader: no UseSystem split, no flags, a
+// `bytes` key raises `NotImplementedError`, and the `match` tests the name `key` rather than `self.key`.
+//
+// Binary_Plist reads `PlistReader` (`formats/apple/plist_reader.rs`). Uncore does not register a
+// `.plist` extension, so this type is not wired into `UncoreArchive`. Python has no Uncore twin;
+// Capcom's `Binary_Plist` is a different unimplemented type.
+//
+// Binary_Dds: `DDS_HEADER.read` parses the file. `EngineX.Caps.ReadDds` still returns the raw
+// bytes as `TextureAsDds`. An empty mip assigns C# `-1..`, and `System.Index` rejects a negative
+// start, so that path returns `ArgumentOutOfRangeException`. Python stores `range(-1, 0)`.
 //
 // Shapes:
 // - A C# `Factory` returning `Task.FromResult(new Binary_X(...))` is an associated fn `factory`
@@ -25,7 +41,7 @@
 //   throw, and `ITexture::create` forwards to it.
 // - Nested C# types are at module level under their own name; where two would collide they are
 //   prefixed with the enclosing type (`Binary_PcxX_Header`, `Binary_TgaX_Header`, `Binary_RawTag`).
-// - C# exceptions are `io::Error`s; `Log.Info` is `eprintln!`.
+// - C# exceptions are `io::Error`s. `Log.Info` is `openx_poly::log::Log::info`.
 //
 // Stand-ins:
 // - Binary_Img: the `image` crate stands in for System.Drawing's `Bitmap`. It hands back tightly
@@ -42,15 +58,21 @@
 
 use std::any::Any;
 use std::io::{self, Cursor, Error, ErrorKind, Read, Seek, SeekFrom, Write};
-use std::sync::{Arc, Mutex, Weak};
+use std::ops::Range;
+use std::sync::atomic::Ordering;
+use std::sync::{Arc, LazyLock, Mutex, Weak};
 use bytemuck::{Pod, Zeroable};
-use gamex::binary::{Archive, Stream, Task};
+use gamex::binary::{ArcBinary, Archive, BinaryArchive, Stream, Task};
+use openx_vfx::vfx::VfsRead;
+use crate::formats::apple::plist_reader::{PlistObject, PlistReader};
 use gamex::family::FamilyGame;
 use gamex::meta::{fileName, extension, FileSource, IHaveMetaInfo, MetaContent, MetaInfo, MetaManager, Tag};
 use openx::engine::EngineX::{self, Caps};
-use openx_gfx::gfx::{AnyArc, ITexture, TextureAsBytes};
-use openx_gfx::gfx_texture::{TextureFlags, TextureFormat, TexturePixel};
+use openx_poly::log::Log;
+use openx_gfx::gfx::{AnyArc, ITexture, TextureAsBytes, TextureAsDds};
+use openx_gfx::gfx_texture::{DdsFormat, TextureFlags, TextureFormat, TexturePixel, DDSCAPS, DDSCAPS2, DDSD, DDPF, DDS_HEADER, DDS_PIXELFORMAT, FourCC};
 use openx_poly::prelude::{BinaryReaderExt, IStruct};
+use zip::ZipArchive;
 
 /// C# `Task.FromResult((object)value)`.
 fn fromResult<'a>(value: io::Result<Tag>) -> Task<'a, Tag> { Box::pin(std::future::ready(value)) }
@@ -90,6 +112,83 @@ impl Binary_Bik {
 impl IHaveMetaInfo for Binary_Bik {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
         content("Text", file, Tag::Str("BIK Video".into())),
+    ] }
+}
+
+// #endregion
+
+// #region Binary_Dds
+
+// https://github.com/paroj/nv_dds/blob/master/nv_dds.cpp
+/// The file format for DirectDraw Surface
+/// see https://en.wikipedia.org/wiki/DirectDraw
+pub struct Binary_Dds {
+    capsReadDds: bool,
+    bytes: Vec<u8>,
+    spans: Vec<Range<usize>>,
+    format: DdsFormat,
+    pub width: i32,
+    pub height: i32,
+    pub depth: i32,
+    pub mipMaps: i32,
+    pub texFlags: TextureFlags,
+    me: Weak<Binary_Dds>,
+}
+
+impl Binary_Dds {
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { fromResult(Binary_Dds::new(r, &f, true).map(|s| arc(s, |s| &mut s.me))) }
+
+    pub fn new(r: &mut Stream, f: &FileSource, readMagic: bool) -> io::Result<Self> {
+        let capsReadDds = EngineX::Current().caps.contains(Caps::ReadDds);
+        if capsReadDds {
+            let bytes = r.readBytes(f.fileSize as usize)?;
+            return Ok(Self { capsReadDds, bytes, spans: vec![], format: DdsFormat { type_: String::new(), blockSize: 0, value: (TextureFormat::Unknown, TexturePixel::Unknown) }, width: 0, height: 0, depth: 0, mipMaps: 0, texFlags: TextureFlags::empty(), me: Weak::new() });
+        }
+        let (header, _dxt10, format, bytes) = DDS_HEADER::read(r, readMagic)?;
+        let mipMaps = 1.max(header.dwMipMapCount as i32);
+        let (width, height) = (header.dwWidth as i32, header.dwHeight as i32);
+        let mut spans = Vec::with_capacity(mipMaps as usize);
+        let mut offset = 0i32;
+        for i in 0..mipMaps {
+            let (w, h) = (width >> i, height >> i);
+            let size = ((w + 3) / 4).wrapping_mul((h + 3) / 4).wrapping_mul(format.blockSize);
+            let remains = size.min((bytes.len() as i32).wrapping_sub(offset));
+            // C# `-1..` goes through `System.Index`, which rejects a negative start.
+            if w == 0 || h == 0 || remains <= 0 { return Err(Error::new(ErrorKind::InvalidInput, "ArgumentOutOfRangeException: Non-negative number required.")); }
+            spans.push(offset as usize..(offset + remains) as usize);
+            offset += remains;
+        }
+        Ok(Self { capsReadDds, bytes, spans, format, width, height, depth: 0, mipMaps, texFlags: TextureFlags::empty(), me: Weak::new() })
+    }
+
+    // #region ITexture
+
+    pub fn create<T>(&self, platform: &str, func: impl FnOnce(Box<dyn Any>) -> T) -> io::Result<T> {
+        Ok(if self.capsReadDds { func(Box::new(TextureAsDds { bytes: self.bytes.clone() })) }
+        else { func(Box::new(TextureAsBytes { bytes: self.bytes.clone(), format: Arc::new(self.format.value) as AnyArc, spans: self.spans.clone() })) })
+    }
+
+    // #endregion
+}
+
+impl ITexture for Binary_Dds {
+    fn width(&self) -> i32 { self.width }
+    fn height(&self) -> i32 { self.height }
+    fn depth(&self) -> i32 { self.depth }
+    fn mipMaps(&self) -> i32 { self.mipMaps }
+    fn texFlags(&self) -> TextureFlags { self.texFlags }
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> io::Result<()> { Self::create(self, platform, |x| func(&*x)) }
+}
+
+impl IHaveMetaInfo for Binary_Dds {
+    fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
+        content("Texture", file, thisTexture(&self.me)),
+        MetaInfo::new(Some("Texture".into()), Tag::None, vec![
+            node(format!("Format: {}", self.format.type_)),
+            node(format!("Width: {}", self.width)),
+            node(format!("Height: {}", self.height)),
+            node(format!("Mipmaps: {}", self.mipMaps)),
+        ], false),
     ] }
 }
 
@@ -345,7 +444,7 @@ impl Binary_Iif {
         self.allocData(); // precaution, in case XDIR wasn't found
         self.curEventList = None;
         let timing = self.readEventList(r)?;
-        if timing == 0 { eprintln!("Unable to convert data\n"); return Ok(false); }
+        if timing == 0 { Log::info("Unable to convert data\n"); return Ok(false); }
         self.timing.as_mut().unwrap()[self.curTrack as usize] = timing;
         self.events.as_mut().unwrap()[self.curTrack as usize] = self.curEventList.clone();
         self.curTrack += 1;
@@ -407,7 +506,7 @@ impl Binary_Iif {
             let status = r.readByte()?;
             match EV::fromRaw(status & 0xF0) {
                 // Note On/Off
-                Some(EV::NOTE_OFF) => { eprintln!("ERROR: Note off not valid in XMidiFile\n"); return Ok(0); }
+                Some(EV::NOTE_OFF) => { Log::info("ERROR: Note off not valid in XMidiFile\n"); return Ok(0); }
                 Some(EV::NOTE_ON) => self.convertEvent(r, time, status, 3)?,
                 // 2 byte data, Aftertouch, Controller and Pitch Wheel
                 Some(EV::POLY_PRESS) | Some(EV::CONTROL) | Some(EV::PITCH) => self.convertEvent(r, time, status, 2)?,
@@ -511,7 +610,7 @@ impl Binary_Iif {
                     if evnt_.length != 0 { w.write_all(evnt_.stream.as_deref().unwrap_or_default())?; }
                 }
                 // Never occur
-                _ => eprintln!("Not supposed to see this"),
+                _ => Log::info("Not supposed to see this"),
             }
             evnt = evnt_.next.clone();
         }
@@ -943,6 +1042,47 @@ impl IHaveMetaInfo for Binary_Pcx {
             node(format!("Height: {}", self.height)),
         ], false),
     ] }
+}
+
+// #endregion
+
+// #region Binary_Plist
+
+/// The file format for XXX
+pub struct Binary_Plist;
+
+impl Binary_Plist {
+    /// C# `ArcBinary<Binary_Plist>.Current`.
+    pub fn current() -> Arc<dyn ArcBinary> {
+        static CURRENT: LazyLock<Arc<dyn ArcBinary>> = LazyLock::new(|| Arc::new(Binary_Plist));
+        CURRENT.clone()
+    }
+}
+
+impl ArcBinary for Binary_Plist {
+    fn read<'a>(&'a self, source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, tag: &'a Tag) -> Task<'a, ()> {
+        let _ = tag;
+        Box::pin(async move {
+            let r = r.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "NullReferenceException: r"))?;
+            let dict = PlistReader::new().readObject(r)?;
+            let mut files = Vec::new();
+            for (key, value) in dict {
+                let path = match key { PlistObject::Str(s) => s, _ => return Err(Error::new(ErrorKind::InvalidData, "InvalidCastException: Key")) };
+                let bytes = match value { PlistObject::Data(b) => b, _ => return Err(Error::new(ErrorKind::InvalidData, "InvalidCastException: Value")) };
+                files.push(Arc::new(FileSource { path, fileSize: bytes.len() as i64, tag: Tag::Bytes(bytes), ..Default::default() }));
+            }
+            source.setFiles(Some(files));
+            Ok(())
+        })
+    }
+
+    fn readData<'a>(&'a self, source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, file: &'a Arc<FileSource>, option: &'a Tag) -> Task<'a, Option<Stream>> {
+        let _ = (source, r, option);
+        Box::pin(async move {
+            let bytes = match &file.tag { Tag::Bytes(b) => b.clone(), _ => return Err(Error::new(ErrorKind::InvalidData, "InvalidCastException: Tag")) };
+            Ok(Some(Box::new(Cursor::new(bytes)) as Stream))
+        })
+    }
 }
 
 // #endregion
@@ -1481,7 +1621,10 @@ pub struct Binary_Xga {
 }
 
 impl Binary_Xga {
-    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { fromResult(Binary_Xga::new(r, &s.base().tag).map(|s| arc(s, |s| &mut s.me))) }
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> {
+        let tag = s.base().tag.lock().unwrap_or_else(|p| p.into_inner()).clone();
+        fromResult(Binary_Xga::new(r, &tag).map(|s| arc(s, |s| &mut s.me)))
+    }
 
     pub fn new(r: &mut Stream, tag: &Tag) -> io::Result<Self> {
         Ok(Self { type_: 1, body: r.readToEnd()?, width: 64, height: 64, depth: 0, mipMaps: 1, texFlags: TextureFlags::empty(), me: Weak::new() })
@@ -1520,6 +1663,121 @@ impl IHaveMetaInfo for Binary_Xga {
             node(format!("Height: {}", self.height)),
         ], false),
     ] }
+}
+
+// #endregion
+
+// #region Binary_Zip
+
+/// The archive `Read` keeps on `source.Tag` so `ReadData` can open entries after the reader is gone.
+struct ZipHeld {
+    arc: Mutex<ZipArchive<Cursor<Vec<u8>>>>,
+    password: Option<String>,
+    /// SharpZipLib's private `Key` was set. The `zip` crate has no equivalent.
+    rawKey: bool,
+}
+
+fn zipError(err: zip::result::ZipError) -> Error { Error::new(ErrorKind::InvalidData, err.to_string()) }
+
+/// C# `!ZipArchiveEntry.FullName.EndsWith('/')`.
+fn systemFile(name: &str) -> bool { !name.ends_with('/') }
+
+/// C# `ZipEntry.IsFile`. The name test is `/` or `\`. DOS directory (0x10) and volume (0x08)
+/// attributes are not on the `zip` crate's `ZipFile`, so those entries stay.
+fn sharpFile(name: &str) -> bool { !name.ends_with('/') && !name.ends_with('\\') }
+
+/// Binary_Zip
+pub struct Binary_Zip {
+    key: Tag,
+}
+
+impl Binary_Zip {
+    /// C# `Instance`.
+    pub fn instance() -> Arc<dyn ArcBinary> {
+        static INSTANCE: LazyLock<Arc<dyn ArcBinary>> = LazyLock::new(|| Arc::new(Binary_Zip { key: Tag::None }));
+        INSTANCE.clone()
+    }
+
+    /// C# `GetArcBinary`. A null key shares `Instance`. `byte[]` keys compare by value; C# `ConcurrentDictionary<object>` uses reference equality for arrays.
+    pub fn getArcBinary(game: &FamilyGame) -> Arc<dyn ArcBinary> {
+        if game.key.isNone() { return Self::instance(); }
+        static ARCBINARYS: LazyLock<Mutex<Vec<(Tag, Arc<dyn ArcBinary>)>>> = LazyLock::new(|| Mutex::new(Vec::new()));
+        let mut arcs = ARCBINARYS.lock().unwrap_or_else(|p| p.into_inner());
+        if let Some((_, found)) = arcs.iter().find(|(k, _)| k == &game.key) { return found.clone(); }
+        let arc: Arc<dyn ArcBinary> = Arc::new(Binary_Zip { key: game.key.clone() });
+        arcs.push((game.key.clone(), arc.clone()));
+        arc
+    }
+
+    fn owned(r: &mut dyn VfsRead) -> io::Result<Vec<u8>> {
+        r.seek(SeekFrom::Start(0))?;
+        let mut bytes = Vec::new();
+        r.read_to_end(&mut bytes)?;
+        Ok(bytes)
+    }
+}
+
+impl ArcBinary for Binary_Zip {
+    fn read<'a>(&'a self, source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, tag: &'a Tag) -> Task<'a, ()> {
+        let _ = tag;
+        Box::pin(async move {
+            source.useReader.store(false, Ordering::Relaxed);
+            let r = r.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "NullReferenceException: r"))?;
+            let bytes = Self::owned(r)?;
+            let mut arc = ZipArchive::new(Cursor::new(bytes)).map_err(zipError)?;
+            let useSystem = self.key.isNone();
+            // C# `if (Key == null) { }` sits in the SharpZipLib branch and never runs: `UseSystem` already returned.
+            let (password, rawKey) = if useSystem { (None, false) }
+                else { match &self.key {
+                    Tag::Str(s) => (Some(s.clone()), false),
+                    Tag::Bytes(_) => (None, true),
+                    _ => (None, false),
+                } };
+            let mut files = Vec::new();
+            for index in 0..arc.len() {
+                // `by_index` refuses an encrypted entry until a password is supplied. C# lists it from the central directory.
+                let entry = arc.by_index_raw(index).map_err(zipError)?;
+                let raw = entry.name();
+                let keep = if useSystem { systemFile(raw) } else { sharpFile(raw) };
+                if !keep { continue; }
+                let flags = if useSystem { 0 } else if entry.encrypted() { 1 } else { 0 };
+                let path = raw.replace('\\', "/");
+                let packedSize = entry.compressed_size() as i64;
+                let fileSize = entry.size() as i64;
+                // C# `Tag` is the `ZipArchiveEntry` or `ZipEntry`. The index is what `by_index` opens.
+                files.push(Arc::new(FileSource { path, packedSize, fileSize, flags, tag: Tag::Int(index as i64), ..Default::default() }));
+            }
+            *source.base.tag.lock().unwrap_or_else(|p| p.into_inner()) = Tag::Any(Arc::new(ZipHeld { arc: Mutex::new(arc), password, rawKey }));
+            source.setFiles(Some(files));
+            Ok(())
+        })
+    }
+
+    fn readData<'a>(&'a self, source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, file: &'a Arc<FileSource>, option: &'a Tag) -> Task<'a, Option<Stream>> {
+        let _ = (r, option);
+        Box::pin(async move {
+            let held = {
+                let tag = source.base.tag.lock().unwrap_or_else(|p| p.into_inner());
+                match &*tag {
+                    Tag::Any(z) => z.clone().downcast::<ZipHeld>().map_err(|_| Error::new(ErrorKind::InvalidData, "InvalidCastException: Tag"))?,
+                    _ => return Err(Error::new(ErrorKind::InvalidData, "InvalidCastException: Tag")),
+                }
+            };
+            let index = match file.tag.asInt() { Some(i) if i >= 0 => i as usize, _ => return Err(Error::new(ErrorKind::InvalidData, "InvalidCastException: Tag")) };
+            // SharpZipLib decrypts with the reflected `Key`. A password is not that key.
+            if held.rawKey && file.flags != 0 { return Err(Error::new(ErrorKind::Unsupported, "NotSupportedException: ZipFile.Key")); }
+            let mut arc = held.arc.lock().unwrap_or_else(|p| p.into_inner());
+            let mut input = match &held.password {
+                Some(password) if file.flags != 0 => arc.by_index_decrypt(index, password.as_bytes()).map_err(zipError)?,
+                _ => arc.by_index(index).map_err(zipError)?,
+            };
+            // C# `if (!input.CanRead)` logs and returns `Stream.Null`. A `zip` reader implements `Read`, so that branch is not reachable.
+            // The `catch` around this copy is commented out in C#, so a failure here propagates.
+            let mut body = Vec::new();
+            input.read_to_end(&mut body)?;
+            Ok(Some(Box::new(Cursor::new(body)) as Stream))
+        })
+    }
 }
 
 // #endregion
@@ -1579,5 +1837,317 @@ mod tests {
         let mut r = stream(vec![0u8; 4]);
         let mut f = FileSource::default(); f.fileSize = 4;
         assert_eq!(Binary_Img::new(&mut r, &f).err().unwrap().kind(), ErrorKind::Unsupported);
+    }
+
+    fn dxt1Header(width: u32, height: u32, mipMaps: u32) -> DDS_HEADER {
+        DDS_HEADER {
+            dwSize: DDS_HEADER::SIZE_OF as u32,
+            dwFlags: DDSD::HEADER_FLAGS_TEXTURE,
+            dwHeight: height,
+            dwWidth: width,
+            dwPitchOrLinearSize: 0,
+            dwDepth: 0,
+            dwMipMapCount: mipMaps,
+            dwReserved1: [0; 11],
+            ddspf: DDS_PIXELFORMAT { dwSize: DDS_PIXELFORMAT::SIZE_OF as u32, dwFlags: DDPF::FOURCC, dwFourCC: FourCC::DXT1, dwRGBBitCount: 0, dwRBitMask: 0, dwGBitMask: 0, dwBBitMask: 0, dwABitMask: 0 },
+            dwCaps: DDSCAPS::TEXTURE,
+            dwCaps2: DDSCAPS2::empty(),
+            dwCaps3: 0, dwCaps4: 0, dwReserved2: 0,
+        }
+    }
+
+    #[test]
+    fn ddsSplitsThePayloadIntoMipSpans() {
+        let mut bytes = Vec::new();
+        dxt1Header(100, 100, 1).write(&mut bytes, None, &[1, 2, 3], true).unwrap();
+        let mut r = stream(bytes);
+        let dds = Binary_Dds::new(&mut r, &FileSource::default(), true).unwrap();
+        assert_eq!((dds.width, dds.height, dds.mipMaps), (100, 100, 1));
+        assert_eq!(dds.format.type_, "DXT1");
+        assert_eq!(dds.format.blockSize, 8);
+        dds.create("", |s| {
+            let t = s.downcast_ref::<TextureAsBytes>().unwrap();
+            assert_eq!(t.bytes, vec![1, 2, 3]);
+            assert_eq!(t.spans, vec![0..3]);
+        }).unwrap();
+    }
+
+    #[test]
+    fn ddsRejectsAMipThatCollapsesToZero() {
+        let mut bytes = Vec::new();
+        dxt1Header(1, 1, 2).write(&mut bytes, None, &[0u8; 8], true).unwrap();
+        let mut r = stream(bytes);
+        let err = match Binary_Dds::new(&mut r, &FileSource::default(), true) { Err(e) => e, Ok(_) => panic!("a collapsed mip is not a texture") };
+        assert!(err.to_string().contains("ArgumentOutOfRangeException"), "{err}");
+    }
+
+    fn plist(objects: &[Vec<u8>]) -> Vec<u8> {
+        let mut out = b"bplist00".to_vec();
+        let mut offsets = Vec::new();
+        for object in objects {
+            offsets.push(out.len());
+            out.extend(object);
+        }
+        let table = out.len() as u64;
+        for offset in offsets { out.push(offset as u8); }
+        out.extend_from_slice(&[0u8; 6]);
+        out.push(1);
+        out.push(1);
+        out.extend_from_slice(&(objects.len() as u64).to_be_bytes());
+        out.extend_from_slice(&0u64.to_be_bytes());
+        out.extend_from_slice(&table.to_be_bytes());
+        out
+    }
+
+    fn asciiObj(text: &str) -> Vec<u8> { let mut v = vec![0x50 | text.len() as u8]; v.extend(text.as_bytes()); v }
+    fn dataObj(bytes: &[u8]) -> Vec<u8> { let mut v = vec![0x40 | bytes.len() as u8]; v.extend(bytes); v }
+    fn dictObj(keys: &[u8], vals: &[u8]) -> Vec<u8> { let mut v = vec![0xD0 | keys.len() as u8]; v.extend(keys); v.extend(vals); v }
+
+    fn archive() -> BinaryArchive {
+        use gamex::binary::BinaryState;
+        use gamex::family::FamilyGame;
+        use openx_vfx::vfx::DirectoryFileSystem;
+        let state = BinaryState::new(Arc::new(DirectoryFileSystem::new("", None)), FamilyGame::empty(), None, None, Tag::None);
+        BinaryArchive::new(None, state, Some(Binary_Plist::current()))
+    }
+
+    #[test]
+    fn plistListsEachDataValueAndReadsItBack() {
+        use gamex::binary::getResult;
+        use openx_vfx::vfx::VfsRead;
+        let bytes = plist(&[asciiObj("a"), dataObj(&[1, 2, 3]), asciiObj("b"), dataObj(&[9]), dictObj(&[0, 2], &[1, 3])]);
+        let archive = archive();
+        let mut cursor = Cursor::new(bytes);
+        getResult(Binary_Plist.read(&archive, Some(&mut cursor as &mut dyn VfsRead), &Tag::None)).unwrap();
+        let files = archive.files().unwrap();
+        assert_eq!(files.len(), 2);
+        assert_eq!((files[0].path.as_str(), files[0].fileSize), ("a", 3));
+        assert_eq!(files[0].tag.asBytes(), Some(&[1, 2, 3][..]));
+        assert_eq!((files[1].path.as_str(), files[1].fileSize), ("b", 1));
+        let mut data = getResult(Binary_Plist.readData(&archive, None, &files[0], &Tag::None)).unwrap().unwrap();
+        let mut got = Vec::new();
+        data.read_to_end(&mut got).unwrap();
+        assert_eq!(got, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn plistRejectsAKeyThatIsNotAStringAndAValueThatIsNotBytes() {
+        use gamex::binary::getResult;
+        use openx_vfx::vfx::VfsRead;
+        let archive = archive();
+        let key = plist(&[vec![0x10, 1], dataObj(&[1]), dictObj(&[0], &[1])]);
+        let mut cursor = Cursor::new(key);
+        let err = getResult(Binary_Plist.read(&archive, Some(&mut cursor as &mut dyn VfsRead), &Tag::None)).err().unwrap();
+        assert!(err.to_string().contains("InvalidCastException: Key"), "{err}");
+        let value = plist(&[asciiObj("k"), vec![0x10, 1], dictObj(&[0], &[1])]);
+        let mut cursor = Cursor::new(value);
+        let err = getResult(Binary_Plist.read(&archive, Some(&mut cursor as &mut dyn VfsRead), &Tag::None)).err().unwrap();
+        assert!(err.to_string().contains("InvalidCastException: Value"), "{err}");
+        let mut file = FileSource::default();
+        file.tag = Tag::Int(1);
+        let err = getResult(Binary_Plist.readData(&archive, None, &Arc::new(file), &Tag::None)).err().unwrap();
+        assert!(err.to_string().contains("InvalidCastException: Tag"), "{err}");
+    }
+
+    fn crc32(data: &[u8]) -> u32 {
+        let mut crc = 0xFFFFFFFFu32;
+        for &b in data {
+            crc ^= u32::from(b);
+            for _ in 0..8 {
+                let mask = (crc & 1).wrapping_neg();
+                crc = (crc >> 1) ^ (0xEDB88320 & mask);
+            }
+        }
+        !crc
+    }
+
+    /// A stored zip. `flags` is the general-purpose bit field (bit 0 = encrypted).
+    fn zipStored(entries: &[(&str, &[u8], u16)]) -> Vec<u8> {
+        let mut local = Vec::new();
+        let mut central = Vec::new();
+        for (name, data, flags) in entries {
+            let offset = local.len() as u32;
+            let crc = crc32(data);
+            let name = name.as_bytes();
+            let size = data.len() as u32;
+            local.extend_from_slice(&0x04034b50u32.to_le_bytes());
+            local.extend_from_slice(&20u16.to_le_bytes());
+            local.extend_from_slice(&flags.to_le_bytes());
+            local.extend_from_slice(&0u16.to_le_bytes());
+            local.extend_from_slice(&0u16.to_le_bytes());
+            local.extend_from_slice(&0u16.to_le_bytes());
+            local.extend_from_slice(&crc.to_le_bytes());
+            local.extend_from_slice(&size.to_le_bytes());
+            local.extend_from_slice(&size.to_le_bytes());
+            local.extend_from_slice(&(name.len() as u16).to_le_bytes());
+            local.extend_from_slice(&0u16.to_le_bytes());
+            local.extend_from_slice(name);
+            local.extend_from_slice(data);
+            central.extend_from_slice(&0x02014b50u32.to_le_bytes());
+            central.extend_from_slice(&20u16.to_le_bytes());
+            central.extend_from_slice(&20u16.to_le_bytes());
+            central.extend_from_slice(&flags.to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&crc.to_le_bytes());
+            central.extend_from_slice(&size.to_le_bytes());
+            central.extend_from_slice(&size.to_le_bytes());
+            central.extend_from_slice(&(name.len() as u16).to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&0u16.to_le_bytes());
+            central.extend_from_slice(&0u32.to_le_bytes());
+            central.extend_from_slice(&offset.to_le_bytes());
+            central.extend_from_slice(name);
+        }
+        let mut out = local;
+        let cdOff = out.len() as u32;
+        let cdSize = central.len() as u32;
+        let count = entries.len() as u16;
+        out.extend(central);
+        out.extend_from_slice(&0x06054b50u32.to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out.extend_from_slice(&count.to_le_bytes());
+        out.extend_from_slice(&count.to_le_bytes());
+        out.extend_from_slice(&cdSize.to_le_bytes());
+        out.extend_from_slice(&cdOff.to_le_bytes());
+        out.extend_from_slice(&0u16.to_le_bytes());
+        out
+    }
+
+    fn zipArchive(binary: Arc<dyn ArcBinary>) -> BinaryArchive {
+        use gamex::binary::BinaryState;
+        use gamex::family::FamilyGame;
+        use openx_vfx::vfx::DirectoryFileSystem;
+        let state = BinaryState::new(Arc::new(DirectoryFileSystem::new("", None)), FamilyGame::empty(), None, None, Tag::None);
+        BinaryArchive::new(None, state, Some(binary))
+    }
+
+    fn readZip(binary: &Binary_Zip, bytes: Vec<u8>) -> BinaryArchive {
+        use gamex::binary::getResult;
+        use openx_vfx::vfx::VfsRead;
+        let archive = zipArchive(Arc::new(Binary_Zip { key: binary.key.clone() }));
+        let mut cursor = Cursor::new(bytes);
+        getResult(binary.read(&archive, Some(&mut cursor as &mut dyn VfsRead), &Tag::None)).unwrap();
+        archive
+    }
+
+    fn sampleZip() -> Vec<u8> {
+        zipStored(&[
+            ("dir/", b"", 0),
+            ("a\\b.txt", b"hi", 0),
+            ("fold\\", b"", 0),
+            ("c.txt", b"z", 0),
+            ("secret.txt", b"nope", 1),
+        ])
+    }
+
+    #[test]
+    fn zipNullKeySkipsSlashDirsAndReadsTheFile() {
+        use gamex::binary::getResult;
+        use std::sync::atomic::Ordering;
+        let binary = Binary_Zip { key: Tag::None };
+        let archive = readZip(&binary, sampleZip());
+        assert!(!archive.useReader.load(Ordering::Relaxed));
+        let files = archive.files().unwrap();
+        let paths: Vec<&str> = files.iter().map(|s| s.path.as_str()).collect();
+        assert_eq!(paths, vec!["a/b.txt", "fold/", "c.txt", "secret.txt"]);
+        assert!(files.iter().all(|s| s.flags == 0));
+        assert_eq!((files[0].packedSize, files[0].fileSize), (2, 2));
+        let mut data = getResult(binary.readData(&archive, None, &files[0], &Tag::None)).unwrap().unwrap();
+        let mut got = Vec::new();
+        data.read_to_end(&mut got).unwrap();
+        assert_eq!(got, b"hi");
+        let err = getResult(binary.readData(&archive, None, &files[3], &Tag::None)).err().unwrap();
+        assert!(!err.to_string().contains("ZipFile.Key"), "{err}");
+    }
+
+    #[test]
+    fn zipStringKeySetsTheCryptedFlagAndStillReadsAPlainFile() {
+        use gamex::binary::getResult;
+        let binary = Binary_Zip { key: Tag::Str("secret".into()) };
+        let archive = readZip(&binary, sampleZip());
+        let files = archive.files().unwrap();
+        let paths: Vec<&str> = files.iter().map(|s| s.path.as_str()).collect();
+        assert_eq!(paths, vec!["a/b.txt", "c.txt", "secret.txt"]);
+        assert_eq!(files.iter().map(|s| s.flags).collect::<Vec<_>>(), vec![0, 0, 1]);
+        let mut data = getResult(binary.readData(&archive, None, &files[1], &Tag::None)).unwrap().unwrap();
+        let mut got = Vec::new();
+        data.read_to_end(&mut got).unwrap();
+        assert_eq!(got, b"z");
+        let err = getResult(binary.readData(&archive, None, &files[2], &Tag::None)).err().unwrap();
+        assert!(!err.to_string().contains("ZipFile.Key"), "{err}");
+    }
+
+    #[test]
+    fn zipByteKeyDoesNotDecryptAndDoesNotBecomeAPassword() {
+        use gamex::binary::getResult;
+        let binary = Binary_Zip { key: Tag::Bytes(vec![9, 9, 9]) };
+        let archive = readZip(&binary, sampleZip());
+        let files = archive.files().unwrap();
+        let plain = files.iter().find(|s| s.path == "c.txt").unwrap();
+        let mut data = getResult(binary.readData(&archive, None, plain, &Tag::None)).unwrap().unwrap();
+        let mut got = Vec::new();
+        data.read_to_end(&mut got).unwrap();
+        assert_eq!(got, b"z");
+        let secret = files.iter().find(|s| s.path == "secret.txt").unwrap();
+        let err = getResult(binary.readData(&archive, None, secret, &Tag::None)).err().unwrap();
+        assert!(err.to_string().contains("NotSupportedException: ZipFile.Key"), "{err}");
+    }
+
+    #[test]
+    fn zipReadsADeflatedEntry() {
+        use gamex::binary::getResult;
+        use zip::write::SimpleFileOptions;
+        use zip::ZipWriter;
+        let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+        writer.start_file("a.txt", SimpleFileOptions::default()).unwrap();
+        writer.write_all(b"deflated").unwrap();
+        let binary = Binary_Zip { key: Tag::None };
+        let archive = readZip(&binary, writer.finish().unwrap().into_inner());
+        let files = archive.files().unwrap();
+        assert_eq!((files.len(), files[0].path.as_str(), files[0].fileSize), (1, "a.txt", 8));
+        let mut data = getResult(binary.readData(&archive, None, &files[0], &Tag::None)).unwrap().unwrap();
+        let mut got = Vec::new();
+        data.read_to_end(&mut got).unwrap();
+        assert_eq!(got, b"deflated");
+    }
+
+    #[test]
+    fn zipRejectsAMissingReaderAndABadArchiveAndAForeignTag() {
+        use gamex::binary::getResult;
+        use std::sync::atomic::Ordering;
+        let binary = Binary_Zip { key: Tag::None };
+        let archive = zipArchive(Arc::new(Binary_Zip { key: Tag::None }));
+        let err = getResult(binary.read(&archive, None, &Tag::None)).err().unwrap();
+        assert!(err.to_string().contains("NullReferenceException"), "{err}");
+        assert!(!archive.useReader.load(Ordering::Relaxed));
+        let archive = zipArchive(Binary_Zip::instance());
+        let mut cursor = Cursor::new(b"not a zip".to_vec());
+        let err = getResult(binary.read(&archive, Some(&mut cursor as &mut dyn openx_vfx::vfx::VfsRead), &Tag::None)).err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::InvalidData);
+        let mut file = FileSource::default();
+        file.tag = Tag::Str("nope".into());
+        let err = getResult(binary.readData(&archive, None, &Arc::new(file), &Tag::None)).err().unwrap();
+        assert!(err.to_string().contains("InvalidCastException: Tag"), "{err}");
+    }
+
+    #[test]
+    fn zipGetArcBinarySharesTheNullInstanceAndAStringKey() {
+        use gamex::family::FamilyGame;
+        let empty = FamilyGame::empty();
+        assert!(Arc::ptr_eq(&Binary_Zip::getArcBinary(&empty), &Binary_Zip::instance()));
+        let one = FamilyGame { key: Tag::Str("pw".into()), ..Default::default() };
+        let two = FamilyGame { key: Tag::Str("pw".into()), ..Default::default() };
+        let other = FamilyGame { key: Tag::Str("other".into()), ..Default::default() };
+        assert!(Arc::ptr_eq(&Binary_Zip::getArcBinary(&one), &Binary_Zip::getArcBinary(&two)));
+        assert!(!Arc::ptr_eq(&Binary_Zip::getArcBinary(&one), &Binary_Zip::getArcBinary(&other)));
+        // C# `byte[]` keys use reference equality. `Tag::Bytes` compares by value, so equal bytes share one binary.
+        let bytes = FamilyGame { key: Tag::Bytes(vec![1, 2]), ..Default::default() };
+        let same = FamilyGame { key: Tag::Bytes(vec![1, 2]), ..Default::default() };
+        assert!(Arc::ptr_eq(&Binary_Zip::getArcBinary(&bytes), &Binary_Zip::getArcBinary(&same)));
     }
 }

@@ -28,7 +28,7 @@ public class TextureRenderer : Renderer {
     readonly object Obj;
     readonly Range Level;
     readonly object Texture;
-    int FrameDelay;
+    float FrameDelay;
 
     public TextureRenderer(IOpenGfx[] gfx, ISource source, object obj, Range level) {
         GfxModel = (O3deGfxModel)gfx[GfX.XModel];
@@ -46,7 +46,7 @@ public class TextureRenderer : Renderer {
 
     public override void Update(float deltaTime) {
         if (Obj is not ITextureFrames obj || GfxModel == null || !obj.HasFrames) return;
-        FrameDelay += (int)deltaTime;
+        FrameDelay += deltaTime;
         if (FrameDelay <= obj.Fps || !obj.NextFrame()) return;
         FrameDelay = 0; // reset delay between frames
         GfxModel.TextureManager.Reload(Source, obj, Level);

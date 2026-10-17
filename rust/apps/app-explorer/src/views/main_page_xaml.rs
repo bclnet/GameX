@@ -226,5 +226,6 @@ impl eframe::App for MainPage {
         }
         if let Some(z) = &mut self.optionsPage { if !z.ui(ui.ctx()) { self.optionsPage = None; } }
         if let Some(z) = &mut self.aboutPage { if !z.ui(ui.ctx()) { self.aboutPage = None; } }
+        gamex_cig_explorer::show(ui.ctx());
     }
 }

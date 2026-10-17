@@ -52,7 +52,7 @@ use glam::Vec3;
 use openx_poly::poly::Int3;
 
 /// C# `CellManager.ICellXref` — one placed object in a cell.
-pub trait CellXref {
+pub trait CellXref: Send {
     fn name(&self) -> &str;
     fn scale(&self) -> Option<f32>;
     fn position(&self) -> Vec3;
@@ -65,7 +65,7 @@ pub trait CellXrefModel {
 }
 
 /// C# `CellManager.ICell`.
-pub trait Cell {
+pub trait Cell: Send {
     fn id(&self) -> u32;
     fn isInterior(&self) -> bool;
     fn gridId(&self) -> Int3;
@@ -75,7 +75,7 @@ pub trait Cell {
 }
 
 /// C# `CellManager.ILand` — terrain for one exterior cell.
-pub trait Land {
+pub trait Land: Send {
     fn gridId(&self) -> Int3;
     fn vtex(&self) -> &[u32];
     fn heightOffset(&self) -> f32;
@@ -83,7 +83,7 @@ pub trait Land {
 }
 
 /// C# `CellManager.ILtex`.
-pub trait Ltex {
+pub trait Ltex: Send {
     fn intv(&self) -> i64;
     fn path(&self) -> &str;
 }
@@ -95,7 +95,7 @@ pub trait Ligh {
 }
 
 /// C# `CellManager.IQuery` — the world database.
-pub trait Query {
+pub trait Query: Send {
     fn meterInUnits(&self) -> f32;
     fn cellLengthInMeters(&self) -> f32;
     /// C# `Radius` — `[0]` is the load radius, `[1]` the visible radius.
@@ -355,6 +355,25 @@ fn ring(center: Int3, r: i32, world: i32) -> Vec<Int3> {
         out.push(Int3::new(center.x + r, y, world));
     }
     out
+}
+
+/// C# `interface ICellDatabase`.
+///
+/// `query` hands back a shared handle. `SetWorld` mutates, and `CellManager`
+/// only lends `&Query`, so the handle is a `Mutex`. The concrete database
+/// (Uncore's `Binary_Engine`, still unported) boxes itself as
+/// `Arc<dyn CellDatabase>` and that `Arc` is what `Tag::Any` holds, so the
+/// engine can downcast to the trait. A bare concrete value inside the `Any`
+/// does not.
+pub type SharedQuery = std::sync::Arc<std::sync::Mutex<Box<dyn Query>>>;
+
+pub trait CellDatabase: Send + Sync {
+    fn archive(&self) -> openx_poly::core::SourceRef;
+    fn query(&self) -> SharedQuery;
+    fn cellId(&self) -> Int3;
+    fn cellInterior(&self) -> bool;
+    fn playerPosition(&self) -> Vec3;
+    fn playerRotation(&self) -> glam::Quat;
 }
 
 /// C# `interface IDatabase`.

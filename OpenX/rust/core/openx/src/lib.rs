@@ -22,7 +22,7 @@ pub mod vendor;
 
 pub mod prelude {
     pub use crate::algorithms::{crc32_digest, murmur_hash2, murmur_hash3};
-    pub use crate::manager::{Cell, CellBuilder, CellManager, CellXref, Land, Query};
+    pub use crate::manager::{Cell, CellBuilder, CellDatabase, CellManager, CellXref, Land, Query};
     pub use crate::engine::{Engine, EngineX};
     pub use crate::client::{ClientHost, GlobalTime, Scene, SceneState};
     pub use crate::profiler::{ProfileData, Profiler, ProfilerError};

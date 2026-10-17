@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 openx-poly = { path = "../../core/poly" }
+ureq = "2.12"
 
 [features]
 full = []

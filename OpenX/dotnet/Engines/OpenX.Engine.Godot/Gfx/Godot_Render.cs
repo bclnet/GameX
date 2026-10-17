@@ -28,7 +28,7 @@ public class TextureRenderer : Renderer {
     readonly GodotGfxModel GfxModel;
     readonly ISource Source;
     readonly object Obj;
-    int FrameDelay;
+    float FrameDelay;
 
     public TextureRenderer(Node parent, IOpenGfx[] gfx, ISource source, object obj, System.Range level) {
         Parent = parent;
@@ -50,7 +50,7 @@ public class TextureRenderer : Renderer {
 
     public override void Update(float deltaTime) {
         if (Obj is not ITextureFrames obj || GfxModel == null || !obj.HasFrames) return;
-        FrameDelay += (int)deltaTime;
+        FrameDelay += deltaTime;
         if (FrameDelay <= obj.Fps || !obj.NextFrame()) return;
         FrameDelay = 0; // reset delay between frames
         //GfxModel.TextureManager.ReloadTexture(Source, obj, Level);

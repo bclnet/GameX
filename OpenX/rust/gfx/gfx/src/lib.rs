@@ -22,7 +22,7 @@ pub mod prelude {
         IMaterial, MaterialProp, MaterialPropKind, MaterialStdProp, MaterialStd2Prop, MaterialShaderProp, MaterialShaderVProp, MaterialBuilder, MaterialManager,
         IOpenGfx, IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel, IOpenGfxLight, GfxTerrainLayer, IOpenGfxTerrain,
     };
-    pub use crate::gfx_texture::{TextureFlags, TextureFormat, DDS_HEADER, DDS_PIXELFORMAT}; // DdsError
+    pub use crate::gfx_texture::{TextureFlags, TextureFormat, TexturePixel, DdsFormat, DDS_HEADER, DDS_PIXELFORMAT};
     pub use crate::gfx_render::{blitByPalette, Color32, Colorf, Pass, Renderer};
     // pub use crate::gfx_bitmap::{Color, DirectBitmap};
     // pub use crate::texture_helper::{

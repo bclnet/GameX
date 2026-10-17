@@ -77,7 +77,7 @@ class TextureRenderer(EginRenderer):
         self.vao: int = self._setupVao()
         self.background: bool = background
         self.boundingBox: AABB = AABB(-1., -1., -1., 1., 1., 1.)
-        self.frameDelay: int = 0
+        self.frameDelay: float = 0
 
     def getViewport(self, size: tuple) -> tuple:
         return None if not (o := self.obj) else \
@@ -126,7 +126,7 @@ class TextureRenderer(EginRenderer):
         obj = self.obj if isinstance(self.obj, ITextureFrames) else None
         if not obj or not obj.hasFrames(): return
         self.frameDelay += deltaTime
-        if self.frameDelay <= obj.fps or not obj.decodeFrame(): return
+        if self.frameDelay <= obj.fps or not obj.nextFrame(): return
         self.frameDelay = 0 # reset delay between frames
         self.gfxModel.textureManager.reloadTexture(self.source, obj)
 

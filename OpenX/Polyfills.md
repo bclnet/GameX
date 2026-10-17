@@ -14,9 +14,10 @@ To find a type's counterpart in another language, look up its row. When somethin
 | `System.IO/` reader, writer and stream polyfills | `reader.py`, `writer.py`; streams in `openx.core.stream` | `openx_poly::reader` / `writer`: extension traits on `std::io::Read`/`Write`/`Seek` |
 | `Poly2.1/` (`Half`, `HalfFloat`, `BitConverterX`: netstandard2.1 gaps) | `numpy.float16` (`reader.readHalf` not ported yet) | `half::f16` used directly, no alias or file (stable Rust has no `f16` yet); `BitConverterX` is std `from_le_bytes` plus `f16::from_bits` |
 | `System/` (`MathX`, `ConvertX`, `UnsafeX`, `ThreadSafeRandom`, ...) | `system.py`, `unsafe.py` | `openx_poly::system` |
-| `System.Collections.Generic/` (pools, coroutine queues, `KV`) | `pool.py` | `openx_poly::pool` |
+| `System.Collections.Generic/` (pools, coroutine queues, `KV`) | `pool.py` | `openx_poly::pool` (`GenericPool` / `StaticPool` in `generic_pool`, re-exported here; `SinglePool` is not ported) |
+| `Log.cs` | `log.py` | `openx_poly::log` |
+| `TypeX.cs` (`TypeRegistry`) | | `openx_poly::type_x` |
 | `System.Drawing/` (`Color`, `BoundingBox`, `Ray`, ...) | `openx.sys.drawing` | `openx_poly::drawing` |
 | C# `enum`s too big for a Rust enum (over 1,000 members; gen_enums.py decides) | Python `IntEnum`; over 1,000 members, a class of int constants with a `Names` dict | `openx_poly::system::const_enum::ConstEnum`: a newtype over the base type with associated consts |
-| `Log.cs` | `log.py` | `openx_poly::log` |
 | `ISource.cs` | `openx.core.core` | `openx_poly::core` |
 | `System.Text/` `ValueStringBuilder`, `System.Security.Cryptography/`, `MathNet.Numerics/` | | Rust's `String`, RustCrypto crates, when something needs them |

@@ -185,7 +185,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFramesSelect):
 
     def hasFrames(self) -> bool: return self.numFrames > 0
 
-    def decodeFrame(self) -> bool:
+    def nextFrame(self) -> bool:
         r = self.r
         frameHeader: X_FrameHeader
         header = r.readS(self.X_ChunkHeader)

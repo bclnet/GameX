@@ -1,6 +1,16 @@
 // PORT-SOURCE: Families/GameX.Cig.Explorer/Apps/DataForge/NoteControl.xaml.cs
 // PORT-SHA: de9abc21a268745b
-// PORT-STATUS: todo (21 live LOC in C#)
+// PORT-STATUS: done
 //
-// Not yet ported. When porting, update PORT-SHA to the C# file's current
-// hash and flip PORT-STATUS to `done`. ./sync-check.sh reports drift.
+// The XAML text. Nothing in MainPage hosts this control.
+
+use egui::Ui;
+
+/// NoteControl
+pub struct NoteControl;
+
+impl NoteControl {
+    pub fn ui(ui: &mut Ui) {
+        ui.label("Use the DataForge App");
+    }
+}

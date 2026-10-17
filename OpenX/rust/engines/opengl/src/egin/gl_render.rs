@@ -5,8 +5,10 @@
 // Ported: `GLCamera`, `GLDebugCamera`, `GLMeshBuffers`, `QuadIndexBuffer`,
 // `GLPickingTexture` and `GLRenderMaterial`; `GLMeshBufferCache` is in
 // gl_vao.rs. Not ported: `MeshBatchRenderer`, `GLRenderableMesh`,
-// `OctreeDebugRenderer<T>`, `MeshSceneNode` and `ParticleControllerFactory`,
-// which need egin's unported mesh and scene types. OpenTK's `Keys`,
+// `OctreeDebugRenderer<T>` and `MeshSceneNode`, which need egin's unported
+// mesh and scene types. `ParticleControllerFactory` is in
+// `gfx/open_gl_render.rs`, next to the sprite and trail renderers it
+// constructs. OpenTK's `Keys`,
 // `MouseButton`, `MouseState` and `KeyboardState` are small stand-ins here.
 // GL calls go through `GL()` (gfx/open_gl.rs), C#'s static `GL`.
 //

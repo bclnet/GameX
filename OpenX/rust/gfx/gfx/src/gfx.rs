@@ -33,10 +33,12 @@
 //   * `Reload` in the C# discards the handle the builder returns. Here the
 //     cache is updated with it, so a backend that hands back a fresh handle
 //     does not lose the reload.
-//   * `path is ITexture z` — the C# lets an already-decoded asset stand in for
-//     the path. `SourcePath` is a real path type, so that case is a separate
-//     method (`createFrom`) that takes the decoded asset and a path to cache
-//     it under.
+//   * `path is ITexture z` — the C# lets an already-decoded texture stand in
+//     for the path. That case is `createFrom`, which takes the texture and a
+//     path to cache it under. An object passed as the path (`ObjectRenderer`)
+//     is `SourcePath::Obj`, compared by identity. `ObjectModelManager` hands
+//     that object to the builder without re-boxing it, so `TypeId` stays the
+//     concrete type.
 //   * `ITexture.Create<T>(string platform, Func<object, T>)` is a generic, so
 //     `ITexture::create` hands the value to a `&mut dyn FnMut(&dyn Any)` instead.
 //     Its siblings on `ISprite` / `IMaterial` have no callers yet and are left out.
@@ -222,11 +224,16 @@ impl<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>, OB: ObjectMo
     async fn load(&mut self, key: &SourceKey, static_: bool) -> Result<(B::Object, AnyArc), Error> {
         debug_assert!(!self.cached.contains_key(key));
         self.builder.ensure();
-        self.preload(&key.0, &key.1);
-        let task = self.tasks.remove(key).expect("preload registers the task");
-        let obj = task.await?;
+        // C# `GetAsset` returns the object when the path already is that object.
+        // Re-boxing it through `getAssetAny` would make the `TypeId` `Arc<dyn Any>`
+        // and the builder's lookup would miss.
+        let obj = if let SourcePath::Obj(obj) = &key.1 { obj.clone() } else {
+            self.preload(&key.0, &key.1);
+            let task = self.tasks.remove(key).expect("preload registers the task");
+            Arc::from(task.await?)
+        };
         let created = self.builder.create(&key.0, &*obj, static_, &mut self.materialManager).await?;
-        Ok((created, Arc::from(obj)))
+        Ok((created, obj))
     }
 
     pub fn clear(&mut self) { self.tasks.clear(); self.cached.clear(); }
@@ -401,6 +408,14 @@ pub struct TextureAsBytes {
 }
 
 /// C# `interface ITexture`.
+///
+/// `ITextureFrames` and `ITextureSelect` are separate interfaces in C#. The
+/// Explorer holds the texture as `Arc<dyn ITexture>`, which cannot see a second
+/// trait, and `nextFrame` has to run through that shared handle. The five
+/// methods below are those interfaces, with the no-frame, no-select defaults.
+/// An animated or selectable texture overrides them. `nextFrame` and `select`
+/// take `&self` because the handle is shared; an override that changes frames
+/// keeps the state behind interior mutability.
 pub trait ITexture: Send + Sync {
     fn width(&self) -> i32;
     fn height(&self) -> i32;
@@ -411,6 +426,16 @@ pub trait ITexture: Send + Sync {
     /// object-safe, so `func` gets the value (`TextureAsBytes`, `TextureAsDds`) and the
     /// caller keeps what it builds.
     fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> Result<(), Error>;
+    /// C# `ITextureFrames.Fps`. `0` when the texture has no frames.
+    fn fps(&self) -> i32 { 0 }
+    /// C# `ITextureFrames.HasFrames`.
+    fn hasFrames(&self) -> bool { false }
+    /// C# `ITextureFrames.NextFrame()`. `false` when nothing advanced.
+    fn nextFrame(&self) -> bool { false }
+    /// C# `ITextureSelect.MaxId`.
+    fn maxId(&self) -> i32 { 0 }
+    /// C# `ITextureSelect.Select(int id)`.
+    fn select(&self, _id: i32) {}
 }
 
 /// C# `interface ITextureSelect : ITexture`.

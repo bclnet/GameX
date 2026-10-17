@@ -18,8 +18,8 @@
 // A pure-Rust decoder also removes libogg/libvorbis from the shipping
 // dependencies entirely, which the C# has to bundle per platform.
 //
-// To wire it up: decode to PCM with `lewton` or `symphonia`, fill an
-// `openx_sfx::Audio`, and hand it to `AudioManager::create`. Nothing else
-// in the codebase touches Vorbis directly.
+// To wire it up: decode with `lewton` or `symphonia` inside an `AudioBuilder::create`.
+// `AudioManager::create` loads the asset from `(ISource, path)` and passes that
+// tag to the builder. Nothing else in the codebase touches Vorbis directly.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` watches it.

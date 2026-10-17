@@ -34,12 +34,16 @@
 //     throws when a directory holds zero or several `.cue` files — a multi-disc
 //     set is not exotic.
 //
-// `NetworkFileSystem` is not ported: its constructor rejects any URI with a
-// filename, `Glob`/`FileExists`/`FileInfo` all call local `File.Exists`, and
-// `Open` unconditionally returns null. It cannot open anything, over the
-// network or otherwise. See `vfx_network.rs`.
+// `NetworkFileSystem` is ported as C# wrote it, which does not fetch anything.
+// The constructor rejects a URI whose path has a filename. `Glob` asks the
+// local matcher to search the pattern as a directory (it is not one).
+// `FileExists` and `FileInfo` call local `File.Exists`, and `FileInfo`'s
+// length is 0. `Open` returns null. `Advance` for `.zip`, `.7z`, `.bin`/`.cue`,
+// `.n64`/`.v64`/`.z64` and `.3ds` returns null: those filesystems are not
+// ported, so `Next` stays on this one. See `vfx_network.rs` for `NetworkHost`.
 
-use std::io::{Read, Seek};
+use std::io::{self, Read, Seek, Write};
+use std::path::{Path, PathBuf};
 
 /// C# `(string path, long length)` from `FileInfo`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,6 +55,10 @@ pub struct FileInfo {
 /// Anything the VFS can hand back for reading.
 pub trait VfsRead: Read + Seek {}
 impl<T: Read + Seek> VfsRead for T {}
+
+/// C# `Stream` opened with mode `"w"`: write and seek, owned by the caller.
+pub trait VfsWrite: Write + Seek + Send {}
+impl<T: Write + Seek + Send> VfsWrite for T {}
 
 /// C# `abstract class FileSystem`.
 pub trait FileSystem: Send + Sync {
@@ -69,6 +77,19 @@ pub trait FileSystem: Send + Sync {
     /// threw here instead of returning null, which broke `AggregateFileSystem`'s
     /// fallback; see the module header.
     fn open(&self, path: &str) -> Option<Box<dyn VfsRead + '_>>;
+
+    /// C# `Open(path, "w")`. `None` when this filesystem has no write mode.
+    ///
+    /// The file must already exist. C# uses `FileMode.Open` and `FileAccess.Write`,
+    /// which does not create or truncate.
+    fn openWrite(&self, path: &str) -> Option<Box<dyn VfsWrite + Send>> { None }
+
+    /// An owned reader, so an archive can return it to a pool. `None` when the
+    /// reader would borrow `self`.
+    fn openOwned(&self, path: &str) -> Option<Box<dyn VfsRead + Send>> { None }
+
+    /// C# `vfx is NetworkFileSystem`.
+    fn isNetwork(&self) -> bool { false }
 
     /// C# `FindPaths(string path, string searchPattern)`.
     ///
@@ -205,6 +226,10 @@ impl FileSystem for VirtualFileSystem {
             .get(path)
             .map(|d| Box::new(std::io::Cursor::new(d.as_slice())) as Box<dyn VfsRead + '_>)
     }
+
+    fn openOwned(&self, path: &str) -> Option<Box<dyn VfsRead + Send>> {
+        self.virtuals.get(path).map(|d| Box::new(std::io::Cursor::new(d.clone())) as Box<dyn VfsRead + Send>)
+    }
 }
 
 /// C# `class AggregateFileSystem` — first hit wins.
@@ -238,24 +263,50 @@ impl FileSystem for AggregateFileSystem {
     fn open(&self, path: &str) -> Option<Box<dyn VfsRead + '_>> {
         self.aggregate.iter().find_map(|f| f.open(path))
     }
+
+    fn openWrite(&self, path: &str) -> Option<Box<dyn VfsWrite + Send>> {
+        self.aggregate.iter().find_map(|f| f.openWrite(path))
+    }
+
+    fn openOwned(&self, path: &str) -> Option<Box<dyn VfsRead + Send>> {
+        self.aggregate.iter().find_map(|f| f.openOwned(path))
+    }
+
+    fn isNetwork(&self) -> bool { self.aggregate.iter().any(|f| f.isNetwork()) }
 }
 
 /// C# `class DirectoryFileSystem` — a real directory on disk.
+///
+/// `baseRoot` is the path passed in. `basePath` is the optional extra segment.
+/// `Next` may move `root` (a file root becomes its parent; a non-empty
+/// `basePath` is joined on) and, in C#, into a zip or disc. Those archive
+/// filesystems are not ported, so `advance` returns `None` and `Next` stays here.
+///
+/// A missing directory does not throw. C# `Directory.EnumerateFiles` throws
+/// `DirectoryNotFoundException`; here `Next` leaves `root` as it is, which is
+/// what a game install that is not on this machine needs.
 pub struct DirectoryFileSystem {
-    root: std::path::PathBuf,
+    baseRoot: PathBuf,
+    basePath: String,
+    root: PathBuf,
+    /// C# `Skip`, the root length plus one. Glob still strips with `strip_prefix`.
+    skip: usize,
 }
 
 impl DirectoryFileSystem {
-    pub fn new(root: impl Into<std::path::PathBuf>) -> Self {
-        Self { root: root.into() }
+    /// C# `DirectoryFileSystem(string baseRoot, string basePath)`. `None` is C#'s null.
+    pub fn new(baseRoot: impl AsRef<Path>, basePath: Option<&str>) -> Self {
+        let baseRoot = baseRoot.as_ref().to_path_buf();
+        let skip = baseRoot.as_os_str().len() + 1;
+        Self { root: baseRoot.clone(), baseRoot, basePath: basePath.unwrap_or("").to_string(), skip }
     }
 
-    /// Joins under the root and rejects anything that escapes it.
+    /// Joins under the current root and rejects anything that escapes it.
     ///
     /// The C# calls `Path.Combine(Root, path)` with no such check, so a path
     /// containing `..` reads outside the intended tree — and these paths come
-    /// from asset files.
-    fn resolve(&self, path: &str) -> Option<std::path::PathBuf> {
+    /// from asset files. This guard was already in the port; `Next` does not remove it.
+    fn resolve(&self, path: &str) -> Option<PathBuf> {
         let joined = self.root.join(path);
         let mut depth = 0i32;
         for c in std::path::Path::new(path).components() {
@@ -272,6 +323,27 @@ impl DirectoryFileSystem {
             }
         }
         Some(joined)
+    }
+
+    /// C# `Next()`. A missing directory leaves `root` as it is. C# throws
+    /// `DirectoryNotFoundException` there. The first file's order is the
+    /// filesystem's, which can differ from .NET's. `Advance` for zip, 7z, disc,
+    /// n64 and 3ds is not ported, so those extensions stay on this filesystem.
+    pub fn next(mut self) -> Self {
+        if self.root.is_file() || fileName(&self.root).contains('*') {
+            if let Some(parent) = self.root.parent() {
+                self.root = parent.to_path_buf();
+                self.skip = self.root.as_os_str().len() + 1;
+            }
+            return self;
+        }
+        let Some(first) = firstFile(&self.root) else { return self; };
+        if endsIgnore(&first, ".bin") || endsIgnore(&first, ".cue") { return self; }
+        if !self.basePath.is_empty() {
+            self.root = pathCombine(&self.baseRoot, &self.basePath);
+            self.skip = self.root.as_os_str().len() + 1;
+        }
+        self
     }
 }
 
@@ -306,6 +378,83 @@ impl FileSystem for DirectoryFileSystem {
             .ok()
             .map(|f| Box::new(f) as Box<dyn VfsRead + '_>)
     }
+
+    /// C# `Open(path, "w")`: the file must exist. `FileMode.Open` does not create or truncate.
+    fn openWrite(&self, path: &str) -> Option<Box<dyn VfsWrite + Send>> {
+        let p = self.resolve(path)?;
+        if !p.is_file() { return None; }
+        std::fs::OpenOptions::new().write(true).open(p).ok().map(|f| Box::new(f) as Box<dyn VfsWrite + Send>)
+    }
+
+    fn openOwned(&self, path: &str) -> Option<Box<dyn VfsRead + Send>> {
+        let p = self.resolve(path)?;
+        std::fs::File::open(p).ok().map(|f| Box::new(f) as Box<dyn VfsRead + Send>)
+    }
+}
+
+/// C# `Path.GetFileName`. A trailing separator means there is no name.
+fn pathFileName(path: &str) -> &str {
+    if path.is_empty() || path.ends_with('/') || path.ends_with('\\') { return ""; }
+    match path.rfind(['/', '\\']) { Some(i) => &path[i + 1..], None => path }
+}
+
+fn fileName(path: &Path) -> String {
+    path.file_name().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default()
+}
+
+fn endsIgnore(s: &str, ext: &str) -> bool {
+    s.get(s.len().saturating_sub(ext.len())..).is_some_and(|t| t.eq_ignore_ascii_case(ext))
+}
+
+/// C# `Path.Combine`. A rooted `b` (`/`, `\`, or `X:` on Windows) replaces `a`.
+fn pathCombine(a: &Path, b: &str) -> PathBuf {
+    if b.is_empty() { return a.to_path_buf(); }
+    let bytes = b.as_bytes();
+    let rooted = bytes.first().is_some_and(|c| *c == b'/' || *c == b'\\')
+        || (cfg!(windows) && bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':');
+    if rooted { PathBuf::from(b) } else { a.join(b) }
+}
+
+/// The first file in `root`, or `Some("")` when the directory is empty.
+/// `None` when the directory cannot be read. Order is the filesystem's.
+fn firstFile(root: &Path) -> Option<String> {
+    let rd = std::fs::read_dir(root).ok()?;
+    for e in rd.flatten() {
+        if e.path().is_file() { return Some(e.file_name().to_string_lossy().into_owned()); }
+    }
+    Some(String::new())
+}
+
+/// C# `class NetworkFileSystem`. It does not open a network stream.
+pub struct NetworkFileSystem;
+
+impl NetworkFileSystem {
+    /// C# constructor. `localPath` is `uri.LocalPath`. A file name throws
+    /// `ArgumentOutOfRangeException`.
+    pub fn new(localPath: &str) -> io::Result<Self> {
+        if !pathFileName(localPath).is_empty() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("ArgumentOutOfRangeException: {localPath}")));
+        }
+        Ok(Self)
+    }
+}
+
+impl FileSystem for NetworkFileSystem {
+    /// C# builds a `Matcher` and searches the pattern itself as the directory.
+    /// A pattern is not a directory, so this is empty.
+    fn glob(&self, _path: &str, _searchPattern: &str) -> Vec<String> { Vec::new() }
+
+    /// C# `File.Exists(path)` — the local disk, not the URI.
+    fn fileExists(&self, path: &str) -> bool { Path::new(path).is_file() }
+
+    /// Length is 0 whenever the local file exists.
+    fn fileInfo(&self, path: &str) -> Option<FileInfo> {
+        if Path::new(path).is_file() { Some(FileInfo { path: path.to_string(), length: 0 }) } else { None }
+    }
+
+    fn open(&self, _path: &str) -> Option<Box<dyn VfsRead + '_>> { None }
+
+    fn isNetwork(&self) -> bool { true }
 }
 
 fn walk(
@@ -427,9 +576,81 @@ mod tests {
     #[test]
     fn directory_fs_rejects_paths_escaping_its_root() {
         // The C# Path.Combine's straight through, so `..` reads outside.
-        let d = DirectoryFileSystem::new("/tmp/does-not-matter");
+        let d = DirectoryFileSystem::new("/tmp/does-not-matter", None);
         assert!(d.resolve("../../etc/passwd").is_none());
         assert!(d.resolve("a/../b").is_some(), "interior .. that stays inside is fine");
         assert!(d.resolve("ok/path").is_some());
+    }
+
+    fn tempDir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("openx-vfx-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn next_joins_base_path_onto_the_root() {
+        let dir = tempDir("next");
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        std::fs::write(dir.join("top.txt"), b"t").unwrap();
+        std::fs::write(dir.join("sub/a.txt"), b"hi").unwrap();
+        let d = DirectoryFileSystem::new(&dir, Some("sub")).next();
+        assert!(d.fileExists("a.txt"));
+        assert!(!d.fileExists("top.txt"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn next_on_a_bin_or_cue_does_not_apply_base_path() {
+        let dir = tempDir("cue");
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        std::fs::write(dir.join("a.cue"), b"cue").unwrap();
+        std::fs::write(dir.join("sub/a.txt"), b"hi").unwrap();
+        let d = DirectoryFileSystem::new(&dir, Some("sub")).next();
+        assert!(d.fileExists("a.cue"), "Advance is not ported, so the directory stays");
+        assert!(!d.fileExists("a.txt"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn next_on_a_file_moves_the_root_to_its_parent() {
+        let dir = tempDir("file");
+        let file = dir.join("game.pak");
+        std::fs::write(&file, b"pak").unwrap();
+        let d = DirectoryFileSystem::new(&file, Some("nope")).next();
+        assert!(d.fileExists("game.pak"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn open_write_updates_an_existing_file_and_does_not_create() {
+        let dir = tempDir("write");
+        std::fs::write(dir.join("a.txt"), b"old").unwrap();
+        let d = DirectoryFileSystem::new(&dir, None);
+        {
+            let mut w = d.openWrite("a.txt").unwrap();
+            w.write_all(b"new").unwrap();
+        }
+        assert_eq!(std::fs::read(dir.join("a.txt")).unwrap(), b"new");
+        assert!(d.openWrite("missing.txt").is_none());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn network_file_system_rejects_a_filename_and_does_not_open() {
+        assert!(NetworkFileSystem::new("/pak/file.pak").is_err());
+        let n = NetworkFileSystem::new("/").unwrap();
+        assert!(n.isNetwork());
+        assert!(n.open("anything").is_none());
+        assert!(n.glob("", "*.pak").is_empty());
+        let dir = tempDir("net");
+        let file = dir.join("local.txt");
+        std::fs::write(&file, b"abcd").unwrap();
+        let path = file.to_str().unwrap();
+        assert!(n.fileExists(path));
+        assert_eq!(n.fileInfo(path).unwrap().length, 0);
+        assert!(!n.fileExists(dir.join("nope.txt").to_str().unwrap()));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

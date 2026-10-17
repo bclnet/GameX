@@ -147,7 +147,10 @@ runtime resolution by string. **The runtime type graph is not load-bearing.**
 their definition with `register_type!`, a module-level `register` collects them,
 the crate root wires the modules together. `TypeRegistry::create(name)` replaces
 `Activator.CreateInstance(GetRType(name))`. Duplicate names are an error, where
-the C# silently kept whichever was scanned first for l-types.
+the C# silently kept whichever was scanned first for l-types. The live module is
+`OpenX/rust/core/poly/src/type_x.rs`; `family::registerType` stores typed
+factories there. The copy under `OpenX/rust/_/core/polyio/type_x.rs` stays as
+history. `GetAllProperties`, `GetAllFields` and `GetDefaultConstructor` stay parked.
 
 Registration is explicit rather than link-time (`inventory`). Link-time
 collection reads nicer but registrations silently vanish when a crate ends up

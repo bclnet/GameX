@@ -212,14 +212,24 @@ as C# embeds them as resources.
 
 `Type.GetType` + `Activator.CreateInstance` becomes a registry:
 `family::registerType(name, factory)` / `findType`, keyed by the C# type name
-in the spec (`"GameX.Uncore.UncoreArchive, GameX.Uncore"`). Family crates
-register their `archiveType` (`ArchiveFactory`), `vfxType`, `clientType` and
-explorer apps; until one is registered, `CreateArchive` fails with
-"unknown ArchiveType". `familyType`, `gameType`, `engineType`, `appType` and
-`detectorType` are recorded but build the base type. When openx's parked
-`TypeRegistry` (`OpenX/rust/core/poly/_/`) comes back out, the registry moves
-there. Only registered types are reachable, so a spec can't instantiate an
-arbitrary type as C#'s `Type.GetType` allows.
+in the spec (`"GameX.Uncore.UncoreArchive, GameX.Uncore"`). The values sit on
+`openx_poly::type_x::TypeRegistry` (moved out of `OpenX/rust/_/core/polyio/type_x.rs`;
+that copy stays). They are the typed factories (`ArchiveFactory`,
+`FileSystemFactory`, `ClientFactory`, `AppStartup`), not parameterless
+constructors. Family crates register their `archiveType`, `vfxType`,
+`clientType` and explorer apps; until one is registered, `CreateArchive` fails
+with "unknown ArchiveType". `familyType`, `gameType`, `engineType`, `appType`
+and `detectorType` are recorded but build the base type. `GetAllProperties`,
+`GetAllFields` and `GetDefaultConstructor` stay parked. Only registered types
+are reachable, so a spec can't instantiate an arbitrary type as C#'s
+`Type.GetType` allows.
+
+`BinaryArchive` pools readers and writers (`GenericPool`). A checkout is held
+until drop, including across `.await`; C# `ActionAsync` releases at task
+creation and is not copied. `DirectoryFileSystem.Next` takes `(baseRoot, basePath)`.
+`Advance` for zip, 7z, disc, n64 and 3ds is not ported. `NetworkFileSystem`
+does not fetch, and `getArchive` returns `NotImplementedException` for it.
+`NetworkHost` is blocking `ureq` and is not called from `GetArchive`.
 
 Kept as in C#: `CreateFamily` recurses through `specs` with no cycle check; a
 `*` game id becomes the default and `CreateFamilyGame` returns null (`None`);
@@ -862,12 +872,14 @@ object) and sets `Min`/`Max` capitalised; `FTL_FACE` sets `self.rbg`;
 ## OpenX's OpenGL engine in the egui Explorer
 
 Ported: `Engine_OpenGL.cs` (`engine_open_gl.rs`), `Gfx/OpenGL.cs`, the
-texture, test-triangle, material, grid and world renderers of
-`Gfx/OpenGL_Render.cs`, the cameras and `GLRenderMaterial` of
-`Egin/Gl_Render.cs`, `Renderer` / `Pass` (`Gfx_Render.cs`), `EginRenderer`
-and `RenderMaterial` (`Egin_Render.cs`), and the WPF host, `OpenGLControl.cs`
-and `UI/GLWpfControl.cs`, as an egui control (ADR 0005). GameX's
-`OpenGL_Render.cs` and the Explorer's `AppGfxControl.cs` (OpenGL only) use them.
+texture, object, test-triangle, material, grid, world, particle and engine
+renderers of `Gfx/OpenGL_Render.cs` (sprites, trails, `ChildRenderer`,
+`ParticleControllerFactory`, `OpenGLOpenEngine`), the cameras and
+`GLRenderMaterial` of `Egin/Gl_Render.cs`, `Renderer` / `Pass`
+(`Gfx_Render.cs`), `EginRenderer` and `RenderMaterial` (`Egin_Render.cs`),
+and the WPF host, `OpenGLControl.cs` and `UI/GLWpfControl.cs`, as an egui
+control (ADR 0005). GameX's `OpenGL_Render.cs` and the Explorer's
+`AppGfxControl.cs` (OpenGL only) use them.
 A scratch harness on the GOG install drew Arx Fatalis's `.bmp` and `.jpg`
 textures this way.
 
@@ -896,7 +908,9 @@ C# bugs kept as is:
 * `ARGB32` uploads as `Rgb` + `UnsignedInt8888Rev`, an invalid GL pairing, so
   RGBA images (labelled `ARGB32` by `Binary_Img`) fail to upload.
 * Only `plane` and `testtri` are embedded in the csproj, so every `vrf.*`
-  shader (material, grid) fails to load.
+  shader (material, grid, particle sprite, particle trail) fails to load.
+* `TrailsRenderer` uploads `uModelMatrix` with a count of 0, so the model
+  matrix is never sent.
 * `OpenGLControl.Tick` renders, then `GLWpfControl.Render` clears and renders
   again, so each frame draws twice.
 * `GLDebugCamera.HandleInput` adds `Scroll.X - MouseState.X` to the scroll
@@ -909,8 +923,38 @@ Differences:
   drivers may not.
 * glow has no double uniforms, so `GLRenderMaterial`'s `Uniform1d` int params
   are set as floats.
-* `ObjectRenderer` isn't ported: C# passes the loaded object as the manager's
-  `path`, and Rust's `SourcePath` is only a string or an int.
+* `ObjectRenderer` passes the loaded object as `SourcePath::Obj` (identity
+  key). `ObjectModelManager` gives that object to the builder without
+  re-boxing it, so the `TypeId` stays concrete. Nothing is registered in
+  `BuildersByType` until `Binary_Nif` is ported, so `Start` logs the miss
+  and the view stays empty.
+* `Select(0)` runs inside `TextureRenderer` after the upload. The control
+  has no `Value`. C#'s `Select` on the `ISource` is dead even if the key
+  handler were uncommented. Current textures have no frames, so the picture
+  does not change.
+* The explorer's Particle tab builds the outer `ParticleRenderer`, which
+  has no `Start` / `Update` / `Render` in C# either. `ChildRenderer` is
+  what a particle scene node drives, and that node is not ported. Texture
+  sequences stay unused: the texture tag is an `ITexture`, and C# reads
+  sequences only when the tag is an `IDictionary`.
+* `EngineRenderer` downcasts to `Arc<dyn CellDatabase>` boxed inside the
+  `Any`. No format produces one until `Binary_Engine`. `OpenGLOpenEngine`
+  uses `stepCells` / `finishCell` instead of `AsyncCoroutineQueue`.
+  `OpenGLCellBuilder::step` returns immediately, so a begun cell is empty
+  containers.
+* The other `AppGfx` controls stay unwired. Their OpenX files are the WPF
+  placeholders, and a wrapper around those files would not draw.
+* `TDataGrid` is the XAML `DataGrid` on `Value`. There is no reflection, so
+  columns are not generated from properties. A `Tag::Map` is Key/Value. A
+  `Tag::Any` of `Vec<IndexMap<String, Tag>>` is one row per map, columns in
+  first-seen order. A `Vec<Tag>` of non-maps is one Value column. Anything
+  else stays the debug text. Python still shows the tab as text. No family
+  emits `DataGrid` yet.
+* Cig's three family apps register `Application_Startup`. Each `Show` is an
+  egui window in the explorer. `appType` still builds the base `FamilyApp`,
+  so the windows open with empty trees. `DataForgeApp`, `StarWordsApp`, the
+  databases, `CigArchive` and `ResourceManagerProvider` are unported.
+  Python's `FamilyApp.openAsync` still raises `NotImplementedError`.
 
 `egin_render.rs` and `gfx_render.rs` were older snake_case ports; they're
 camelCase now. `egin_render`'s `Camera` no longer guards a zero-height
@@ -979,8 +1023,46 @@ renamed it `Engine.cs`. Now:
   Explorer's `App` calls with C#'s engine list.
 * `engine_unknown` / `engine_test` / `engine_system` mirror C#'s `Engine_*`
   folders. `TestEngine`'s gfx objects are bare types (every C# member throws);
-  `SystemSfx` isn't ported yet (openx-sfx's `AudioManager` isn't C#'s shape).
+  `SystemSfx` is ported: `AudioManager` loads from `(ISource, path)`, and
+  `OpenGLEngine`'s `sfxFactory` holds one. `SystemAudioBuilder` still throws,
+  so the Explorer's Play button logs `NotImplementedException`.
 * The nine other engine crates register `XEngine` (and `XShellEngine`) with
   C#'s id, name and caps. Their backends aren't ported, so their factories are
   `Engine`'s default, none.
 * openx-sfx gained `IOpenSfx` / `IOpenSfxs`, and is camelCase.
+
+## Uncore `PlistReader` and `Binary_Plist`
+
+`Formats/Apple/PlistReader.cs` is ported (`families/uncore/src/formats/apple/plist_reader.rs`). `Binary_Plist` is an `ArcBinary` in `formats/binary.rs`. `Binary.cs` stays partial: `Binary_Engine` is still out. Uncore does not register a `.plist` extension, so the archive factory was not changed. Python has no Uncore twin. Capcom's `Binary_Plist` is a different type and still raises `NotImplementedError`.
+
+C# bugs kept as is:
+
+* `ReadObject<T>(string)` opens the file and then calls itself (`readObjectTPath`).
+* The root is the last object-table entry, not `topLevelObjectOffset`. The trailer sanity checks stay commented out.
+* A non-seekable stream is copied, then `Length` and `Position` still come from the original. Rust only has `Read + Seek`, so that path is not representable.
+* `new BinaryReader(stream)` disposes the stream (`leaveOpen` is false). The port does not close a borrowed reader.
+* Fill nibble 15 is omitted, so later object refs no longer line up with table slots.
+* A self-cycle is omitted. A cycle between two containers still recurses.
+* `PlistArray.ToString` prints `ObjectReference[objectRef]` (the stored int), not the object. A negative ref throws.
+* `ReadUnicodeString` increments its index twice. On a little-endian host the buffer is UTF-16 LE, which is what `Encoding.Unicode` decodes.
+* An 8-byte integer is a signed reinterpret of the `u64`. A UID is `Dictionary<string, ulong>` under `CF$UID`.
+* `DateTime.ToString` follows the current culture. The port prints local `yyyy-MM-dd HH:mm:ss` (UTC off Windows).
+
+The same hand-built `bplist00` bytes were read with the C# `PlistReader`: a string key and a `byte[]` value, the boxed integer widths, a fill byte left off the root, a string root rejected as `PlistReader+PlistItem`, and the short-stream and bad-magic messages.
+
+## Uncore `Binary_Zip`
+
+`Binary_Zip` is in `families/uncore/src/formats/binary.rs`. `Binary.cs` stays partial (`PORT-SHA` `26b9cbb734746358`) until `Binary_Engine` is ported. Uncore does not register `.zip`, so `uncore.rs` was not changed. `_LIB/System.IO.Compression.cs` stays the NOT PORTED placeholder: `Binary_Zip` does not call `ZipArchiveX`.
+
+`zip` 4.2.0 (rustc 1.75; later 4.x needs 1.82) stands in for both readers. A null key is `System.IO.Compression.ZipArchive`: a name is kept unless it ends in `/`, and flags stay 0. Any other key is SharpZipLib `ZipFile`: a name ending in `/` or `\` is skipped, and flags are 1 when the entry is encrypted. A string key is `ZipFile.Password` (UTF-8 bytes to `by_index_decrypt`). Store, deflate, and deflate64 are enabled, plus AES for a string password. bzip2, lzma, and zstd are not linked.
+
+`Binary.tag` is a `Mutex` and `BinaryArchive.useReader` is an `AtomicBool`, so `Read` can assign both through the shared archive. `Read` copies the stream from the start into the `ZipArchive` stored on `source.Tag`. C# `new ZipArchive(stream, Read)` takes that stream (`leaveOpen` is false) and disposes it with the archive. The borrowed reader is left open. Listing uses `by_index_raw`: `by_index` refuses an encrypted entry before a password is supplied, and C# lists those entries from the central directory.
+
+C# behaviour kept, and the stand-ins:
+
+* The empty `if (Key == null)` in the SharpZipLib branch never runs, because `UseSystem` already handled a null key.
+* A `byte[]` key is SharpZipLib's private `Key` (the traditional cipher key, not a password). The crate cannot set it. An encrypted entry then returns `NotSupportedException: ZipFile.Key`. A plain entry still reads. `GetArcBinary` caches `byte[]` keys by value; C# `ConcurrentDictionary<object>` uses reference equality for arrays.
+* SharpZipLib `IsFile` also rejects a DOS directory attribute (0x10) or volume label (0x08) when the host is DOS or WindowsNT. Those attributes are not on the crate's `ZipFile`.
+* `!input.CanRead` logs and returns `Stream.Null`. An opened `zip` reader implements `Read`, so that branch is not reachable. The `catch` around the copy stays commented out, and so do `Write` and `WriteData`.
+
+Python already has `Binary_Zip` and was left as it is. It always uses `zipfile`, skips the UseSystem split and the flags, raises `NotImplementedError` for a `bytes` key, and its `match` guard reads the name `key` instead of `self.key`.

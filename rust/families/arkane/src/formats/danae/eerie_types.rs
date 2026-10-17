@@ -18,10 +18,11 @@
 //
 // `Quaternion.Inverse` is spelled out in `transformInverseVertexQuat`: glam's
 // `Quat::inverse` is the conjugate, which is only the inverse of a unit quaternion.
-// `Log.Info` is `eprintln!`. `string.Equals(.., OrdinalIgnoreCase)` is
+// `Log.Info` is `openx_poly::log::Log::info`. `string.Equals(.., OrdinalIgnoreCase)` is
 // `eq_ignore_ascii_case`.
 
 use glam::{I16Vec3, Quat, U16Vec3, Vec2, Vec3, Vec4};
+use openx_poly::log::Log;
 use openx_poly::system::unsafe_x::IStruct;
 
 /// C# `enum MATERIAL : i32`.
@@ -396,7 +397,7 @@ impl E_3DOBJ {
         let Vertexs = self.Vertexs.as_mut().unwrap();
         let offset = Vertexs[self.Origin as usize].V;
         if offset.x == 0.0 && offset.y == 0.0 && offset.z == 0.0 { return; }
-        eprintln!("NOT CENTERED {}\n", self.File);
+        Log::info(&format!("NOT CENTERED {}\n", self.File));
         for i in 0..self.NumVertex as usize { Vertexs[i].V -= offset; Vertexs[i].Vert.S -= offset; }
         self.Point0 -= offset;
     }

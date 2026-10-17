@@ -116,7 +116,7 @@ class Binary_Spr(ITextureFrames, IHaveMetaInfo):
 
     def hasFrames(self) -> bool: return self.frame < len(self.frames)
 
-    def decodeFrame(self) -> bool:
+    def nextFrame(self) -> bool:
         p = self.pixels[self.frame]
         Raster.blitByPalette(self.bytes, 4, p, self.palette, 3)
         self.frame += 1

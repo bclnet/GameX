@@ -5,8 +5,9 @@
 // Ported: `AABB`, `Camera` (verified against the C# test suite, see the tests at
 // the bottom), `RenderMaterial` and `EginRenderer`. Not ported: `IPickingTexture`,
 // `IVBIB`, `IEginModel`, `Frustum`, `IMesh`, `DrawCall`, `RenderableMesh`,
-// `MeshBatchRequest`, `IMeshCollection`, `Octree`, `Scene`, `SceneNode` and
-// `IParticleSystem`, which the model and particle renderers need.
+// `MeshBatchRequest`, `IMeshCollection`, `Octree`, `Scene` and `SceneNode`,
+// which the model renderers need. `IParticleSystem` is the data a particle
+// child renderer reads; nothing in the tree implements it yet.
 //
 // ===================== MATRIX CONVENTION ==================================
 //
@@ -29,6 +30,7 @@
 use std::collections::HashMap;
 use glam::{Mat4, Vec2, Vec3, Vec4};
 use openx_gfx::gfx::{MaterialPropKind, MaterialShaderProp};
+use openx_poly::pool::KV;
 
 /// C# `Camera.CAMERASPEED` — units per second.
 pub const CAMERA_SPEED: f32 = 300.0;
@@ -339,6 +341,19 @@ pub trait EginRenderer: openx_gfx::gfx_render::Renderer {
     //fn boundingBox(&self) -> Aabb;
     fn getViewport(&self, size: (i32, i32)) -> Option<(i32, i32)> { None }
     fn render(&mut self, camera: &Camera, pass: openx_gfx::gfx_render::Pass) {}
+}
+
+/// C# `interface IParticleSystem`.
+///
+/// The lists are owned copies. A system is read once, when the child renderer
+/// is built.
+pub trait IParticleSystem: Send + Sync {
+    fn data(&self) -> &KV;
+    fn renderers(&self) -> Vec<KV>;
+    fn operators(&self) -> Vec<KV>;
+    fn initializers(&self) -> Vec<KV>;
+    fn emitters(&self) -> Vec<KV>;
+    fn childParticleNames(&self, enabledOnly: bool) -> Vec<String>;
 }
 
 // NOT PORTED: `IPickingTexture`, `OnDiskBufferData` (+ `Attribute`,

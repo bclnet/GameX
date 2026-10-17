@@ -10,3 +10,8 @@ workspace = true
 
 [dependencies]
 gamex-cig = { path = "../../families/cig" }
+gamex = { path = "../../core/gamex" }
+egui = "0.36"
+
+[dev-dependencies]
+serde_json = "1"

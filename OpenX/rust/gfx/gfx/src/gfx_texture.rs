@@ -1,12 +1,17 @@
 // PORT-SOURCE: Gfx/OpenX.Gfx/Gfx_Texture.cs
 // PORT-SHA: 18e4bbf2bcc46a69
 // PORT-STATUS: done
+//
+// `DDS_HEADER.read` / `write` follow the C# methods. `MakeFormat` always
+// returns Raw / RGBA32 (`dwRGBBitCount >> 2`), and BC7 maps to `TextureFormat::BC5`.
+// `TextureConvert.Dxt3ToDtx5` is not ported: the C# body never writes the block.
+// A FourCC or dxgiFormat outside the C# switch is `ArgumentOutOfRangeException`.
+// A D3D10 resource dimension outside 0..=4 is an error here; C# keeps the bits.
 
 #![allow(non_camel_case_types)]
 
-// use bytemuck::{Pod, Zeroable};
-// use poly::prelude::{BinaryReaderExt};
-// use std::io::{Read, Seek};
+use openx_poly::prelude::BinaryReaderExt;
+use std::io::{Error, ErrorKind, Read, Result, Seek, Write};
 
 //#region Texture Enums
 
@@ -174,6 +179,26 @@ pub struct DDS_HEADER_DXT10 {
 }
 
 impl DDS_HEADER_DXT10 {
+    pub const SIZE_OF: usize = 20;
+
+    fn read<R: Read + Seek>(r: &mut R) -> Result<Self> {
+        let dxgi = r.readUInt32()?;
+        let dim = r.readUInt32()?;
+        let miscFlag = r.readUInt32()?;
+        let arraySize = r.readUInt32()?;
+        let miscFlags2 = r.readUInt32()?;
+        let dxgiFormat = dxgiOf(dxgi).ok_or_else(|| Error::new(ErrorKind::InvalidInput, format!("ArgumentOutOfRangeException: dxgiFormat {dxgi}")))?;
+        let resourceDimension = dimensionOf(dim)?;
+        Ok(Self { dxgiFormat, resourceDimension, miscFlag, arraySize, miscFlags2 })
+    }
+
+    fn writeBody<W: Write>(&self, w: &mut W) -> Result<()> {
+        for v in [self.dxgiFormat as u32, self.resourceDimension as u32, self.miscFlag, self.arraySize, self.miscFlags2] {
+            w.write_all(&v.to_le_bytes())?;
+        }
+        Ok(())
+    }
+
     // pub const SIZE_OF: usize = 20;
 
     // #[inline]
@@ -279,9 +304,116 @@ pub struct DDS_HEADER {
 //     }
 // }
 
+/// C# `(object type, int blockSize, object value)` from `DDS_HEADER.Read`.
+/// `type_` is the FourCC name, the DXGI name, or `"Raw"`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DdsFormat {
+    pub type_: String,
+    pub blockSize: i32,
+    pub value: (TextureFormat, TexturePixel),
+}
+
 impl DDS_HEADER {
     pub const MAGIC: u32 = 0x2053_4444;
     pub const SIZE_OF: usize = 124;
+
+    /// C# `Verify()`.
+    pub fn verify(&self) -> Result<()> {
+        if self.dwSize != 124 { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file header size: {}.", self.dwSize))); }
+        if !self.dwFlags.contains(DDSD::HEIGHT | DDSD::WIDTH) { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file flags: {:#x}.", self.dwFlags.bits()))); }
+        if !self.dwCaps.contains(DDSCAPS::TEXTURE) { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file caps: {:#x}.", self.dwCaps.bits()))); }
+        if self.ddspf.dwSize != 32 { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file pixel format size: {}.", self.ddspf.dwSize))); }
+        Ok(())
+    }
+
+    /// C# `DDS_HEADER.Read(BinaryReader r, bool readMagic = true)`.
+    pub fn read<R: Read + Seek>(r: &mut R, readMagic: bool) -> Result<(Self, Option<DDS_HEADER_DXT10>, DdsFormat, Vec<u8>)> {
+        if readMagic {
+            let magic = r.readUInt32()?;
+            if magic != Self::MAGIC { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file magic: \"{magic}\"."))); }
+        }
+        let header = Self::readBody(r)?;
+        header.verify()?;
+        let headerDxt10 = if header.ddspf.dwFourCC == FourCC::DX10 { Some(DDS_HEADER_DXT10::read(r)?) } else { None };
+        let format = header.formatOf(&headerDxt10)?;
+        let bytes = r.readToEnd()?;
+        Ok((header, headerDxt10, format, bytes))
+    }
+
+    /// C# `DDS_HEADER.Write(BinaryWriter w, DDS_HEADER header, DDS_HEADER_DXT10? headerDxt10, byte[] bytes, bool writeMagic = true)`.
+    pub fn write<W: Write>(&self, w: &mut W, headerDxt10: Option<&DDS_HEADER_DXT10>, bytes: &[u8], writeMagic: bool) -> Result<()> {
+        self.verify()?;
+        if writeMagic { w.write_all(&Self::MAGIC.to_le_bytes())?; }
+        self.writeBody(w)?;
+        if self.ddspf.dwFourCC == FourCC::DX10 {
+            let Some(d) = headerDxt10 else { return Err(Error::new(ErrorKind::InvalidInput, "ArgumentNullException: headerDxt10")); };
+            d.writeBody(w)?;
+        }
+        w.write_all(bytes)
+    }
+
+    fn readBody<R: Read + Seek>(r: &mut R) -> Result<Self> {
+        let dwSize = r.readUInt32()?;
+        let flags = r.readUInt32()?;
+        let dwHeight = r.readUInt32()?;
+        let dwWidth = r.readUInt32()?;
+        let dwPitchOrLinearSize = r.readUInt32()?;
+        let dwDepth = r.readUInt32()?;
+        let dwMipMapCount = r.readUInt32()?;
+        let mut dwReserved1 = [0u32; 11];
+        for slot in &mut dwReserved1 { *slot = r.readUInt32()?; }
+        let pfSize = r.readUInt32()?;
+        let pfFlags = r.readUInt32()?;
+        let four = r.readUInt32()?;
+        let dwRGBBitCount = r.readUInt32()?;
+        let dwRBitMask = r.readUInt32()?;
+        let dwGBitMask = r.readUInt32()?;
+        let dwBBitMask = r.readUInt32()?;
+        let dwABitMask = r.readUInt32()?;
+        let caps = r.readUInt32()?;
+        let caps2 = r.readUInt32()?;
+        let dwCaps3 = r.readUInt32()?;
+        let dwCaps4 = r.readUInt32()?;
+        let dwReserved2 = r.readUInt32()?;
+        if dwSize != 124 { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file header size: {dwSize}."))); }
+        let dwFlags = DDSD::from_bits_retain(flags);
+        if !dwFlags.contains(DDSD::HEIGHT | DDSD::WIDTH) { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file flags: {flags:#x}."))); }
+        let dwCaps = DDSCAPS::from_bits_retain(caps);
+        if !dwCaps.contains(DDSCAPS::TEXTURE) { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file caps: {caps:#x}."))); }
+        if pfSize != 32 { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid DDS file pixel format size: {pfSize}."))); }
+        let dwFourCC = fourCc(four).ok_or_else(|| Error::new(ErrorKind::InvalidInput, format!("ArgumentOutOfRangeException: dwFourCC {four}")))?;
+        Ok(Self {
+            dwSize, dwFlags, dwHeight, dwWidth, dwPitchOrLinearSize, dwDepth, dwMipMapCount, dwReserved1,
+            ddspf: DDS_PIXELFORMAT { dwSize: pfSize, dwFlags: DDPF::from_bits_retain(pfFlags), dwFourCC, dwRGBBitCount, dwRBitMask, dwGBitMask, dwBBitMask, dwABitMask },
+            dwCaps, dwCaps2: DDSCAPS2::from_bits_retain(caps2), dwCaps3, dwCaps4, dwReserved2,
+        })
+    }
+
+    fn writeBody<W: Write>(&self, w: &mut W) -> Result<()> {
+        for v in [self.dwSize, self.dwFlags.bits(), self.dwHeight, self.dwWidth, self.dwPitchOrLinearSize, self.dwDepth, self.dwMipMapCount] {
+            w.write_all(&v.to_le_bytes())?;
+        }
+        for v in self.dwReserved1 { w.write_all(&v.to_le_bytes())?; }
+        let p = &self.ddspf;
+        for v in [p.dwSize, p.dwFlags.bits(), p.dwFourCC as u32, p.dwRGBBitCount, p.dwRBitMask, p.dwGBitMask, p.dwBBitMask, p.dwABitMask] {
+            w.write_all(&v.to_le_bytes())?;
+        }
+        for v in [self.dwCaps.bits(), self.dwCaps2.bits(), self.dwCaps3, self.dwCaps4, self.dwReserved2] {
+            w.write_all(&v.to_le_bytes())?;
+        }
+        Ok(())
+    }
+
+    fn formatOf(&self, headerDxt10: &Option<DDS_HEADER_DXT10>) -> Result<DdsFormat> {
+        Ok(match self.ddspf.dwFourCC {
+            FourCC::NONE => DdsFormat { type_: "Raw".into(), blockSize: (self.ddspf.dwRGBBitCount >> 2) as i32, value: (TextureFormat::RGBA32, TexturePixel::Unknown) },
+            FourCC::DXT1 => ddsPacked("DXT1", 8, TextureFormat::DXT1, TexturePixel::Unknown),
+            FourCC::DXT3 => ddsPacked("DXT3", 16, TextureFormat::DXT3, TexturePixel::Unknown),
+            FourCC::DXT5 => ddsPacked("DXT5", 16, TextureFormat::DXT5, TexturePixel::Unknown),
+            FourCC::DX10 => dx10Format(headerDxt10)?,
+            other => return Err(Error::new(ErrorKind::InvalidInput, format!("ArgumentOutOfRangeException: dwFourCC {other:?}"))),
+        })
+    }
 
     // #[inline]
     // pub fn flags(&self) -> DDSD {
@@ -551,6 +683,83 @@ impl DDS_HEADER {
 
 //#endregion
 
+fn ddsPacked(type_: &str, blockSize: i32, format: TextureFormat, pixel: TexturePixel) -> DdsFormat {
+    DdsFormat { type_: type_.into(), blockSize, value: (format, pixel) }
+}
+
+fn fourCc(v: u32) -> Option<FourCC> {
+    Some(match v {
+        x if x == FourCC::NONE as u32 => FourCC::NONE,
+        x if x == FourCC::DXT1 as u32 => FourCC::DXT1,
+        x if x == FourCC::DXT2 as u32 => FourCC::DXT2,
+        x if x == FourCC::DXT3 as u32 => FourCC::DXT3,
+        x if x == FourCC::DXT4 as u32 => FourCC::DXT4,
+        x if x == FourCC::DXT5 as u32 => FourCC::DXT5,
+        x if x == FourCC::RXGB as u32 => FourCC::RXGB,
+        x if x == FourCC::ATI1 as u32 => FourCC::ATI1,
+        x if x == FourCC::ATI2 as u32 => FourCC::ATI2,
+        x if x == FourCC::A2XY as u32 => FourCC::A2XY,
+        x if x == FourCC::DX10 as u32 => FourCC::DX10,
+        _ => return None,
+    })
+}
+
+/// The dxgi values `DDS_HEADER.Read` accepts. Anything else is the C# `_` arm.
+fn dxgiOf(v: u32) -> Option<DXGI_FORMAT> {
+    Some(match v {
+        x if x == DXGI_FORMAT::BC1_UNORM as u32 => DXGI_FORMAT::BC1_UNORM,
+        x if x == DXGI_FORMAT::BC1_UNORM_SRGB as u32 => DXGI_FORMAT::BC1_UNORM_SRGB,
+        x if x == DXGI_FORMAT::BC2_UNORM as u32 => DXGI_FORMAT::BC2_UNORM,
+        x if x == DXGI_FORMAT::BC2_UNORM_SRGB as u32 => DXGI_FORMAT::BC2_UNORM_SRGB,
+        x if x == DXGI_FORMAT::BC3_UNORM as u32 => DXGI_FORMAT::BC3_UNORM,
+        x if x == DXGI_FORMAT::BC3_UNORM_SRGB as u32 => DXGI_FORMAT::BC3_UNORM_SRGB,
+        x if x == DXGI_FORMAT::BC4_UNORM as u32 => DXGI_FORMAT::BC4_UNORM,
+        x if x == DXGI_FORMAT::BC4_SNORM as u32 => DXGI_FORMAT::BC4_SNORM,
+        x if x == DXGI_FORMAT::BC5_UNORM as u32 => DXGI_FORMAT::BC5_UNORM,
+        x if x == DXGI_FORMAT::BC5_SNORM as u32 => DXGI_FORMAT::BC5_SNORM,
+        x if x == DXGI_FORMAT::BC6H_UF16 as u32 => DXGI_FORMAT::BC6H_UF16,
+        x if x == DXGI_FORMAT::BC6H_SF16 as u32 => DXGI_FORMAT::BC6H_SF16,
+        x if x == DXGI_FORMAT::BC7_UNORM as u32 => DXGI_FORMAT::BC7_UNORM,
+        x if x == DXGI_FORMAT::BC7_UNORM_SRGB as u32 => DXGI_FORMAT::BC7_UNORM_SRGB,
+        x if x == DXGI_FORMAT::R8_UNORM as u32 => DXGI_FORMAT::R8_UNORM,
+        _ => return None,
+    })
+}
+
+fn dx10Format(header: &Option<DDS_HEADER_DXT10>) -> Result<DdsFormat> {
+    let Some(h) = header else { return Err(Error::new(ErrorKind::InvalidInput, "ArgumentOutOfRangeException: dxgiFormat")); };
+    Ok(match h.dxgiFormat {
+        DXGI_FORMAT::BC1_UNORM => ddsPacked("BC1_UNORM", 8, TextureFormat::DXT1, TexturePixel::Unknown),
+        DXGI_FORMAT::BC1_UNORM_SRGB => ddsPacked("BC1_UNORM_SRGB", 8, TextureFormat::DXT1, TexturePixel::Signed),
+        DXGI_FORMAT::BC2_UNORM => ddsPacked("BC2_UNORM", 16, TextureFormat::DXT3, TexturePixel::Unknown),
+        DXGI_FORMAT::BC2_UNORM_SRGB => ddsPacked("BC2_UNORM_SRGB", 16, TextureFormat::DXT3, TexturePixel::Signed),
+        DXGI_FORMAT::BC3_UNORM => ddsPacked("BC3_UNORM", 16, TextureFormat::DXT5, TexturePixel::Unknown),
+        DXGI_FORMAT::BC3_UNORM_SRGB => ddsPacked("BC3_UNORM_SRGB", 16, TextureFormat::DXT5, TexturePixel::Signed),
+        DXGI_FORMAT::BC4_UNORM => ddsPacked("BC4_UNORM", 8, TextureFormat::BC4, TexturePixel::Unknown),
+        DXGI_FORMAT::BC4_SNORM => ddsPacked("BC4_SNORM", 8, TextureFormat::BC4, TexturePixel::Signed),
+        DXGI_FORMAT::BC5_UNORM => ddsPacked("BC5_UNORM", 16, TextureFormat::BC5, TexturePixel::Unknown),
+        DXGI_FORMAT::BC5_SNORM => ddsPacked("BC5_SNORM", 16, TextureFormat::BC5, TexturePixel::Signed),
+        DXGI_FORMAT::BC6H_UF16 => ddsPacked("BC6H_UF16", 16, TextureFormat::BC6H, TexturePixel::Unknown),
+        DXGI_FORMAT::BC6H_SF16 => ddsPacked("BC6H_SF16", 16, TextureFormat::BC6H, TexturePixel::Signed),
+        // C# maps both BC7 values to TextureFormat.BC5.
+        DXGI_FORMAT::BC7_UNORM => ddsPacked("BC7_UNORM", 16, TextureFormat::BC5, TexturePixel::Unknown),
+        DXGI_FORMAT::BC7_UNORM_SRGB => ddsPacked("BC7_UNORM_SRGB", 16, TextureFormat::BC5, TexturePixel::Signed),
+        DXGI_FORMAT::R8_UNORM => ddsPacked("R8_UNORM", 1, TextureFormat::R8, TexturePixel::Unknown),
+        other => return Err(Error::new(ErrorKind::InvalidInput, format!("ArgumentOutOfRangeException: dxgiFormat {other:?}"))),
+    })
+}
+
+fn dimensionOf(v: u32) -> Result<D3D10_RESOURCE_DIMENSION> {
+    Ok(match v {
+        0 => D3D10_RESOURCE_DIMENSION::UNKNOWN,
+        1 => D3D10_RESOURCE_DIMENSION::BUFFER,
+        2 => D3D10_RESOURCE_DIMENSION::TEXTURE1D,
+        3 => D3D10_RESOURCE_DIMENSION::TEXTURE2D,
+        4 => D3D10_RESOURCE_DIMENSION::TEXTURE3D,
+        _ => return Err(Error::new(ErrorKind::InvalidData, format!("D3D10_RESOURCE_DIMENSION {v}"))),
+    })
+}
+
 //#region DXGI_FORMAT
 
 #[repr(u32)]
@@ -681,11 +890,108 @@ pub enum DXGI_FORMAT {
 
 //#endregion
 
-// STALE: these tests were written against an earlier draft of this file
-// (`DdsHeader`, snake_case fields, `from_raw`, `DdsError`) that no longer
-// exists. Disabled so the crate's other tests can run; rewrite against
-// `DDS_HEADER` / `DDS_PIXELFORMAT` / `DDS_HEADER_DXT10` when this file is
-// revisited.
+#[cfg(test)]
+mod read_tests {
+    use super::*;
+    use std::io::Cursor;
+
+    /// A 100x100 DXT1 header + payload [1, 2, 3], from `OpenX.GfxTests` `Test_Read`.
+    const DXT1_VECTOR: &str = "RERTIHwAAAAHEAAAZAAAAGQAAACIEwAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAEAAAARFhUMQAAAAAAAAAAAAAAAAAAAAAAAAAACBBAAAAAAAAAAAAAAAAAAAAAAAABAgM=";
+    /// The same image as DX10 with a BC1_UNORM_SRGB extension header.
+    const DX10_VECTOR: &str = "RERTIHwAAAAHEAAAZAAAAGQAAACIEwAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAEAAAARFgxMAAAAAAAAAAAAAAAAAAAAAAAAAAACBBAAAAAAAAAAAAAAAAAAAAAAABIAAAAAwAAAAAAAAABAAAAAAAAAAECAw==";
+
+    fn b64(s: &str) -> Vec<u8> {
+        const T: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        let mut out = Vec::new();
+        let (mut acc, mut bits) = (0u32, 0u32);
+        for c in s.bytes() {
+            if c == b'=' { break; }
+            let Some(v) = T.iter().position(|&x| x == c) else { continue };
+            acc = (acc << 6) | v as u32;
+            bits += 6;
+            if bits >= 8 { bits -= 8; out.push((acc >> bits) as u8); }
+        }
+        out
+    }
+
+    fn dxt1Header() -> DDS_HEADER {
+        DDS_HEADER {
+            dwSize: DDS_HEADER::SIZE_OF as u32,
+            dwFlags: DDSD::HEADER_FLAGS_TEXTURE,
+            dwHeight: 100,
+            dwWidth: 100,
+            dwPitchOrLinearSize: 100 * 100 / 2,
+            dwDepth: 0,
+            dwMipMapCount: 1,
+            dwReserved1: [0; 11],
+            ddspf: DDS_PIXELFORMAT { dwSize: DDS_PIXELFORMAT::SIZE_OF as u32, dwFlags: DDPF::FOURCC, dwFourCC: FourCC::DXT1, dwRGBBitCount: 0, dwRBitMask: 0, dwGBitMask: 0, dwBBitMask: 0, dwABitMask: 0 },
+            dwCaps: DDSCAPS::SURFACE_FLAGS_TEXTURE | DDSCAPS::SURFACE_FLAGS_MIPMAP,
+            dwCaps2: DDSCAPS2::empty(),
+            dwCaps3: 0,
+            dwCaps4: 0,
+            dwReserved2: 0,
+        }
+    }
+
+    #[test]
+    fn reads_the_csharp_vectors() {
+        let mut c = Cursor::new(b64(DXT1_VECTOR));
+        let (h, dxt10, format, bytes) = DDS_HEADER::read(&mut c, true).unwrap();
+        assert_eq!(h.dwWidth * h.dwHeight, 10000);
+        assert_eq!(bytes, vec![1, 2, 3]);
+        assert!(dxt10.is_none());
+        assert_eq!(format.type_, "DXT1");
+        assert_eq!(format.blockSize, 8);
+        assert_eq!(format.value, (TextureFormat::DXT1, TexturePixel::Unknown));
+
+        let mut c = Cursor::new(b64(DX10_VECTOR));
+        let (h, dxt10, format, bytes) = DDS_HEADER::read(&mut c, true).unwrap();
+        assert_eq!(h.dwWidth * h.dwHeight, 10000);
+        assert_eq!(bytes, vec![1, 2, 3]);
+        let d = dxt10.unwrap();
+        assert_eq!(d.dxgiFormat, DXGI_FORMAT::BC1_UNORM_SRGB);
+        assert_eq!(d.resourceDimension, D3D10_RESOURCE_DIMENSION::TEXTURE2D);
+        assert_eq!(d.arraySize, 1);
+        assert_eq!(format.value, (TextureFormat::DXT1, TexturePixel::Signed));
+    }
+
+    #[test]
+    fn write_reproduces_the_csharp_bytes() {
+        let h = dxt1Header();
+        let mut out = Vec::new();
+        h.write(&mut out, None, &[1, 2, 3], true).unwrap();
+        assert_eq!(out, b64(DXT1_VECTOR));
+
+        let mut h = dxt1Header();
+        h.ddspf.dwFourCC = FourCC::DX10;
+        let d = DDS_HEADER_DXT10 { dxgiFormat: DXGI_FORMAT::BC1_UNORM_SRGB, resourceDimension: D3D10_RESOURCE_DIMENSION::TEXTURE2D, miscFlag: 0, arraySize: 1, miscFlags2: DDS_ALPHA_MODE::ALPHA_MODE_UNKNOWN as u32 };
+        let mut out = Vec::new();
+        h.write(&mut out, Some(&d), &[1, 2, 3], true).unwrap();
+        assert_eq!(out, b64(DX10_VECTOR));
+    }
+
+    #[test]
+    fn bad_magic_and_verify_fail() {
+        let mut bytes = b64(DXT1_VECTOR);
+        bytes[0] = 0xFF;
+        let err = DDS_HEADER::read(&mut Cursor::new(bytes), true).unwrap_err();
+        assert!(err.to_string().contains("Invalid DDS file magic"), "{err}");
+        let mut h = dxt1Header();
+        h.dwSize = 100;
+        assert!(h.verify().unwrap_err().to_string().contains("header size"));
+        h.dwSize = 124;
+        h.dwFlags = DDSD::empty();
+        assert!(h.verify().unwrap_err().to_string().contains("flags"));
+        h.dwFlags = DDSD::HEIGHT | DDSD::WIDTH;
+        h.dwCaps = DDSCAPS::empty();
+        assert!(h.verify().unwrap_err().to_string().contains("caps"));
+        h.dwCaps = DDSCAPS::TEXTURE;
+        h.ddspf.dwSize = 0;
+        assert!(h.verify().unwrap_err().to_string().contains("pixel format size"));
+    }
+}
+
+// The module below targeted an earlier draft (`DdsHeader`, snake_case, `DdsError`).
 #[cfg(any())]
 mod tests {
     use super::*;

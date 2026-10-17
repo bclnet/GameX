@@ -35,7 +35,7 @@ class TextureRenderer(Renderer):
         self.obj: object = obj
         # self.gfxModel.textureManager.delete(obj)
         # self.tex: int = self.gfxModel.textureManager.create(obj, self.level)[0]
-        self.frameDelay: int = 0
+        self.frameDelay: float = 0
 
     def start(self):
         card = base.render.attachNewNode(CardMaker('card').generate())
@@ -48,7 +48,7 @@ class TextureRenderer(Renderer):
     #     obj: ITextureFrames = self.obj
     #     if not self.gfxModel or not obj or not obj.hasFrames(): return
     #     self.frameDelay += deltaTime
-    #     if self.frameDelay <= obj.fps or not obj.decodeFrame(): return
+    #     if self.frameDelay <= obj.fps or not obj.nextFrame(): return
     #     self.frameDelay = 0 # reset delay between frames
     #     self.gfxModel.textureManager.reloadTexture(obj)
 

@@ -7,9 +7,9 @@
 //! ROM header parsing (`n64`).
 //!
 //! Outstanding: `disc` (4,145 live C# lines) and `x3ds` (2,658) are real binary
-//! container readers — CD/DVD images and 3DS cartridges. Neither is started.
-//! `vfx_network` and `ext_services` are decisions rather than ports; each module
-//! explains what to use instead.
+//! container readers — CD/DVD images and 3DS cartridges. The mount path is not
+//! started. `vfx_network` is `NetworkHost` on blocking `ureq`. `ext_services`
+//! is a decision rather than a port; the module says what to use instead.
 
 pub mod disc;
 pub mod disc_addressing;
@@ -40,6 +40,7 @@ pub mod prelude {
     pub use crate::util::{align, copy_file, endianness, from_hex_string, pad_file, to_hex_string};
     pub use crate::vfx::{
         createMatcher, AggregateFileSystem, DirectoryFileSystem, FileInfo, FileSystem,
-        VirtualFileSystem,
+        NetworkFileSystem, VirtualFileSystem,
     };
+    pub use crate::vfx_network::NetworkHost;
 }

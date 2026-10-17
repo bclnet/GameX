@@ -15,9 +15,11 @@ pub mod system;
 // pub mod system_drawing;
 pub mod io;
 pub mod pool;
+pub mod generic_pool;
+pub mod log;
 // pub mod system_numerics;
 // pub mod system_text;
-// pub mod type_x;
+pub mod type_x;
 
 /// The names worth importing together. C# got these via `global using` and
 /// namespace-wide extension methods; Rust needs the traits in scope explicitly.
@@ -35,7 +37,8 @@ pub mod prelude {
     pub use crate::io::reader::{BinaryReaderExt};
     pub use crate::system::const_enum::ConstEnum;
     pub use crate::system::unsafe_x::IStruct;
-    pub use crate::pool::KV;
+    pub use crate::pool::{GenericPool, KV, StaticPool};
+    pub use crate::log::Log;
     // pub use crate::io::polyfill_binary_writer::BinaryWriterExt;
     // pub use crate::io::indented_text_writer::{IndentedIoWriter, IndentedTextWriter};
     // pub use crate::io::polyfill_stream::{StreamExt, StreamWriteExt};

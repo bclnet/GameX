@@ -13,15 +13,20 @@
 //
 // `Type.GetType` + `Activator.CreateInstance`: Rust has no reflection, so
 // family crates register factories by the C# type name with `registerType`, and
-// GameX looks them up with `findType` (Python's `findType`). Archives
+// GameX looks them up with `findType` (Python's `findType`). The values sit on
+// `openx_poly::type_x::TypeRegistry`. Archives
 // (`archiveType`), file systems (`vfxType`), clients (`clientType`) and explorer
-// apps are created this way. `familyType`, `gameType`, `engineType`, `appType`
-// and `detectorType` are recorded but build the base type: no family crate
-// derives from them in Rust yet.
+// apps are created this way. The Explorer calls `gamex_cig_explorer::register`,
+// which registers DataForge, StarWords and Subsumption `Application_Startup`.
+// `familyType`, `gameType`, `engineType`, `appType` and `detectorType` are
+// recorded but build the base type: no family crate derives from them in Rust yet.
 //
-// Not in openx's Rust port yet, so done differently here: `NetworkFileSystem`
-// and `NetworkHost` (an http resource fails with `Unsupported`), and the store
-// maps of `Store.cs` (only `Direct:` keys resolve).
+// `NetworkFileSystem` does not fetch. `GetArchive` returns `Unsupported` with
+// `NotImplementedException: NetworkFileSystem` when the vfx `isNetwork`, which
+// walks the aggregate this port always wraps around the real filesystem.
+// `NetworkHost` is ported and is not called from here: the `StreamArchive`
+// line in C# is commented out. Rust errors have no stack trace, so `Log.Error`
+// is the message only. The store maps of `Store.cs` still resolve only `Direct:`.
 
 use std::any::Any;
 use std::collections::{HashMap, HashSet};
@@ -34,7 +39,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use indexmap::IndexMap;
 use md5::{Digest, Md5};
 use openx::util::{decodePath, YamlDict};
-use openx_vfx::vfx::{AggregateFileSystem, DirectoryFileSystem, FileSystem, VfsRead, VirtualFileSystem};
+use openx_poly::log::Log;
+use openx_vfx::vfx::{AggregateFileSystem, DirectoryFileSystem, FileSystem, NetworkFileSystem, VfsRead, VfsWrite, VirtualFileSystem};
 use serde_json::Value;
 
 use crate::binary::{Archive, ArchiveExt, BinaryState, ManyArchive, MultiArchive, Vfx};
@@ -73,13 +79,12 @@ pub struct SystemPath {
     pub paths: Option<Vec<String>>,
 }
 
-static TYPES: LazyLock<RwLock<HashMap<String, Arc<dyn Any + Send + Sync>>>> = LazyLock::new(Default::default);
-
 /// Registers what C# `Type.GetType(name)` + `Activator.CreateInstance` would build, under the C# type name.
-pub fn registerType<T: Any + Send + Sync>(name: &str, value: T) { TYPES.write().unwrap().insert(name.to_string(), Arc::new(value)); }
+/// The value lives in `openx_poly::type_x::TypeRegistry`.
+pub fn registerType<T: Any + Send + Sync>(name: &str, value: T) { openx_poly::type_x::registerType(name, value); }
 
 /// C# `Type.GetType(name)`, for a type registered with `registerType` as a `T`.
-pub fn findType<T: Any + Clone>(name: &str) -> Option<T> { TYPES.read().unwrap().get(name).and_then(|s| s.downcast_ref::<T>()).cloned() }
+pub fn findType<T: Any + Clone>(name: &str) -> Option<T> { openx_poly::type_x::findType(name) }
 
 /// An `archiveType`: C# `Archive(Archive parent, BinaryState state)`.
 pub type ArchiveFactory = fn(Option<Arc<dyn Archive>>, BinaryState) -> io::Result<Arc<dyn Archive>>;
@@ -194,14 +199,22 @@ pub fn createFamilyApp(familyId: &str, id: &str, elem: &Value) -> io::Result<Arc
 
 /// Creates the file system.
 pub fn createFileSystem(vfxType: Option<&str>, path: &SystemPath, subPath: Option<&str>, host: Option<&Uri>) -> io::Result<Vfx> {
-    if host.is_some() { return Err(Error::new(ErrorKind::Unsupported, "NetworkFileSystem")); }
+    if let Some(host) = host { return Ok(Arc::new(NetworkFileSystem::new(&host.localPath)?)); }
+    // C# calls `Next()` on a custom vfx. The factory returns `Arc<dyn FileSystem>`, which cannot be unwrapped, so `Next` stays inside the factory.
     if let Some(vfx) = vfxType.and_then(findType::<FileSystemFactory>) { return vfx(path); }
     let mut baseRoot = match subPath { Some(s) if !s.is_empty() => pathCombine(&path.root, s), _ => path.root.clone() };
     if baseRoot.ends_with('/') || baseRoot.ends_with('\\') { baseRoot.pop(); }
-    Ok(match &path.paths {
-        Some(basePaths) if basePaths.len() > 1 => Arc::new(AggregateFileSystem::new(basePaths.iter().map(|s| Box::new(DirectoryFileSystem::new(pathCombine(&baseRoot, s))) as Box<dyn FileSystem>).collect())),
-        basePaths => Arc::new(DirectoryFileSystem::new(match basePaths.as_ref().and_then(|s| s.first()) { Some(s) => pathCombine(&baseRoot, s), None => baseRoot })),
-    })
+    match &path.paths {
+        Some(basePaths) if basePaths.len() > 1 => {
+            let mut parts = Vec::new();
+            for s in basePaths { parts.push(Box::new(DirectoryFileSystem::new(&baseRoot, Some(s.as_str())).next()) as Box<dyn FileSystem>); }
+            Ok(Arc::new(AggregateFileSystem::new(parts)))
+        }
+        basePaths => {
+            let basePath = basePaths.as_ref().and_then(|s| s.first()).map(|s| s.as_str());
+            Ok(Arc::new(DirectoryFileSystem::new(&baseRoot, basePath).next()))
+        }
+    }
 }
 
 /// C# `Path.Combine`.
@@ -396,7 +409,7 @@ impl Family {
                 id: id.clone(),
             })
         })();
-        s.inspect_err(|e| eprintln!("ERROR: {id}: {e}"))
+        s.inspect_err(|e| Log::error(&format!("{id}: {e}")))
     }
 
     /// Touches this instance.
@@ -489,6 +502,9 @@ impl FileSystem for ArcFileSystem {
     fn fileExists(&self, path: &str) -> bool { self.0.fileExists(path) }
     fn fileInfo(&self, path: &str) -> Option<openx_vfx::vfx::FileInfo> { self.0.fileInfo(path) }
     fn open(&self, path: &str) -> Option<Box<dyn VfsRead + '_>> { self.0.open(path) }
+    fn openWrite(&self, path: &str) -> Option<Box<dyn VfsWrite + Send>> { self.0.openWrite(path) }
+    fn openOwned(&self, path: &str) -> Option<Box<dyn VfsRead + Send>> { self.0.openOwned(path) }
+    fn isNetwork(&self) -> bool { self.0.isNetwork() }
 }
 
 impl fmt::Display for Family {
@@ -825,7 +841,7 @@ impl FamilyGame {
     /// FamilyGame. Like C#, an error part way through is logged and leaves the rest unset.
     pub fn new(familyId: &str, id: &str, elem: &Value, dgame: &FamilyGame) -> FamilyGame {
         let mut s = FamilyGame { id: id.to_string(), ..Default::default() };
-        if let Err(e) = s.init(familyId, elem, dgame) { eprintln!("ERROR: {familyId}.{id}: {e}"); }
+        if let Err(e) = s.init(familyId, elem, dgame) { Log::error(&format!("{familyId}.{id}: {e}")); }
         s
     }
 
@@ -943,6 +959,7 @@ impl FamilyGame {
 
     /// Create the archive.
     pub fn getArchive(self: &Arc<Self>, vfx: Vfx, edition: Option<Arc<FamilyGameEdition>>, searchPattern: Option<&str>, throwOnError: bool) -> io::Result<Option<Arc<dyn Archive>>> {
+        if vfx.isNetwork() { return Err(Error::new(ErrorKind::Unsupported, "NotImplementedException: NetworkFileSystem")); }
         let searchPattern = self.createSearchPatterns(searchPattern);
         let mut archives: Vec<Arc<dyn Archive>> = Vec::new();
         let dlcKeys: Vec<&String> = self.dlcs.iter().filter(|x| x.1.path.as_deref().is_some_and(|s| !s.is_empty())).map(|x| x.0).collect();
@@ -1059,7 +1076,7 @@ pub fn uncore() -> Option<Arc<Family>> {
 
 /// The Unknown arc file.
 pub fn uncoreArchive() -> Option<Arc<dyn Archive>> {
-    static UNCORE_ARCHIVE: LazyLock<Option<Arc<dyn Archive>>> = LazyLock::new(|| uncore()?.getArchive("game:/#APP", false).inspect_err(|e| eprintln!("ERROR: {e}")).ok().flatten());
+    static UNCORE_ARCHIVE: LazyLock<Option<Arc<dyn Archive>>> = LazyLock::new(|| uncore()?.getArchive("game:/#APP", false).inspect_err(|e| Log::error(&e.to_string())).ok().flatten());
     UNCORE_ARCHIVE.clone()
 }
 
@@ -1071,7 +1088,7 @@ pub fn getFamily(id: &str, throwOnError: bool) -> io::Result<Option<Arc<Family>>
             FAMILIES.write().unwrap().insert(family.id.clone(), family.clone());
             return Ok(Some(family));
         }
-        Err(e) => eprintln!("ERROR: {e}"),
+        Err(e) => Log::error(&e.to_string()),
     }
     if throwOnError { Err(argumentOutOfRange("id", id)) } else { Ok(None) }
 }
@@ -1226,6 +1243,15 @@ mod tests {
         let data = getResultData(&arc, "sub/b.txt");
         assert_eq!(data, b"b");
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn anHttpResourceFailsAsNetworkFileSystem() {
+        let family = getFamily("Uncore", true).unwrap().unwrap();
+        let err = match family.getArchive("http://example.com/#APP", true) { Err(e) => e, Ok(_) => panic!("an http archive is not implemented") };
+        assert!(err.to_string().contains("NetworkFileSystem"), "{err}");
+        let err = match family.getArchive("http://example.com/pak#APP", true) { Err(e) => e, Ok(_) => panic!("a filename uri is out of range") };
+        assert!(err.to_string().contains("ArgumentOutOfRangeException"), "{err}");
     }
 
     fn getResultData(arc: &BinaryArchive, path: &str) -> Vec<u8> {

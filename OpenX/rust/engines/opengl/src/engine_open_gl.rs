@@ -3,8 +3,7 @@
 // PORT-STATUS: partial
 //
 // Not ported: `OpenGLGfxSprite3D`'s sprite manager (C# never creates it either:
-// its constructor line is commented out), and `OpenGLEngine`'s `SfxFactory`
-// (`SystemSfx`, openx's engine_system, isn't ported), so its one slot is empty.
+// its constructor line is commented out). `SfxFactory` is `SystemSfx`.
 //
 // The C# managers share one `TextureManager` and one `MaterialManager` by
 // reference. Rust's own them: the object manager holds the material manager,
@@ -25,6 +24,7 @@ use std::sync::{Arc, LazyLock, Mutex};
 use glam::{Mat4, Quat, Vec3, Vec4};
 use glow::HasContext;
 use openx::engine::{Engine, EngineX};
+use openx::engine_system::platform_system::SystemSfx;
 use openx_gfx::gfx::*;
 use openx_gfx::gfx_texture::{TextureFlags, TextureFormat, TexturePixel};
 use openx_poly::core::{BoxFuture, SourcePath, SourceRef};
@@ -564,11 +564,25 @@ impl OpenGLEngine {
         static This: LazyLock<Engine> = LazyLock::new(|| Engine {
             caps: EngineX::Caps::Drawing,
             gfxFactory: || Some(vec![Some(Arc::new(Mutex::new(OpenGLGfxApi))), None, Some(Arc::new(Mutex::new(OpenGLGfxSprite3D))), Some(Arc::new(Mutex::new(OpenGLGfxModel::new()))), None, Some(Arc::new(Mutex::new(OpenGLGfxTerrain::new())))]),
-            // C#: [new SystemSfx()]; SystemSfx isn't ported (openx's engine_system)
-            sfxFactory: || Some(vec![None]),
+            // C#: [new SystemSfx()];
+            sfxFactory: || Some(vec![Some(Arc::new(Mutex::new(SystemSfx::new())))]),
             ..Engine::new("GL", "OpenGL")
         });
         &This
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::OpenGLEngine;
+    use std::sync::Mutex;
+    use openx::engine_system::platform_system::SystemSfx;
+
+    #[test]
+    fn sfxFactoryIsSystemSfx() {
+        let sfx = (OpenGLEngine::This().sfxFactory)().unwrap();
+        assert_eq!(sfx.len(), 1);
+        assert!(sfx[0].as_ref().unwrap().downcast_ref::<Mutex<SystemSfx>>().is_some());
     }
 }
 

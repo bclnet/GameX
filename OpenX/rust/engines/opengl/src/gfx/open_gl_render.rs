@@ -16,8 +16,10 @@
 // no `Start`/`Update`/`Render` in C# either; `ChildRenderer` is what Valve's
 // `ParticleSceneNode` drives, and that scene node isn't ported.
 // `EngineRenderer` needs an `Arc<dyn CellDatabase>` boxed inside the `Any`.
-// No format produces one until `Binary_Engine`. The cell coroutine isn't
-// ported, so a started engine loads empty containers.
+// `Binary_Engine` produces one when the query archive implements `IQueryFunc`.
+// That implementor is Bethesda's `Binary_Esm`, still unported, so a real file
+// still fails the cast. The cell coroutine isn't ported, so a started engine
+// loads empty containers.
 //
 // `ObjectRenderer` passes the loaded object as `SourcePath::Obj`. Nothing is
 // registered in `BuildersByType` until `Binary_Nif`'s builder is ported, so

@@ -1773,6 +1773,7 @@ dependencies = [
  "bytemuck",
  "flate2",
  "gamex",
+ "glam",
  "image",
  "openx",
  "openx-gfx",

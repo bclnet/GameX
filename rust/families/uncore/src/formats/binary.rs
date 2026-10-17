@@ -1,12 +1,26 @@
 // PORT-SOURCE: Families/GameX.Uncore/Formats/Binary.cs
 // PORT-SHA: 26b9cbb734746358
-// PORT-STATUS: partial
+// PORT-STATUS: done
 //
 // Ported: Binary_Bik, Binary_Dds, Binary_Fsb, Binary_Iif, Binary_Img, Binary_Msg, Binary_Pal, Binary_Pcx,
-// Binary_Plist, Binary_Raw, Binary_Snd, Binary_Tga, Binary_Txt, Binary_Xga, Binary_Zip, Binary_TestTri.
+// Binary_Plist, Binary_Raw, Binary_Snd, Binary_Tga, Binary_Txt, Binary_Xga, Binary_Zip, Binary_TestTri,
+// Binary_Engine.
 //
-// Not ported:
-// - Binary_Engine: `ICellDatabase` is `openx::manager::CellDatabase`. `IQueryFunc` (`GetQuery`) is still unported, and nothing boxes an `Arc<dyn CellDatabase>` into `Tag::Any` yet.
+// Binary_Engine reads six ASCII fields (`archive:query:cell:interior:position:rotation`).
+// A byte above 127 becomes `?`, as `Encoding.ASCII` does. `pr` of length `<= 3` is
+// `Quaternion.Identity`; a longer list uses the first four components. `GetArchive` of a
+// name that is not one archive is a `MultiArchive`, and the `BinaryArchive` cast then fails.
+// `IQueryFunc` is `openx::manager::IQueryFunc`. `ArcBinary::asQueryFunc` is the cast; the
+// default is the failure. Bethesda's `Binary_Esm` is the implementor and is still unported,
+// so a real query archive fails `InvalidCastException: IQueryFunc`. The `MetaContent` value
+// is `Arc<dyn CellDatabase + Send + Sync>` inside `Tag::Any`. `GetInfoNodes` omits
+// `CellInterior` and `PlayerRotation`. `{Query}` prints `IQuery` (`Box<dyn Query>` has no
+// C# runtime type name). `{Archive}` prints `GameX.BinaryArchive`. `int`/`float` parse as
+// invariant (trim, `.` decimal), not the current culture. Uncore wires `.start`.
+//
+// Python's `Binary_Engine` is behind and was left as it is: `bool("False")` is true,
+// identity is `len(pr) == 1` (C# is `<= 3`, so length 0, 2, or 3 throws there), and
+// `getQuery` is called with no `IQueryFunc` cast.
 //
 // Binary_Zip: `zip` 4.2.0 (`ZipArchive`) stands in for both `System.IO.Compression.ZipArchive`
 // (null key) and SharpZipLib `ZipFile` (any other key). The bytes are copied out of the borrowed
@@ -62,11 +76,15 @@ use std::ops::Range;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, LazyLock, Mutex, Weak};
 use bytemuck::{Pod, Zeroable};
-use gamex::binary::{ArcBinary, Archive, BinaryArchive, Stream, Task};
+use gamex::binary::{ArcBinary, Archive, ArchiveExt, BinaryArchive, Stream, Task};
 use openx_vfx::vfx::VfsRead;
 use crate::formats::apple::plist_reader::{PlistObject, PlistReader};
 use gamex::family::FamilyGame;
 use gamex::meta::{fileName, extension, FileSource, IHaveMetaInfo, MetaContent, MetaInfo, MetaManager, Tag};
+use glam::{Quat, Vec3};
+use openx::manager::{CellDatabase, SharedQuery};
+use openx_poly::core::SourceRef;
+use openx_poly::poly::Int3;
 use openx::engine::EngineX::{self, Caps};
 use openx_poly::log::Log;
 use openx_gfx::gfx::{AnyArc, ITexture, TextureAsBytes, TextureAsDds};
@@ -1802,6 +1820,125 @@ impl IHaveMetaInfo for Binary_TestTri {
 
 // #endregion
 
+// #region Binary_Engine
+
+/// C# `Encoding.ASCII.GetString`: a byte above 127 is `?`.
+fn ascii(bytes: &[u8]) -> String { bytes.iter().map(|&b| if b < 0x80 { b as char } else { '?' }).collect() }
+
+fn field<'a>(values: &'a [String], index: usize) -> io::Result<&'a str> {
+    values.get(index).map(String::as_str).ok_or_else(|| Error::new(ErrorKind::InvalidData, "IndexOutOfRangeException"))
+}
+
+fn parseBool(s: &str) -> io::Result<bool> {
+    if s.eq_ignore_ascii_case("true") { Ok(true) }
+    else if s.eq_ignore_ascii_case("false") { Ok(false) }
+    else { Err(Error::new(ErrorKind::InvalidData, format!("FormatException: {s}"))) }
+}
+
+fn parseInt(s: &str) -> io::Result<i32> {
+    s.trim().parse().map_err(|_| Error::new(ErrorKind::InvalidData, format!("FormatException: {s}")))
+}
+
+fn parseFloat(s: &str) -> io::Result<f32> {
+    s.trim().parse().map_err(|_| Error::new(ErrorKind::InvalidData, format!("FormatException: {s}")))
+}
+
+fn ints(s: &str) -> io::Result<Vec<i32>> { s.split(',').map(parseInt).collect() }
+fn floats(s: &str) -> io::Result<Vec<f32>> { s.split(',').map(parseFloat).collect() }
+
+fn at<T: Copy>(values: &[T], index: usize) -> io::Result<T> {
+    values.get(index).copied().ok_or_else(|| Error::new(ErrorKind::InvalidData, "IndexOutOfRangeException"))
+}
+
+/// C# `(BinaryArchive)archive`. A null archive stays null. Anything else that is not a `BinaryArchive` throws.
+fn castArchive(archive: Option<Arc<dyn Archive>>) -> io::Result<Option<Arc<BinaryArchive>>> {
+    match archive {
+        None => Ok(None),
+        Some(archive) => archive.downcastBinaryArchive().map(Some).ok_or_else(|| Error::new(ErrorKind::InvalidData, "InvalidCastException: BinaryArchive")),
+    }
+}
+
+/// C# `Vector3.ToString` with the invariant group separator.
+fn vec3String(v: Vec3) -> String { format!("<{}, {}, {}>", v.x, v.y, v.z) }
+
+/// The file format for Engine
+pub struct Binary_Engine {
+    me: Weak<Binary_Engine>,
+    pub archive: Option<Arc<BinaryArchive>>,
+    pub queryArchive: Option<Arc<BinaryArchive>>,
+    pub query: SharedQuery,
+    pub cellId: Int3,
+    pub cellInterior: bool,
+    pub playerPosition: Vec3,
+    pub playerRotation: Quat,
+}
+
+impl Binary_Engine {
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> {
+        fromResult(Binary_Engine::new(r, s).map(|engine| arc(engine, |s| &mut s.me)))
+    }
+
+    pub fn new(r: &mut Stream, s: &dyn Archive) -> io::Result<Self> {
+        let values: Vec<String> = ascii(&r.readToEnd()?).split(':').map(str::to_string).collect();
+        let ar = field(&values, 0)?.to_string();
+        let qa = field(&values, 1)?.to_string();
+        let ci = ints(field(&values, 2)?)?;
+        let cb = parseBool(field(&values, 3)?)?;
+        let pp = floats(field(&values, 4)?)?;
+        let pr = floats(field(&values, 5)?)?;
+        let archive = castArchive(ArchiveExt::getArchive(s, &Tag::Str(ar), true)?)?;
+        let queryArchive = castArchive(ArchiveExt::getArchive(s, &Tag::Str(qa), true)?)?;
+        let queryBinary = queryArchive.as_ref().ok_or_else(|| Error::new(ErrorKind::InvalidData, "NullReferenceException: QueryArchive"))?;
+        let arcBinary = queryBinary.arcBinary.as_ref().ok_or_else(|| Error::new(ErrorKind::InvalidData, "NullReferenceException: ArcBinary"))?;
+        let query = arcBinary.asQueryFunc().ok_or_else(|| Error::new(ErrorKind::InvalidData, "InvalidCastException: IQueryFunc"))?.getQuery();
+        Ok(Self {
+            me: Weak::new(),
+            archive,
+            queryArchive,
+            query,
+            cellId: Int3::new(at(&ci, 0)?, at(&ci, 1)?, at(&ci, 2)?),
+            cellInterior: cb,
+            playerPosition: Vec3::new(at(&pp, 0)?, at(&pp, 1)?, at(&pp, 2)?),
+            playerRotation: if pr.len() <= 3 { Quat::IDENTITY } else { Quat::from_xyzw(at(&pr, 0)?, at(&pr, 1)?, at(&pr, 2)?, at(&pr, 3)?) },
+            })
+    }
+
+    /// `Arc<dyn CellDatabase + Send + Sync>`, the value `EngineRenderer` downcasts.
+    fn database(&self) -> Arc<dyn CellDatabase + Send + Sync> {
+        self.me.upgrade().expect("NullReferenceException: Binary_Engine")
+    }
+}
+
+impl CellDatabase for Binary_Engine {
+    fn archive(&self) -> SourceRef {
+        let archive = self.archive.clone().expect("NullReferenceException: Archive");
+        SourceRef::from(archive as Arc<dyn openx_poly::core::ISource>)
+    }
+    fn query(&self) -> SharedQuery { self.query.clone() }
+    fn cellId(&self) -> Int3 { self.cellId }
+    fn cellInterior(&self) -> bool { self.cellInterior }
+    fn playerPosition(&self) -> Vec3 { self.playerPosition }
+    fn playerRotation(&self) -> Quat { self.playerRotation }
+}
+
+impl IHaveMetaInfo for Binary_Engine {
+    fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> {
+        // C# `{Query}` is `object.ToString()`. A `Box<dyn Query>` has no runtime type name.
+        let archive = match &self.archive { Some(_) => "GameX.BinaryArchive", None => "" };
+        vec![
+            content("Engine", file, Tag::Any(Arc::new(self.database()))),
+            MetaInfo::new(Some("Binary_Engine".into()), Tag::None, vec![
+                node(format!("Archive: {archive}")),
+                node("Query: IQuery".into()),
+                node(format!("CellId: {},{},{}", self.cellId.x, self.cellId.y, self.cellId.z)),
+                node(format!("PlayerPosition: {}", vec3String(self.playerPosition))),
+            ], false),
+        ]
+    }
+}
+
+// #endregion
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2149,5 +2286,166 @@ mod tests {
         let bytes = FamilyGame { key: Tag::Bytes(vec![1, 2]), ..Default::default() };
         let same = FamilyGame { key: Tag::Bytes(vec![1, 2]), ..Default::default() };
         assert!(Arc::ptr_eq(&Binary_Zip::getArcBinary(&bytes), &Binary_Zip::getArcBinary(&same)));
+    }
+
+    use gamex::binary::{getResult, newArchive, BinaryState};
+    use gamex::family::{registerType, ArchiveFactory, SearchBy};
+    use crate::uncore::UncoreArchive;
+    use openx::manager::{Cell, IQueryFunc, Land, Ltex, Query};
+    use openx_vfx::vfx::{VirtualFileSystem, VfsRead};
+    use std::sync::Once;
+
+    struct PlainPak;
+    impl ArcBinary for PlainPak {
+        fn read<'a>(&'a self, _source: &'a BinaryArchive, _r: Option<&'a mut dyn VfsRead>, _tag: &'a Tag) -> Task<'a, ()> { Box::pin(async { Ok(()) }) }
+    }
+
+    struct QueryPak;
+    impl ArcBinary for QueryPak {
+        fn read<'a>(&'a self, _source: &'a BinaryArchive, _r: Option<&'a mut dyn VfsRead>, _tag: &'a Tag) -> Task<'a, ()> { Box::pin(async { Ok(()) }) }
+        fn asQueryFunc(&self) -> Option<&dyn IQueryFunc> { Some(self) }
+    }
+    impl IQueryFunc for QueryPak {
+        fn getQuery(&self) -> SharedQuery { Arc::new(Mutex::new(Box::new(StubQuery))) }
+    }
+
+    struct StubQuery;
+    impl Query for StubQuery {
+        fn meterInUnits(&self) -> f32 { 0. }
+        fn cellLengthInMeters(&self) -> f32 { 0. }
+        fn loadRadius(&self) -> i32 { 0 }
+        fn visibleRadius(&self) -> i32 { 0 }
+        fn world(&self) -> i32 { 0 }
+        fn setWorld(&mut self, _world: i32) {}
+        fn getCellId(&self, _point: Vec3) -> Int3 { Int3::ZERO }
+        fn findCell(&self, _cell: Int3) -> Option<Box<dyn Cell>> { None }
+        fn findCellByName(&self, _name: &str) -> Option<Box<dyn Cell>> { None }
+        fn findLand(&self, _cell: Int3) -> Option<Box<dyn Land>> { None }
+        fn findLtex(&self, _index: i32) -> Option<Box<dyn Ltex>> { None }
+    }
+
+    fn engineArchive(parent: Option<Arc<dyn Archive>>, state: BinaryState) -> io::Result<Arc<dyn Archive>> {
+        let binary: Arc<dyn ArcBinary> = if state.game.id == "Query" { Arc::new(QueryPak) } else { Arc::new(PlainPak) };
+        Ok(newArchive(BinaryArchive::new(parent, state, Some(binary))))
+    }
+
+    fn registerEngineArchive() {
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| registerType::<ArchiveFactory>("GameX.Test.EngineArchive, GameX.Test", engineArchive));
+    }
+
+    fn engineParent(id: &str, files: &[(&str, Vec<u8>)]) -> Arc<dyn Archive> {
+        registerEngineArchive();
+        let game = Arc::new(FamilyGame {
+            id: id.into(),
+            archiveType: Some("GameX.Test.EngineArchive, GameX.Test".into()),
+            searchBy: SearchBy::Arc,
+            arcExts: Some(vec![".pak".into()]),
+            ..Default::default()
+        });
+        let mut virtuals = std::collections::HashMap::new();
+        for (path, data) in files { virtuals.insert((*path).to_string(), data.clone()); }
+        let state = BinaryState::new(Arc::new(VirtualFileSystem::new(virtuals)), game, None, None, Tag::None);
+        newArchive(BinaryArchive::new(None, state, None))
+    }
+
+    fn openEngine(id: &str, text: &[u8], files: &[(&str, Vec<u8>)]) -> io::Result<Tag> {
+        let parent = engineParent(id, files);
+        let mut r = stream(text.to_vec());
+        let file = Arc::new(FileSource { path: "dir/cell.start".into(), ..Default::default() });
+        getResult(Binary_Engine::factory(&mut r, file, &*parent))
+    }
+
+    fn paks() -> Vec<(&'static str, Vec<u8>)> { vec![("world.pak", vec![]), ("query.pak", vec![])] }
+
+    fn engineDb(text: &[u8]) -> Arc<dyn CellDatabase + Send + Sync> {
+        let Tag::Info(info) = openEngine("Query", text, &paks()).unwrap() else { panic!("factory") };
+        let nodes = info.getInfoNodes(None, Some(&Arc::new(FileSource { path: "dir/cell.start".into(), ..Default::default() })), &Tag::None);
+        let content = nodes[0].tag.asMetaContent().unwrap();
+        assert_eq!((content.type_.as_str(), content.name.as_str()), ("Engine", "cell.start"));
+        let db = content.value.asAny().unwrap().downcast_ref::<Arc<dyn CellDatabase + Send + Sync>>().unwrap().clone();
+        assert_eq!(nodes[1].name.as_deref(), Some("Binary_Engine"));
+        assert_eq!(nodes[1].items.len(), 4);
+        assert_eq!(nodes[1].items[0].name.as_deref(), Some("Archive: GameX.BinaryArchive"));
+        assert_eq!(nodes[1].items[1].name.as_deref(), Some("Query: IQuery"));
+        assert!(nodes[1].items.iter().all(|s| s.name.as_deref().is_some_and(|n| !n.starts_with("CellInterior") && !n.starts_with("PlayerRotation"))));
+        db
+    }
+
+    #[test]
+    fn engineRejectsAShortFileABadBoolAndAShortCell() {
+        let err = openEngine("Query", b"a:b", &paks()).err().unwrap();
+        assert!(err.to_string().contains("IndexOutOfRangeException"), "{err}");
+        let err = openEngine("Query", b"a:b:1,2,3:yes:0,0,0:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("FormatException"), "{err}");
+        let err = openEngine("Query", b"a:b:1,2,3: true:0,0,0:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("FormatException"), "{err}");
+        let err = openEngine("Query", b"a:b:1,x:True:0,0,0:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("FormatException"), "{err}");
+        // C# indexes the cell and the position after `GetArchive`, so the names have to resolve first.
+        let err = openEngine("Query", b"world.pak:query.pak:1,2:True:0,0,0:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("IndexOutOfRangeException"), "{err}");
+        let err = openEngine("Query", b"world.pak:query.pak:1,2,3:True:1,2:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("IndexOutOfRangeException"), "{err}");
+    }
+
+    #[test]
+    fn engineCastFailsWhenTheArchiveIsNotABinaryOrTheBinaryIsNotAQuery() {
+        let err = openEngine("Query", b"missing.pak:query.pak:1,2,3:True:0,0,0:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("InvalidCastException: BinaryArchive"), "{err}");
+        let err = openEngine("Plain", b"world.pak:query.pak:1,2,3:True:0,0,0:0", &paks()).err().unwrap();
+        assert!(err.to_string().contains("InvalidCastException: IQueryFunc"), "{err}");
+    }
+
+    #[test]
+    fn engineReadsTheCellAndKeepsAShortRotationAsIdentity() {
+        let db = engineDb(b"world.pak:query.pak: 1, 2 ,3:true:1.5,2,3:0");
+        assert!(db.cellInterior());
+        assert_eq!(db.cellId(), Int3::new(1, 2, 3));
+        let _ = db.archive();
+        assert!(db.query().lock().unwrap().world() == 0);
+        assert_eq!(db.playerPosition(), Vec3::new(1.5, 2.0, 3.0));
+        assert_eq!(db.playerRotation(), Quat::IDENTITY);
+        let nodes = {
+            let Tag::Info(info) = openEngine("Query", b"world.pak:query.pak: 1, 2 ,3:true:1.5,2,3:0", &paks()).unwrap() else { panic!("factory") };
+            info.getInfoNodes(None, Some(&Arc::new(FileSource { path: "dir/cell.start".into(), ..Default::default() })), &Tag::None)
+        };
+        assert_eq!(nodes[1].items[2].name.as_deref(), Some("CellId: 1,2,3"));
+        assert_eq!(nodes[1].items[3].name.as_deref(), Some("PlayerPosition: <1.5, 2, 3>"));
+
+        let db = engineDb(b"world.pak:query.pak:1,2,3:False:0,0,0:1,2,3");
+        assert!(!db.cellInterior());
+        assert_eq!(db.playerRotation(), Quat::IDENTITY);
+        let db = engineDb(b"world.pak:query.pak:9,8,7,6:FALSE:4,5,6:0,1,0,0,9");
+        assert_eq!(db.cellId(), Int3::new(9, 8, 7));
+        assert_eq!(db.playerPosition(), Vec3::new(4.0, 5.0, 6.0));
+        assert_eq!(db.playerRotation(), Quat::from_xyzw(0.0, 1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn engineAsciiReplacesBytesAbove127() {
+        let files = [("caf?.pak", vec![]), ("query.pak", vec![])];
+        let db = {
+            let Tag::Info(info) = openEngine("Query", b"caf\xE9.pak:query.pak:4,5,6:True:0,0,0:0,0,0,1", &files).unwrap() else { panic!("factory") };
+            let nodes = info.getInfoNodes(None, None, &Tag::None);
+            nodes[0].tag.asMetaContent().unwrap().value.asAny().unwrap().downcast_ref::<Arc<dyn CellDatabase + Send + Sync>>().unwrap().clone()
+        };
+        assert_eq!((db.cellId(), db.playerRotation()), (Int3::new(4, 5, 6), Quat::IDENTITY));
+    }
+
+    #[test]
+    fn startUsesBinaryEngine() {
+        let parent = engineParent("Query", &[]);
+        let run = |path: &str| {
+            let (tag, factory) = UncoreArchive::assetFactory(&FileSource { path: path.into(), ..Default::default() }, &FamilyGame::empty());
+            let mut r = stream(b"a:b".to_vec());
+            let err = getResult(factory.unwrap()(&mut r, Arc::new(FileSource::default()), &*parent)).err().unwrap();
+            assert_eq!(tag, Tag::Int(0));
+            assert!(err.to_string().contains("IndexOutOfRangeException"), "{err}");
+        };
+        run("a.start");
+        run("a.START");
+        let (_, factory) = UncoreArchive::assetFactory(&FileSource { path: "a.zip".into(), ..Default::default() }, &FamilyGame::empty());
+        assert!(factory.is_none());
     }
 }

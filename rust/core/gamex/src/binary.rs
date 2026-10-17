@@ -890,6 +890,9 @@ pub trait ArcBinary: Send + Sync {
     fn writeData<'a>(&'a self, source: &'a BinaryArchive, w: Option<&'a mut dyn Write>, file: &'a Arc<FileSource>, data: Stream, option: &'a Tag) -> Task<'a, ()> { err(ErrorKind::Unsupported, "NotSupported".into()) }
     /// Processes this instance.
     fn process<'a>(&'a self, source: &'a BinaryArchive) -> Task<'a, ()> { ok(()) }
+    /// C# `(CellManager.IQueryFunc)this`. The default is the failed cast.
+    /// Bethesda's `Binary_Esm` is the implementor and is still unported.
+    fn asQueryFunc(&self) -> Option<&dyn openx::manager::IQueryFunc> { None }
 }
 
 impl dyn ArcBinary {

@@ -6,8 +6,9 @@
 // `OpenGLNifObjectBuilder.BuildObject`, both unported (Gamebryo's Nif.cs and
 // OpenGLNifObjectBuilder.cs), so an "Object" view has no builder.
 // "Particle" builds the outer `ParticleRenderer`, which draws nothing.
-// "Engine" needs the value to be an `Arc<dyn CellDatabase>` inside the `Any`;
-// `Binary_Engine` is still unported, so the cast fails.
+// "Engine" needs the value to be an `Arc<dyn CellDatabase>` inside the `Any`.
+// `Binary_Engine` supplies that when the query archive implements `IQueryFunc`.
+// Bethesda's `Binary_Esm` is that implementor and is still unported.
 //
 // C#'s `object obj` is the MetaContent's `Tag`: "Texture" takes a
 // `Tag::Texture`, "Material" a `Tag::Any` holding a `MaterialProp`, and

@@ -329,7 +329,7 @@ todo	94	15063f19c21c8973	Core/GameXTests/WB/FormatTests.cs	core/gamex-tests/src/
 todo	195	7d37b02b5c39a7af	Core/GameXTests/WB/FormatTests2.cs	core/gamex-tests/src/wb/format_tests2.rs	gamex-tests
 todo	28	7d65a9529c828775	Families/GameX.Ubisoft/Ubisoft.cs	families/ubisoft/src/ubisoft.rs	gamex-ubisoft
 done	333	88b27724927ec82e	Families/GameX.Uncore/Formats/Apple/PlistReader.cs	families/uncore/src/formats/apple/plist_reader.rs	gamex-uncore
-todo	1145	26b9cbb734746358	Families/GameX.Uncore/Formats/Binary.cs	families/uncore/src/formats/binary.rs	gamex-uncore
+done	1145	26b9cbb734746358	Families/GameX.Uncore/Formats/Binary.cs	families/uncore/src/formats/binary.rs	gamex-uncore
 todo	140	fad0e282e0bbae19	Families/GameX.Uncore/Formats/Collada/ColladaFileWriter+CreateNode.cs	families/uncore/src/formats/collada/collada_file_writer_create_node.rs	gamex-uncore
 todo	5	9c501afca6f015c6	Families/GameX.Uncore/Formats/Collada/ColladaFileWriter+OutputTest.cs	families/uncore/src/formats/collada/collada_file_writer_output_test.rs	gamex-uncore
 todo	28	526620f78e92cd90	Families/GameX.Uncore/Formats/Collada/ColladaFileWriter+SetAsset.cs	families/uncore/src/formats/collada/collada_file_writer_set_asset.rs	gamex-uncore

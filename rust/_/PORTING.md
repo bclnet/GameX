@@ -938,7 +938,9 @@ Differences:
   sequences stay unused: the texture tag is an `ITexture`, and C# reads
   sequences only when the tag is an `IDictionary`.
 * `EngineRenderer` downcasts to `Arc<dyn CellDatabase>` boxed inside the
-  `Any`. No format produces one until `Binary_Engine`. `OpenGLOpenEngine`
+  `Any`. `Binary_Engine` produces one when the query archive implements
+  `IQueryFunc`. That implementor is Bethesda's `Binary_Esm`, still unported,
+  so a real file still fails the cast. `OpenGLOpenEngine`
   uses `stepCells` / `finishCell` instead of `AsyncCoroutineQueue`.
   `OpenGLCellBuilder::step` returns immediately, so a begun cell is empty
   containers.
@@ -1033,7 +1035,7 @@ renamed it `Engine.cs`. Now:
 
 ## Uncore `PlistReader` and `Binary_Plist`
 
-`Formats/Apple/PlistReader.cs` is ported (`families/uncore/src/formats/apple/plist_reader.rs`). `Binary_Plist` is an `ArcBinary` in `formats/binary.rs`. `Binary.cs` stays partial: `Binary_Engine` is still out. Uncore does not register a `.plist` extension, so the archive factory was not changed. Python has no Uncore twin. Capcom's `Binary_Plist` is a different type and still raises `NotImplementedError`.
+`Formats/Apple/PlistReader.cs` is ported (`families/uncore/src/formats/apple/plist_reader.rs`). `Binary_Plist` is an `ArcBinary` in `formats/binary.rs`. `Binary.cs` is ported. Uncore does not register a `.plist` extension, so the archive factory was not changed. Python has no Uncore twin. Capcom's `Binary_Plist` is a different type and still raises `NotImplementedError`.
 
 C# bugs kept as is:
 
@@ -1052,7 +1054,7 @@ The same hand-built `bplist00` bytes were read with the C# `PlistReader`: a stri
 
 ## Uncore `Binary_Zip`
 
-`Binary_Zip` is in `families/uncore/src/formats/binary.rs`. `Binary.cs` stays partial (`PORT-SHA` `26b9cbb734746358`) until `Binary_Engine` is ported. Uncore does not register `.zip`, so `uncore.rs` was not changed. `_LIB/System.IO.Compression.cs` stays the NOT PORTED placeholder: `Binary_Zip` does not call `ZipArchiveX`.
+`Binary_Zip` is in `families/uncore/src/formats/binary.rs`. `Binary.cs` is ported (`PORT-SHA` `26b9cbb734746358`). Uncore does not register `.zip`. `_LIB/System.IO.Compression.cs` stays the NOT PORTED placeholder: `Binary_Zip` does not call `ZipArchiveX`.
 
 `zip` 4.2.0 (rustc 1.75; later 4.x needs 1.82) stands in for both readers. A null key is `System.IO.Compression.ZipArchive`: a name is kept unless it ends in `/`, and flags stay 0. Any other key is SharpZipLib `ZipFile`: a name ending in `/` or `\` is skipped, and flags are 1 when the entry is encrypted. A string key is `ZipFile.Password` (UTF-8 bytes to `by_index_decrypt`). Store, deflate, and deflate64 are enabled, plus AES for a string password. bzip2, lzma, and zstd are not linked.
 
@@ -1066,3 +1068,17 @@ C# behaviour kept, and the stand-ins:
 * `!input.CanRead` logs and returns `Stream.Null`. An opened `zip` reader implements `Read`, so that branch is not reachable. The `catch` around the copy stays commented out, and so do `Write` and `WriteData`.
 
 Python already has `Binary_Zip` and was left as it is. It always uses `zipfile`, skips the UseSystem split and the flags, raises `NotImplementedError` for a `bytes` key, and its `match` guard reads the name `key` instead of `self.key`.
+
+## Uncore `Binary_Engine`
+
+`Binary_Engine` is in `families/uncore/src/formats/binary.rs`. `Binary.cs` is ported (`PORT-SHA` `26b9cbb734746358`, `PORT_MAP` `done`). Uncore's `.start` calls `Binary_Engine::factory`. `uncore.rs` stays `PORT-SHA` `cf108586ac269047`.
+
+The file is six ASCII fields, `archive:query:cell:interior:position:rotation`. `Encoding.ASCII` turns a byte above 127 into `?`. `bool.Parse` accepts `True`/`False` in any case and rejects `1`, `yes`, and surrounding spaces. `int.Parse` and `float.Parse` trim and use an invariant `.` decimal; C# uses the current culture. A cell or position shorter than three values throws after `GetArchive`, which is where C# indexes them. A rotation of length `<= 3` is `Quaternion.Identity`. A longer list uses the first four components (`x, y, z, w`) and ignores the rest.
+
+`GetArchive` of a name that is not exactly one archive returns a `MultiArchive` (C# does this for an empty search too; `throwOnError` is unused there). The `(BinaryArchive)` cast then fails. A null archive would stay null and the next use would throw `NullReferenceException`. `Open` on a `BinaryArchive` whose `ArcBinary` is null fails in `read` before that cast.
+
+`Query` is `((IQueryFunc)QueryArchive.ArcBinary).GetQuery()`. Rust has no interface cast on `Arc<dyn ArcBinary>`, so `ArcBinary::asQueryFunc` is the cast and its default is the failure. `IQueryFunc` lives on `openx::manager`. Bethesda's `Binary_Esm` is the only implementor and is still unported, so a real query archive returns `InvalidCastException: IQueryFunc`. The test double is the only one that succeeds.
+
+`GetInfoNodes` omits `CellInterior` and `PlayerRotation`. `{Archive}` prints `GameX.BinaryArchive` (C# `object.ToString()` with no override; family archives that are a `BinaryArchive` value have that runtime type). `{Query}` prints `IQuery`, because `Box<dyn Query>` has no C# runtime type name. `CellId` prints `x,y,z`. `PlayerPosition` prints `<x, y, z>` with the invariant group separator. The `MetaContent` value is `Arc<dyn CellDatabase + Send + Sync>` inside `Tag::Any`, which is what `EngineRenderer::fromAny` downcasts. A bare `Binary_Engine` does not.
+
+Python's `Binary_Engine` was left as it is. `bool("False")` is true. Identity is `len(pr) == 1`, so length 0, 2, or 3 throws and length 1 is identity. `getQuery` is called with no `IQueryFunc` cast. C# was not changed.

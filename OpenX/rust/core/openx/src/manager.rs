@@ -361,11 +361,19 @@ fn ring(center: Int3, r: i32, world: i32) -> Vec<Int3> {
 ///
 /// `query` hands back a shared handle. `SetWorld` mutates, and `CellManager`
 /// only lends `&Query`, so the handle is a `Mutex`. The concrete database
-/// (Uncore's `Binary_Engine`, still unported) boxes itself as
+/// (Uncore's `Binary_Engine`) boxes itself as
 /// `Arc<dyn CellDatabase>` and that `Arc` is what `Tag::Any` holds, so the
 /// engine can downcast to the trait. A bare concrete value inside the `Any`
 /// does not.
 pub type SharedQuery = std::sync::Arc<std::sync::Mutex<Box<dyn Query>>>;
+
+/// C# `CellManager.IQueryFunc`.
+///
+/// `GetQuery` builds the world database. Bethesda's `Binary_Esm` is the
+/// implementor and is still unported. `ArcBinary::asQueryFunc` is the cast.
+pub trait IQueryFunc: Send + Sync {
+    fn getQuery(&self) -> SharedQuery;
+}
 
 pub trait CellDatabase: Send + Sync {
     fn archive(&self) -> openx_poly::core::SourceRef;

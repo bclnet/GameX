@@ -2,9 +2,8 @@
 // PORT-SHA: cf108586ac269047
 // PORT-STATUS: done
 //
-// PARTIAL PORT: AssetFactory's `.start` (Binary_Engine) returns (0, null),
-// since that type is not ported, so those files fall back to MetaManager's
-// text-or-hex content. `.dds` is `Binary_Dds`.
+// `.start` is `Binary_Engine`. `.dds` is `Binary_Dds`. `.zip` and `.plist` are
+// not registered: C# does not list them here.
 //
 // C# finds UncoreArchive by name through Type.GetType; `register` adds it to
 // gamex's type registry under the same name, and an app calls it at startup.
@@ -15,7 +14,7 @@ use gamex::archiveSource;
 use gamex::binary::{newArchive, AssetFactory, Archive, Binary, BinaryState, Stream, Task};
 use gamex::family::{registerType, ArchiveFactory, FamilyGame};
 use gamex::meta::{extension, FileSource, Tag};
-use crate::formats::binary::{Binary_Dds, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_TestTri, Binary_Txt};
+use crate::formats::binary::{Binary_Dds, Binary_Engine, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_TestTri, Binary_Txt};
 
 pub fn register() {
     registerType::<ArchiveFactory>("GameX.Uncore.UncoreArchive, GameX.Uncore", |parent, state| Ok(UncoreArchive::new(parent, state)));
@@ -47,7 +46,7 @@ impl UncoreArchive {
             ".pcx" => (Tag::Int(0), Some(Binary_Pcx::factory)),
             ".tga" => (Tag::Int(0), Some(Binary_Tga::factory)),
             ".dds" => (Tag::Int(0), Some(Binary_Dds::factory)),
-            ".start" => (Tag::Int(0), None), // Binary_Engine: not ported
+            ".start" => (Tag::Int(0), Some(Binary_Engine::factory)),
             _ => match source.path.as_str() {
                 "testtri.gfx" => (Tag::Int(0), Some(Binary_TestTri::factory)),
                 _ => (Tag::Int(0), None),

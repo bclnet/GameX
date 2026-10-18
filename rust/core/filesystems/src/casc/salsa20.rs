@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX.FileSystems/Casc/Salsa20.cs
 // PORT-SHA: e72b9873376631e1
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — and this one is worse than the first refusal, because it is the
 // **second** Salsa20 implementation in GameX.

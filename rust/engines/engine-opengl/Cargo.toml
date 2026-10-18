@@ -9,7 +9,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+glam = { workspace = true }
 gamex = { path = "../../core/gamex" }
+gamex-arkane = { path = "../../families/arkane" }
 gamex-gamebryo = { path = "../../families/gamebryo" }
 openx-engine-opengl = { path = "../../../OpenX/rust/engines/opengl" }
 openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }

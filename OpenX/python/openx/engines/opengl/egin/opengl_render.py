@@ -3,7 +3,12 @@ import math, numpy as np
 from enum import Enum
 from OpenGL.GL import *
 from openx.gfx import Key, KeyboardState, MouseState, Renderer #, IOpenGLGfx
-from openx.gfx.egin import Scene, Camera, DrawCall, MeshBatchRequest, RenderMaterial, RenderableMesh, IPickingTexture, Octree 
+from openx.gfx.egin import Scene, Camera, DrawCall, MeshBatchRequest, RenderMaterial, RenderableMesh, IPickingTexture, Octree, SceneNode, IMeshCollection
+from openx.gfx.egin.egin_particle import (
+    InstantaneousEmitter, ContinuousEmitter, CreateWithinSphere, InitialVelocityNoise, OffsetVectorToVector, PositionOffset,
+    RandomAlpha, RandomColor, RandomLifeTime, RandomRadius, RandomRotation, RandomRotationSpeed, RandomSequence, RandomTrailLength,
+    RemapParticleCountToScalar, RingWave, Decay, BasicMovement, ColorInterpolate, InterpolateRadius, FadeAndKill, FadeInSimple,
+    FadeOutSimple, OscillateScalar, SpinUpdate) 
 
 CAMERASPEED = 300 # Per second
 
@@ -601,6 +606,81 @@ class OctreeDebugRenderer:
 #endregion
 
 #region Particle
+
+class MeshSceneNode(SceneNode, IMeshCollection):
+    def __init__(self, scene: Scene, source: ISource, mesh: IMesh, meshIndex: int, skinMaterials: dict[str, str] = None):
+        super().__init__(scene)
+        self.mesh = GLRenderableMesh(scene.graphic, source, mesh, meshIndex, skinMaterials)
+        self.localBoundingBox = self.mesh.boundingBox
+    @property
+    def tint(self): return self.mesh.tint
+    @tint.setter
+    def tint(self, value): self.mesh.tint = value
+    @property
+    def renderableMeshes(self):
+        yield self.mesh
+    def getSupportedRenderModes(self): return self.mesh.getSupportedRenderModes()
+    def setRenderMode(self, renderMode: str) -> None: self.mesh.setRenderMode(renderMode)
+    def update(self, context) -> None: self.mesh.update(context.timestep)
+    def render(self, context) -> None: pass
+
+class ParticleControllerFactory:
+    _emitters = {
+        'C_OP_InstantaneousEmitter': lambda baseProperties, emitterInfo: InstantaneousEmitter(baseProperties, emitterInfo),
+        'C_OP_ContinuousEmitter': lambda baseProperties, emitterInfo: ContinuousEmitter(baseProperties, emitterInfo),
+    }
+    _initializers = {
+        'C_INIT_CreateWithinSphere': lambda info: CreateWithinSphere(info),
+        'C_INIT_InitialVelocityNoise': lambda info: InitialVelocityNoise(info),
+        'C_INIT_OffsetVectorToVector': lambda info: OffsetVectorToVector(info),
+        'C_INIT_PositionOffset': lambda info: PositionOffset(info),
+        'C_INIT_RandomAlpha': lambda info: RandomAlpha(info),
+        'C_INIT_RandomColor': lambda info: RandomColor(info),
+        'C_INIT_RandomLifeTime': lambda info: RandomLifeTime(info),
+        'C_INIT_RandomRadius': lambda info: RandomRadius(info),
+        'C_INIT_RandomRotation': lambda info: RandomRotation(info),
+        'C_INIT_RandomRotationSpeed': lambda info: RandomRotationSpeed(info),
+        'C_INIT_RandomSequence': lambda info: RandomSequence(info),
+        'C_INIT_RandomTrailLength': lambda info: RandomTrailLength(info),
+        'C_INIT_RemapParticleCountToScalar': lambda info: RemapParticleCountToScalar(info),
+        'C_INIT_RingWave': lambda info: RingWave(info),
+    }
+    _operators = {
+        'C_OP_Decay': lambda info: Decay(info),
+        'C_OP_BasicMovement': lambda info: BasicMovement(info),
+        'C_OP_ColorInterpolate': lambda info: ColorInterpolate(info),
+        'C_OP_InterpolateRadius': lambda info: InterpolateRadius(info),
+        'C_OP_FadeAndKill': lambda info: FadeAndKill(info),
+        'C_OP_FadeInSimple': lambda info: FadeInSimple(info),
+        'C_OP_FadeOutSimple': lambda info: FadeOutSimple(info),
+        'C_OP_OscillateScalar': lambda info: OscillateScalar(info),
+        'C_OP_SpinUpdate': lambda info: SpinUpdate(info),
+    }
+    @staticmethod
+    def tryCreateEmitter(name: str, baseProperties: dict, emitterInfo: dict):
+        factory = ParticleControllerFactory._emitters.get(name)
+        if factory is None: return False, None
+        return True, factory(baseProperties, emitterInfo)
+    @staticmethod
+    def tryCreateInitializer(name: str, initializerInfo: dict):
+        factory = ParticleControllerFactory._initializers.get(name)
+        if factory is None: return False, None
+        return True, factory(initializerInfo)
+    @staticmethod
+    def tryCreateOperator(name: str, operatorInfo: dict):
+        factory = ParticleControllerFactory._operators.get(name)
+        if factory is None: return False, None
+        return True, factory(operatorInfo)
+    @staticmethod
+    def tryCreateRender(name: str, source, rendererInfo: dict, gfx):
+        from openx.engines.opengl.gfx.opengl_render import ParticleRenderer
+        table = {
+            'C_OP_RenderSprites': lambda source, info, gfx: ParticleRenderer.SpritesRenderer(source, info, gfx),
+            'C_OP_RenderTrails': lambda source, info, gfx: ParticleRenderer.TrailsRenderer(source, info, gfx),
+        }
+        factory = table.get(name)
+        if factory is None: return False, None
+        return True, factory(source, rendererInfo, gfx)
 
 #endregion
 

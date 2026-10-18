@@ -1,10 +1,12 @@
 // PORT-SOURCE: Engines/GameX.Engine.OpenGL/OpenGL_Render.cs
-// PORT-SHA: 78188c836ed24ae9
+// PORT-SHA: 85e7fd691556ba6d
 // PORT-STATUS: done
 //
 // PARTIAL PORT: the static constructor registers `Binary_Nif` with
 // `OpenGLNifObjectBuilder.BuildObject`, both unported (Gamebryo's Nif.cs and
-// OpenGLNifObjectBuilder.cs), so an "Object" view has no builder.
+// OpenGLNifObjectBuilder.cs). `Binary_Ftl` is registered on the first
+// `createRenderer` (`open_gl_ftl_object_builder`). An "Object" view of a NIF
+// still has no builder.
 // "Particle" builds the outer `ParticleRenderer`, which draws nothing.
 // "Engine" needs the value to be an `Arc<dyn CellDatabase>` inside the `Any`.
 // `Binary_Engine` supplies that when the query archive implements `IQueryFunc`.
@@ -14,10 +16,12 @@
 // `Tag::Texture`, "Material" a `Tag::Any` holding a `MaterialProp`, and
 // `obj is IHaveSource z` has no Rust form yet.
 
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::io::{Error, ErrorKind};
-use std::sync::Arc;
+use std::sync::{Arc, Once};
 use gamex::meta::Tag;
+use gamex_arkane::formats::danae::binary::Binary_Ftl;
+use openx_engine_opengl::gfx::open_gl::OpenGLX;
 use openx_engine_opengl::gfx::open_gl_render::{EngineRenderer, MaterialRenderer, ObjectRenderer, ParticleRenderer, TestTriRenderer, TextureRenderer};
 use openx_gfx::gfx::{IOpenGfxs, MaterialProp};
 use openx_gfx_egin::egin_render::EginRenderer;
@@ -26,7 +30,16 @@ use openx_poly::core::{SourcePath, SourceRef};
 pub struct OpenGLRenderer;
 
 impl OpenGLRenderer {
+    /// C# `OpenGLRenderer`'s static constructor. NIF stays unregistered.
+    fn register() {
+        static ONCE: Once = Once::new();
+        ONCE.call_once(|| {
+            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Ftl>(), crate::open_gl_ftl_object_builder::buildObject);
+        });
+    }
+
     pub fn createRenderer(parent: Option<&dyn std::any::Any>, gfx: &IOpenGfxs, source: &SourceRef, obj: &Tag, type_: &str) -> Result<Option<Box<dyn EginRenderer + Send>>, Error> {
+        Self::register();
         let badObj = || Error::new(ErrorKind::InvalidInput, format!("InvalidCastException: {type_}: {obj:?}"));
         Ok(Some(match type_ {
             "TestTri" => Box::new(TestTriRenderer::new(gfx, source, &())?),

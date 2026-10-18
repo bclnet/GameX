@@ -1,7 +1,12 @@
 from __future__ import annotations
 import os
 from openx.core import ISource, IHaveSource
-from openx.engines.opengl.gfx import TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
+from openx.engines.opengl.gfx import OpenGLX, TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
+from gamex.engines.opengl.openglFtlObjectBuilder import OpenGLFtlObjectBuilder
+from gamex.families.Arkane.formats.danae.binary import Binary_Ftl
+
+OpenGLX.buildersByType['Binary_Ftl'] = OpenGLFtlObjectBuilder.buildObject
+OpenGLX.buildersByType[Binary_Ftl] = OpenGLFtlObjectBuilder.buildObject
 
 # typedefs
 class IOpenGfx: pass

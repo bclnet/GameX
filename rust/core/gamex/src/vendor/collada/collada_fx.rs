@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Collada/Collada_FX.cs
 // PORT-SHA: 5c3df852a1a4d390
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — COLLADA schema binding, 2,533 lines across six files.
 //

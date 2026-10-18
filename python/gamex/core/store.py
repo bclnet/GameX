@@ -35,13 +35,7 @@ def getPathByKey(key: str, family: str, elem: dict[str, object]):
 
 class store_abandon:
     @staticmethod
-    def getPath():
-        match system:
-            case 'Windows': root = 'E:\\'; paths = [os.path.join(root, 'AbandonLibrary')]
-            case 'Linux': root = os.path.expanduser('~'); paths = [os.path.join(root, 'AbandonLibrary')]
-            case 'Darwin': roots = [os.path.expanduser('~'), '/Users/Shared']; paths = [os.path.join(root, 'AbandonLibrary') for root in roots]
-            case _: raise Exception(f'Unknown platform: {system}')
-        return next(iter(s for s in paths if os.path.isdir(s)), None)
+    def getPath(): return 'E:\\AbandonLibrary'
 
     @classmethod
     def init(cls):
@@ -61,13 +55,7 @@ class store_abandon:
 
 class store_archive:
     @staticmethod
-    def getPath():
-        match system:
-            case 'Windows': root = 'E:\\'; paths = [os.path.join(root, 'ArchiveLibrary')]
-            case 'Linux': root = os.path.expanduser('~'); paths = [os.path.join(root, 'ArchiveLibrary')]
-            case 'Darwin': roots = [os.path.expanduser('~'), '/Users/Shared']; paths = [os.path.join(root, 'ArchiveLibrary') for root in roots]
-            case _: raise Exception(f'Unknown platform: {system}')
-        return next(iter(s for s in paths if os.path.isdir(s)), None)
+    def getPath(): return 'E:\\ArchiveLibrary'
 
     @classmethod
     def init(cls):
@@ -300,8 +288,12 @@ class store_ubisoft:
     def getPath():
         match system:
             case 'Windows': root = os.getenv('LOCALAPPDATA'); paths = [os.path.join(root, 'Ubisoft Game Launcher')]
-            case 'Linux': root = os.path.expanduser('~'); paths = [os.path.join(root, 'Ubisoft Game Launcher')]
-            case 'Darwin': roots = [os.path.expanduser('~'), '/Users/Shared']; paths = [os.path.join(root, 'Ubisoft Game Launcher') for root in roots]
+            case 'Linux':
+                home = [os.path.expanduser('~'), '/Users/Shared']; search = ['??']
+                paths = [os.path.join(h, s) for h in home for s in search]
+            case 'Darwin':
+                home = '/Users/Shared'; search = ['??']
+                paths = [os.path.join(home, s) for s in search]
             case _: raise Exception(f'Unknown platform: {system}')
         return next(iter(s for s in paths if os.path.isdir(s)), None)
         

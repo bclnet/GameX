@@ -6,8 +6,9 @@ the manifest that makes parallel C#/Rust updates tractable.
 import hashlib, os, re, subprocess, sys
 from pathlib import Path
 
-SRC = Path("/home/claude/src/dotnet")
-OUT = Path("/home/claude/rust")
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "dotnet"
+OUT = ROOT / "rust"
 SKIP = {"bin", "obj", ".vs", "packages", "node_modules"}
 
 # .NET project name -> (workspace-relative crate dir, crate name)

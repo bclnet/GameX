@@ -60,6 +60,12 @@ members = [
     "engines/engine-stride",
     "engines/engine-unity",
     "engines/engine-unreal",
+    "engines/engine-vk",
+    "engines/engine-raylib",
+    "engines/engine-bgfx",
+    "engines/engine-bevy",
+    "engines/engine-wgpu",
+    "engines/engine-diligent",
 ]
 
 [workspace.lints.rust]

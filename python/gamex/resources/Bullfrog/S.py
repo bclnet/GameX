@@ -1,58 +1,47 @@
-import os, pathlib
+from __future__ import annotations
+import os
+from decimal import Decimal
 from zipfile import ZipFile
-from io import BytesIO
-from importlib import resources
 
-class MurmurHash3:
-    C1 = 0xcc9e2d51
-    C2 = 0x1b873593
-    Seed = 0xffffffff
-    @staticmethod
-    def hash(data: str) -> int: return MurmurHash3.hash2(data.encode('utf-16le'))
-    @staticmethod
-    def hash2(data: bytes) -> int:
-        h = MurmurHash3.Seed; k = 0; l = 0
-        r = BytesIO(data)
-        chunk = r.readBytes(4)
-        while (chunkLength := len(chunk)) > 0:
-            l += chunkLength
-            match chunkLength:
-                case 4:
-                    k = (chunk[0] | chunk[1] << 8 | chunk[2] << 16 | chunk[3] << 24); k = k*MurmurHash3.C1&0xffffffff; k = MurmurHash3._rotl32(k, 15); k = k*MurmurHash3.C2&0xffffffff; h ^= k 
-                    h = MurmurHash3._rotl32(h, 13); h = (h * 5 + 0xe6546b64) & 0xffffffff
-                case 3: k = (chunk[0] | chunk[1] << 8 | chunk[2] << 16); k = k*MurmurHash3.C1&0xffffffff; k = MurmurHash3._rotl32(k, 15); k = k*MurmurHash3.C2&0xffffffff; h ^= k
-                case 2: k = (chunk[0] | chunk[1] << 8); k = k*MurmurHash3.C1&0xffffffff; k = MurmurHash3._rotl32(k, 15); k = k*MurmurHash3.C2&0xffffffff; h ^= k
-                case 1: k = (chunk[0]); k = k*MurmurHash3.C1&0xffffffff; k = MurmurHash3._rotl32(k, 15); k = k*MurmurHash3.C2&0xffffffff; h ^= k
-            chunk = r.readBytes(4)
-        h ^= l
-        h = MurmurHash3._fmix(h)
-        return h
+# S.Event
+class Event:
+    def __init__(self, frame: int, music: Decimal, sound: Decimal, subtitle: str = None):
+        self.frame = frame
+        self.music = music
+        self.sound = sound
+        self.subtitle = subtitle
 
-    @staticmethod
-    def _rotl32(x:int, r:int) -> int: return (x << r)&0xffffffff | (x >> (32 - r))
-    @staticmethod
-    def _fmix(h:int) -> int:
-        h ^= h >> 16; h = h*0x85ebca6b&0xffffffff
-        h ^= h >> 13; h = h*0xc2b2ae35&0xffffffff
-        h ^= h >> 16
-        return h
+_files = None
+_events: dict[str, list] = {}
 
-file = resources.files().joinpath('resources', 'Bullfrog/S.zip').open('rb')
-arc: ZipFile = ZipFile(file, 'r')
-files: dict[str, object] = { x.filename:x for x in arc.infolist() }
-hashLookup: dict[str, dict[int, str]] = {}
+def _zipFiles() -> dict[str, object]:
+    global _files
+    if _files == None:
+        arc = ZipFile(os.path.join(os.path.dirname(__file__), 'S.zip'), 'r')
+        _files = { os.path.basename(info.filename): info for info in arc.infolist() if not info.is_dir() }
+        _zipFiles.arc = arc
+    return _files
 
-@staticmethod
-def getHashLookup(path: str) -> dict[int, str]:
-    if path in hashLookup: return hashLookup[path]
-    line: str
-    value: dict[int, str] = {}
-    with arc.open(files[path]) as r:
-        while line := r.readline().decode('ascii').rstrip('\r\n'):
-            hashLower = MurmurHash3.hash(line.lower())
-            hashUpper = MurmurHash3.hash(line.upper())
-            hash = (hashUpper << 32) & 0xffffffffffffffff | hashLower
-            if hash in value:
-                print(f'[COLLISION]: {value[hash]} <-> {line}')
-            value[hash] = line
+# Keyed by the zip entry name. A missing path is cached as None.
+def getEvents(path: str):
+    if path in _events: return _events[path]
+    entry = _zipFiles().get(path)
+    if entry == None:
+        _events[path] = None
+        return None
+    value = []
+    with _zipFiles.arc.open(entry) as raw:
+        text = raw.read().decode('utf-8-sig')
+    for line in text.splitlines():
+        p = line.split(' ')
+        evnt = Event(int(p[0]), Decimal(-1), Decimal(-1))
+        for i in range(1, len(p)):
+            part = p[i]
+            if part[0] == '#': pass
+            # decimal.Parse already includes the sign; the unary minus flips it back.
+            elif part[0] == '-': evnt.music = -Decimal(part)
+            elif part[0].isdigit(): evnt.sound = Decimal(part)
+            else: evnt.subtitle = part
+        value.append(evnt)
+    _events[path] = value
     return value

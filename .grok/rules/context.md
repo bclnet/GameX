@@ -14,6 +14,10 @@ Same day, continued: the Danae FTL object builder is in. `FtlObjectBuilder` buil
 
 Same day, continued: the Rust Unreal engine links a C++ stub. `unreal_shim_linked` returns 0 and the version string is `unreal-shim-stub`. Cargo feature `unreal` is off and refuses to compile without UE headers. C++/CLI was skipped: UnrealBuildTool does not support `/clr`, and `UnrealEngine.Framework.dll` is a guest API with no `DllImport`. `openx-engine-unreal` tests are 2. The C# Unreal skeletons were left as they are.
 
+Same day, continued: the Vulkan provider is in this checkout. Engine id `VK`. It registers and creates a Vulkan instance with no window or swapchain. Host, sprite, and model methods still throw. The Explorer does not list it. `openx-engine-vk` tests are 2. `gamex-engine-vk` checks clean. `Vk_Render.cs` is a `todo` row. The Arkane bullet stays open.
+
+Same day, continued: Raylib (`RL`) calls `IsWindowReady` from C# (Raylib-cs 8.1.0, version `6.0`) and from Python (`pyray`, imported only in `version`). Rust does not depend on the raylib crate: 6.0.0 needs rustc 1.88. bgfx (`BX`) and wgpu (`WG`) are registration stubs in all three languages. Diligent (`DN`) registers in all three and its shim reports not linked; the headers are not vendored. Bevy (`BV`) is Rust only: the C# projects and Python packages were removed. The 29 empty `NOT PORTED` rows are `todo`. FTS and OpenGL FTL added two `done` rows and one partial Unity row, so `PORT_MAP.tsv` is 76 `done` / 339 `todo`. WB `Properties.cs` is ported (`bf4ea84fcfecfe68`). Python Bullfrog and Beamdog readers follow C#. Beamdog is `Binary_Abc` and `Binary_XXX`. Python section 4 now has the missing Uncore readers, OpenX graphics, core types, a real `TestEngine` check, and `decodeUri` (`25073859b079bfe0`). The nine Arx `.bmp`s, `Binary_Zip`, `Binary_Engine`, `Compression`, and Store's per-OS roots are still open. `disc_mds` `LoadMdsToDisc` is in (12 tests). Danae `Binary.cs` PORT-SHA is `065bd41b556fd195` after publishing `F_LEVEL.Backg`. The six `Applications/` paths now say `GameX.Cli/` and `Apps/GameX.App.Client/`. An engine id is registered only in a language that can host it. TODO.md lists the open tracks so they can proceed at the same time. Unreal C# stays a stub: UnrealSharp and UnrealCLR run inside Unreal, and C++/CLI cannot host it.
+
 Same day, continued: Source `.mdl` is `Binary_Mdl40`. The factory casts to `BinaryArchive`, then reads the 408-byte header (name, six vectors, flags). An empty name throws. The bone, sequence and texture loads stay commented out. `gamex-valve` tests are 8, `gamex-arkane` 6, `gamex-id` 8. `cargo check --workspace` in `rust/` exited 0. Python's twin names the info group `Model`, stores the string `self`, and uses U+FFFD for a byte above 127. The Explorer was not opened.
 
 ## What is real
@@ -62,7 +66,7 @@ Rust is ahead of Python on the core model and on the Arx decode path, and behind
 
 Python is the hand port and the spec source. It is behind Rust on `EmptyArchive`, `IUnknown`, `Stream`, `FamilyManager` / `ShellState`, and most of `Util`. It always activates `TestEngine` because `openx.core.core` imports `unittest`. Bullfrog and Beamdog readers are not real ports yet.
 
-ADR 0001 still holds: one change, all three languages, same names. A missing twin is recorded, not invented.
+ADR 0001 still holds: one change, all three languages, same names. A missing twin is recorded, not invented. The Ultima Online client port is the exception, from 2026-10-17: it stays C# (`GameX.Origin.UO`, `Clients/UO`, and MonoGame host changes that exist only to run that client) until the owner says it is merged into GameX. Do not keep Python or Rust in sync for that port, and do not add `gamex-origin-uo` to the Rust workspace. Origin resource parsers that already have twins stay in all three languages.
 
 ## Known defects left on purpose
 

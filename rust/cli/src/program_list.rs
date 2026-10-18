@@ -1,4 +1,4 @@
-// PORT-SOURCE: Applications/GameX.App.Cli/Program+List.cs
+// PORT-SOURCE: GameX.Cli/Program+List.cs
 // PORT-SHA: d0168d2099f577c8
 // PORT-STATUS: todo (51 live LOC in C#)
 //

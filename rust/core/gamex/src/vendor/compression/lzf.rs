@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Lzf.cs
 // PORT-SHA: f38992515530f62c
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — 44 lines of LibLZF.
 //

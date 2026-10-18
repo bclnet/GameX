@@ -22,6 +22,36 @@ def decodePath(applicationPath: str, path: str, rootPath: str = None) -> str:
         f'{os.getenv("LOCALAPPDATA")}{path[14:]}' if lowerPath.startswith('%localappdata%') else \
         path
 
+def _decodeHex(a: str, b: str) -> int | None:
+    try: return int(a + b, 16)
+    except ValueError: return None
+
+def decodeUri(path: str) -> str:
+    # C# Uri.UnescapeDataString. '+' stays '+'. A bad % sequence stays escaped.
+    if path is None: raise TypeError('path')
+    if '%' not in path: return path
+    out: list[str] = []
+    i = 0; n = len(path)
+    while i < n:
+        if path[i] == '%' and i + 2 < n:
+            b = _decodeHex(path[i + 1], path[i + 2])
+            if b is None: out.append('%'); i += 1; continue
+            if b < 128: out.append(chr(b)); i += 3; continue
+            need = 2 if b & 0xE0 == 0xC0 else 3 if b & 0xF0 == 0xE0 else 4 if b & 0xF8 == 0xF0 else 0
+            if need == 0: out.append(path[i:i + 3]); i += 3; continue
+            raw = bytearray((b,)); j = i + 3; ok = True
+            while len(raw) < need:
+                if j + 2 >= n or path[j] != '%': ok = False; break
+                nb = _decodeHex(path[j + 1], path[j + 2])
+                if nb is None or nb < 128: ok = False; break
+                raw.append(nb); j += 3
+            if ok:
+                try: out.append(raw.decode('utf-8')); i = j; continue
+                except UnicodeDecodeError: pass
+            out.append(path[i:i + 3]); i += 3; continue
+        out.append(path[i]); i += 1
+    return ''.join(out)
+
 def _int_tryParse(s: str) -> int | None:
     try: return int(s)
     except ValueError: return None

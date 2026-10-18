@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX.FileSystems/Casc/CdnCacheStats.cs
 // PORT-SHA: 440726421e88caee
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — three public mutable statics — `timeSpentDownloading`, `numFilesOpened`, `numFilesDownloaded` — with no synchronisation, incremented from concurrent CDN downloads. `TimeSpan` is 8 bytes so `+=` on it is not even atomic on 32-bit; the counters are `int` so they tear less visibly but still race.
 //

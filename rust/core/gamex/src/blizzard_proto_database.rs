@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/BlizzardProtoDatabase.cs
 // PORT-SHA: 733f96e831880639
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — 4,986 lines of protobuf compiler output.
 //

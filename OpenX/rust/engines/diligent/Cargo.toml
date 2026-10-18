@@ -1,0 +1,20 @@
+[package]
+name = "openx-engine-diligent"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# Off by default. Defines GAMEX_WITH_DILIGENT for native/diligent_shim.cpp.
+# Needs a Diligent install this repo does not have, so it is not a CI default.
+diligent = []
+
+[dependencies]
+openx = { path = "../../core/openx" }
+
+[build-dependencies]
+cc = "1"

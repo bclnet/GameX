@@ -1,6 +1,6 @@
 // PORT-SOURCE: Families/GameX.Uncore/_LIB/System.IO.Compression.cs
 // PORT-SHA: 076ad7e94d38e013
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — 772 lines wrapping third-party libraries, not implementing
 // anything.

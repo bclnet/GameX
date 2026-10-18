@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Lzo.cs
 // PORT-SHA: 2d49176135e0454e
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — 91 lines wrapping the `lzo.net` package.
 //

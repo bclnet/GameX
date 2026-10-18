@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/Assembly.cs
 // PORT-SHA: c09fddebd470ad26
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — assembly-level attributes with no Rust equivalent:
 //

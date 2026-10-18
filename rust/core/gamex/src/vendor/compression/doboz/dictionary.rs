@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Doboz/Dictionary.cs
 // PORT-SHA: 6654f81e073a264d
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — the match-finder half of the Doboz codec.
 //

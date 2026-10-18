@@ -5,9 +5,10 @@ from io import BytesIO
 from PIL import Image
 from enum import Enum
 from quaternion import quaternion
-from openx.core import _pathExtension, EngineX, Int3, ICellDatabase
+from openx.core import _pathExtension, EngineX, Int3, ICellDatabase, log, Writer
 from openx.gfx import Raster, DDS_HEADER, TextureAsDds, TextureAsBytes, ITexture, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
+from .apple.plist_reader import PlistReader
 from zipfile import ZipFile
 
 #region Binary_Bik
@@ -92,10 +93,323 @@ class Binary_Fsb(IHaveMetaInfo):
 
 #endregion
 
+#region Binary_Iif
+
+def _i32(v: int) -> int:
+    v &= 0xFFFFFFFF
+    return v - 0x100000000 if v & 0x80000000 else v
+
+def _i16(v: int) -> int:
+    v &= 0xFFFF
+    return v - 0x10000 if v & 0x8000 else v
+
+def _readChunk(r: BinaryReader) -> tuple[int, int]:
+    # MarshalS ">4xI": id is little-endian, size is big-endian.
+    raw = r.readBytes(8)
+    return int.from_bytes(raw[0:4], 'little'), int.from_bytes(raw[4:8], 'big', signed=True)
+
+def _actualSize(size: int) -> int: return size + (size & 1)
+
+def _vlq(r: BinaryReader) -> int:
+    value = 0
+    for _ in range(4):
+        value = _i32(value << 7)
+        b = r.readByte()
+        value = _i32(value | (b & 0x7F))
+        if (b & 0x80) == 0: break
+    return value
+
+def _vlq2(r: BinaryReader) -> int:
+    value = 0
+    i = 0
+    while i < 4:
+        b = r.readByte()
+        if (b & 0x80) != 0: break
+        value += b
+        i += 1
+    r.skip(-1)
+    return value
+
+def _putVlq(w: Writer, value: int) -> None:
+    value = _i32(value)
+    buffer = value & 0x7F
+    while True:
+        value = _i32(value >> 7)
+        if value == 0: break
+        buffer = _i32(((buffer & 0xFFFFFFFF) << 8) | ((value & 0x7F) | 0x80))
+    while True:
+        w.writeByte(buffer & 0xFF)
+        if (buffer & 0x80) != 0: buffer = _i32(buffer >> 8)
+        else: break
+
+# Binary_Iif
+class Binary_Iif(IHaveMetaInfo):
+    class Chunk:
+        FORM = 0x4d524f46
+        CAT_ = 0x20544143
+        XDIR = 0x52494458
+        XMID = 0x44494d58
+        INFO = 0x4f464e49
+        TIMB = 0x424d4954
+        EVNT = 0x544e5645
+        _struct = ('>4xI', 8)
+    class TIMB:
+        _struct = ('<2x', 2)
+        def __init__(self, patchNumber: int, timbreBank: int):
+            self.patchNumber = patchNumber
+            self.timbreBank = timbreBank
+    class MidiEvent:
+        def __init__(self, time: int):
+            self.time = time
+            self.status = 0
+            self.data0 = 0
+            self.data1 = 0
+            self.length = 0
+            self.stream = None
+            self.next = None
+    class EV(int):
+        NOTE_OFF = 0x80
+        NOTE_ON = 0x90
+        POLY_PRESS = 0xa0
+        CONTROL = 0xb0
+        PROGRAM = 0xc0
+        CHAN_PRESS = 0xd0
+        PITCH = 0xe0
+        SYSEX = 0xf0
+        ESC = 0xf7
+        META = 0xff
+    class EVT(int):
+        OUTPUT_CABLE = 0x21
+        EOT = 0x2f
+        TRACK_END = 0x2f
+        TEMPO = 0x51
+        SET_TEMPO = 0x51
+        TIME_SIG = 0x58
+        KEYSIG = 0x59
+
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Iif(r, f.fileSize)
+
+    def __init__(self, r: BinaryReader, fileSize: int):
+        self.tracks = 0
+        self.events = None
+        self.timing = None
+        self.timbres = None
+        self.theList = None
+        self.curTrack = 0
+        self.curEvent = None
+        self.curEventList = None
+        self._read(r, fileSize)
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self))
+        ]
+
+    def _alloc(self) -> None:
+        if self.events is not None: return
+        self.events = [None] * self.tracks
+        self.timing = [0] * self.tracks
+        self.timbres = [None] * self.tracks
+
+    def _read(self, r: BinaryReader, fileSize: int) -> bool:
+        self.tracks = 1
+        while True:
+            id_, size = _readChunk(r)
+            position = r.tell()
+            result = self._handleFORM(r, size) if id_ == self.Chunk.FORM else self._handleCAT(r, size) if id_ == self.Chunk.CAT_ else False
+            if not result: return False
+            newPosition = position + _actualSize(size)
+            if r.tell() != newPosition: r.seek(position + _actualSize(size))
+            if not r.tell() < fileSize: break
+        return True
+
+    def _handleFORM(self, r: BinaryReader, chunkSize: int) -> bool:
+        kind = r.readUInt32()
+        if kind == self.Chunk.XDIR: return self._handleXDIR(r, chunkSize - 4)
+        if kind == self.Chunk.XMID: return self._handleXMID(r, chunkSize - 4)
+        return False
+
+    def _handleCAT(self, r: BinaryReader, chunkSize: int) -> bool:
+        basePosition = r.tell()
+        endPosition = r.tell() + chunkSize
+        while True:
+            id_, size = _readChunk(r)
+            position = r.tell()
+            if id_ == self.Chunk.XMID:
+                r.skip(-4); position -= 4
+                size = int(chunkSize - (position - basePosition))
+            result = self._handleFORM(r, size) if id_ == self.Chunk.FORM else self._handleXMID(r, size) if id_ == self.Chunk.XMID else False
+            if not result: return False
+            newPosition = position + _actualSize(size)
+            if r.tell() != newPosition: r.seek(position + _actualSize(size))
+            if not r.tell() < endPosition: break
+        return True
+
+    def _handleXDIR(self, r: BinaryReader, chunkSize: int) -> bool:
+        if chunkSize != 10: return False
+        _id, size = _readChunk(r)
+        # C# compares Size to Chunk.INFO, and rejects every size other than 2.
+        if size == self.Chunk.INFO or size != 2: return False
+        self.tracks = r.readUInt16()
+        self._alloc()
+        return True
+
+    def _handleXMID(self, r: BinaryReader, chunkSize: int) -> bool:
+        endPosition = r.tell() + chunkSize
+        while True:
+            id_, size = _readChunk(r)
+            position = r.tell()
+            result = self._handleFORM(r, size) if id_ == self.Chunk.FORM else self._handleTIMB(r, size) if id_ == self.Chunk.TIMB else self._handleEVNT(r, size) if id_ == self.Chunk.EVNT else False
+            if not result: return False
+            newPosition = position + _actualSize(size)
+            if r.tell() != newPosition: r.seek(position + _actualSize(size))
+            if not r.tell() < endPosition: break
+        return True
+
+    def _handleTIMB(self, r: BinaryReader, chunkSize: int) -> bool:
+        numTimbres = r.readUInt16()
+        if (numTimbres << 1) + 2 != chunkSize: return False
+        timbres = []
+        for _ in range(numTimbres):
+            raw = r.readBytes(2)
+            timbres.append(self.TIMB(raw[0], raw[1]))
+        self.timbres[self.curTrack] = timbres
+        return True
+
+    def _handleEVNT(self, r: BinaryReader, chunkSize: int) -> bool:
+        self._alloc()
+        self.curEventList = None
+        timing = self._readEventList(r)
+        if timing == 0: log.info('Unable to convert data\n'); return False
+        self.timing[self.curTrack] = timing
+        self.events[self.curTrack] = self.curEventList
+        self.curTrack += 1
+        return True
+
+    def _createNew(self, time: int):
+        if self.curEventList is None:
+            self.curEvent = self.curEventList = self.MidiEvent(time)
+            return self.curEvent
+        if self.curEvent.time > time: self.curEvent = self.curEventList
+        while self.curEvent.next is not None:
+            if self.curEvent.next.time > time:
+                ev = self.MidiEvent(time); ev.next = self.curEvent.next
+                self.curEvent.next = ev
+                self.curEvent = ev
+                return self.curEvent
+            self.curEvent = self.curEvent.next
+        self.curEvent.next = self.MidiEvent(time)
+        self.curEvent = self.curEvent.next
+        return self.curEvent
+
+    def _convertEvent(self, r: BinaryReader, time: int, status: int, size: int) -> None:
+        current = self._createNew(time)
+        current.status = status
+        current.data0 = r.readByte()
+        if size == 1: return
+        current.data1 = r.readByte()
+        if size == 2: return
+        prev = current
+        delta = _vlq(r)
+        current = self._createNew(time + delta * 3)
+        current.status = status
+        current.data0 = prev.data0
+        current.data1 = 0
+        self.curEvent = prev
+
+    def _convertSystem(self, r: BinaryReader, time: int, status: int) -> None:
+        current = self._createNew(time)
+        current.status = status
+        if current.status == self.EV.META: self.curEvent.data0 = r.readByte()
+        self.curEvent.length = _vlq(r)
+        if self.curEvent.length == 0: return
+        self.curEvent.stream = r.readBytes(self.curEvent.length)
+
+    def _readEventList(self, r: BinaryReader) -> int:
+        time = 0
+        tempo = 500000
+        tempoSet = False
+        while True:
+            status = r.readByte()
+            ev = status & 0xF0
+            if ev == self.EV.NOTE_OFF: log.info('ERROR: Note off not valid in XMidiFile\n'); return 0
+            elif ev == self.EV.NOTE_ON: self._convertEvent(r, time, status, 3)
+            elif ev == self.EV.POLY_PRESS or ev == self.EV.CONTROL or ev == self.EV.PITCH: self._convertEvent(r, time, status, 2)
+            elif ev == self.EV.PROGRAM or ev == self.EV.CHAN_PRESS: self._convertEvent(r, time, status, 1)
+            elif ev == self.EV.SYSEX:
+                if status == self.EV.META:
+                    evt = r.readByte()
+                    if evt == self.EVT.TRACK_END: return _i16((tempo * 9) // 25000)
+                    if evt == self.EVT.SET_TEMPO and not tempoSet:
+                        tempoSet = True
+                        r.skip(1)
+                        tempo = (r.readByte() << 16) | (r.readByte() << 8) | r.readByte()
+                        r.skip(-4)
+                    r.skip(-1)
+                self._convertSystem(r, time, status)
+            else:
+                r.skip(-1)
+                time += _vlq2(r) * 3
+
+    def writeAll(self) -> None:
+        for _i in range(self.tracks): pass
+
+    def writeMidi(self, w: Writer, track: int) -> bool:
+        if self.events is None or track > self.tracks: return False
+        w.writeUInt32(0x6468544d)
+        w.writeInt32E(6)
+        w.writeInt16E(0)
+        w.writeInt16E(1)
+        w.writeInt16E(self.timing[track])
+        return self._writeMidiMTrk(w, self.events[track])
+
+    def _writeMidiMTrk(self, w: Writer, evnts) -> bool:
+        XMIDI_CONTROLLER_NEXT_BREAK = 117
+        time = 0
+        lastStatus = 0
+        sshockBreak = False
+        w.writeUInt32(0x6b72544d)
+        sizePosition = w.f.tell()
+        w.writeUInt32(0)
+        evnt = evnts
+        while evnt is not None:
+            delta = 0 if sshockBreak else evnt.time - time
+            time = evnt.time
+            _putVlq(w, delta)
+            if evnt.status != lastStatus or evnt.status >= self.EV.SYSEX: w.writeByte(evnt.status)
+            lastStatus = evnt.status
+            kind = evnt.status & 0xF0
+            if kind == self.EV.NOTE_OFF or kind == self.EV.NOTE_ON or kind == self.EV.POLY_PRESS or kind == self.EV.PITCH:
+                w.writeByte(evnt.data0); w.writeByte(evnt.data1)
+            elif kind == self.EV.CONTROL:
+                w.writeByte(evnt.data0); w.writeByte(evnt.data1)
+                if evnt.data0 == XMIDI_CONTROLLER_NEXT_BREAK: sshockBreak = True
+            elif kind == self.EV.PROGRAM or kind == self.EV.CHAN_PRESS: w.writeByte(evnt.data0)
+            elif kind == self.EV.SYSEX:
+                if evnt.status == self.EV.META: w.writeByte(evnt.data0)
+                _putVlq(w, evnt.length)
+                if evnt.length != 0: w.f.write(evnt.stream)
+            else: log.info('Not supposed to see this')
+            evnt = evnt.next
+        position = w.f.tell()
+        size = position - sizePosition
+        w.seek(sizePosition)
+        w.writeUInt32E(size & 0xFFFFFFFF)
+        w.seek(position)
+        return True
+
+#endregion
+
 #region Binary_Img
 
 # Binary_Img
 class Binary_Img(IHaveMetaInfo, ITexture):
+    class BmpHeader:
+        # sizeof includes the nested BmpInfoHeader, so 54 not 14.
+        _struct = ('<H3i', 54)
+    class BmpInfoHeader:
+        _struct = ('<3I2H6I', 40)
+
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Img(r, f)
 
@@ -303,6 +617,105 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
         MetaInfo('Binary_Pcx', items = [
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
+            ])
+        ]
+
+#endregion
+
+#region Binary_Pal
+
+# Binary_Pal
+class Binary_Pal(IHaveMetaInfo):
+    @staticmethod
+    async def factory_3(r: BinaryReader, f: FileSource, s: Archive): return Binary_Pal(r, 3)
+    @staticmethod
+    async def factory_4(r: BinaryReader, f: FileSource, s: Archive): return Binary_Pal(r, 4)
+
+    def __init__(self, r: BinaryReader, bpp: int):
+        self.bpp = bpp
+        if bpp == 3:
+            self.records = []
+            for _ in range(256):
+                rgb = r.readBytes(3)
+                self.records.append([rgb[0], rgb[1], rgb[2], 255])
+        elif bpp == 4:
+            self.records = [list(r.readUInt32().to_bytes(4, 'little')) for _ in range(256)]
+        else: raise ValueError(str(bpp))
+
+    def convertVgaPalette(self):
+        if self.bpp == 3:
+            for p in self.records:
+                p[0] = ((p[0] << 2) | (p[0] >> 4)) & 0xFF
+                p[1] = ((p[1] << 2) | (p[1] >> 4)) & 0xFF
+                p[2] = ((p[2] << 2) | (p[2] >> 4)) & 0xFF
+        return self
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'Pallet')),
+        MetaInfo('Pallet', items = [
+            MetaInfo(f'Records: {len(self.records)}')
+            ])
+        ]
+
+#endregion
+
+#region Binary_Plist
+
+# Binary_Plist
+class Binary_Plist(ArcBinaryT):
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
+        obj = PlistReader().readObject(r.f)
+        source.files = [FileSource(path = str(k), fileSize = len(v), tag = v) for k, v in obj.items()]
+
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None):
+        return BytesIO(file.tag)
+
+#endregion
+
+#region Binary_Raw
+
+# Binary_Raw
+class Binary_Raw(IHaveMetaInfo, ITexture):
+    class Tag:
+        def __init__(self, palette: str = None, width: int = 0, height: int = 0):
+            self.palette = palette
+            self.width = width
+            self.height = height
+
+    @staticmethod
+    def factoryMethod(action: callable, palleteFunc: callable):
+        async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Raw(r, s.game, f, action, palleteFunc)
+        return factory
+
+    def __init__(self, r: BinaryReader, game, source: FileSource, action: callable, palleteFunc: callable):
+        self.body = None
+        self.palette = None
+        self.width = 0
+        self.height = 0
+        action(self, r, source)
+        if self.body is None: self.body = r.readToEnd()
+        if isinstance(source.tag, Binary_Raw.Tag):
+            c = source.tag
+            self.palette = c.palette
+            self.width = c.width
+            self.height = c.height
+        self.paletteData = palleteFunc(game.id, self.palette).records
+
+    format = (TextureFormat.RGBA32, TexturePixel.Unknown)
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable):
+        pixels = bytearray()
+        for s in self.body: pixels.extend(self.paletteData[s])
+        return func(TextureAsBytes(bytes(pixels), self.format, None))
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
+        MetaInfo('Binary_Raw', items = [
+            MetaInfo(f'Palette: {self.palette}'),
             MetaInfo(f'Width: {self.width}'),
             MetaInfo(f'Height: {self.height}')
             ])
@@ -630,6 +1043,40 @@ class Binary_Txt(IHaveMetaInfo):
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
+        ]
+
+#endregion
+
+#region Binary_Xga
+
+# Binary_Xga
+class Binary_Xga(IHaveMetaInfo, ITexture):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Xga(r, s.tag)
+
+    def __init__(self, r: BinaryReader, tag: object):
+        self.type = 1
+        self.body = r.readToEnd()
+
+    format = (TextureFormat.RGBA32, TexturePixel.Unknown)
+    width: int = 64
+    height: int = 64
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable):
+        def decode1(): return None
+        if self.type == 1: data = decode1()
+        else: raise Exception(f'Unsupported type: {self.type}')
+        return func(TextureAsBytes(data, self.format, None))
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
+        MetaInfo('Binary_Xga', items = [
+            MetaInfo(f'Type: {self.type}'),
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
+            ])
         ]
 
 #endregion

@@ -3,9 +3,10 @@
 import csv, hashlib, re
 from pathlib import Path
 
-SRC = Path("/home/claude/src/gamex/dotnet")
-OUT = Path("/home/claude/gamex-rust")
-MAP = OUT / "PORT_MAP.tsv"
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "dotnet"
+OUT = ROOT / "rust"
+MAP = OUT / "_" / "PORT_MAP.tsv"
 
 rows = list(csv.DictReader(MAP.open(), delimiter="\t"))
 stamped = done = 0

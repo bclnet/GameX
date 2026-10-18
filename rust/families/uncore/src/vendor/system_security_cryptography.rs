@@ -1,6 +1,6 @@
 // PORT-SOURCE: Families/GameX.Uncore/_LIB/System.Security.Cryptography.cs
 // PORT-SHA: f1fcd7910af79892
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — 24 lines implementing XTEA decryption.
 //

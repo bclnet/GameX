@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Doboz/DobozCodec.cs
 // PORT-SHA: 239658401d2b6475
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — 1,078 lines across three files implementing the Doboz codec.
 //

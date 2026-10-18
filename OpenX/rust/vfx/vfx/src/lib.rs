@@ -6,10 +6,11 @@
 //! implementations (`vfx`), the endianness and stream helpers (`util`), and N64
 //! ROM header parsing (`n64`).
 //!
-//! Outstanding: `disc` (4,145 live C# lines) and `x3ds` (2,658) are real binary
-//! container readers — CD/DVD images and 3DS cartridges. The mount path is not
-//! started. `vfx_network` is `NetworkHost` on blocking `ureq`. `ext_services`
-//! is a decision rather than a port; the module says what to use instead.
+//! Outstanding: `disc` is still a partial of `Disc.cs` (the other sheet formats
+//! and `DiscSectorReader`). `LoadMdsToDisc` is in `disc_mds`. `x3ds` (2,658) is
+//! a 3DS cartridge reader and is not started. `vfx_network` is `NetworkHost` on
+//! blocking `ureq`. `ext_services` is a decision rather than a port; the module
+//! says what to use instead.
 
 pub mod disc;
 pub mod disc_addressing;
@@ -31,7 +32,7 @@ pub mod prelude {
     pub use crate::disc_addressing::{Bcd2, Msf, FRAMES_PER_SECOND, LEAD_IN_SECTORS};
     pub use crate::disc_ccd::{CcdFile, CcdSession, CcdTocEntry, CcdTrack};
     pub use crate::disc_cdi::{CdiFile, CdiSession, CdiTrack, CdiTrackHeader};
-    pub use crate::disc_mds::MdsFormat;
+    pub use crate::disc_mds::{Disc, DiscMountPolicy, MdsFormat};
     pub use crate::disc_nrg::{NrgCue, NrgFile, NrgTaoTrack, NrgTrackIndex, NrgVersion};
     pub use crate::disc_sector::{Blob, DiscToc, MemoryBlob, SbiFile, SbiPatch, SectorReaderPolicy, TocItem};
     pub use crate::disc_synth::{ecm, offsets, SessionFormat, SynthPart};

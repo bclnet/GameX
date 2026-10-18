@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Collada/Collada_Physics.cs
 // PORT-SHA: 13899227650685e7
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — COLLADA schema binding, 2,533 lines across six files.
 //

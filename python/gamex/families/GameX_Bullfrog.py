@@ -1,8 +1,12 @@
 from __future__ import annotations
 import os
 from openx.core import _pathExtension
-from gamex import Family, FamilyGame, ArcBinary, Archive, BinaryArchive
+from gamex import Family, FamilyGame, ArcBinary, Archive, BinaryArchive, ITransformAsset
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
+from gamex.families.Bullfrog.games.DK.database import Database as DK_Database
+from gamex.families.Bullfrog.games.DK2.database import Database as DK2_Database
+from gamex.families.Bullfrog.games.P2.database import Database as P2_Database
+from gamex.families.Bullfrog.games.S.database import Database as S_Database
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # DKGame
@@ -12,7 +16,7 @@ class DKGame(FamilyGame):
 
     def loaded(self):
         super().loaded()
-        #DK_Database.loaded(self)
+        DK_Database.loaded(self)
 
 # DK2Game
 class DK2Game(FamilyGame):
@@ -21,7 +25,7 @@ class DK2Game(FamilyGame):
 
     def loaded(self):
         super().loaded()
-        #DK2_Database.loaded(self)
+        DK2_Database.loaded(self)
 
 # P2Game
 class P2Game(FamilyGame):
@@ -30,7 +34,7 @@ class P2Game(FamilyGame):
 
     def loaded(self):
         super().loaded()
-        #PK_Database.loaded(self)
+        P2_Database.loaded(self)
 
 # SGame
 class SGame(FamilyGame):
@@ -39,10 +43,10 @@ class SGame(FamilyGame):
 
     def loaded(self):
         super().loaded()
-        #S_Database.loaded(self)
+        S_Database.loaded(self)
 
 # BullfrogArchive
-class BullfrogArchive(BinaryArchive):
+class BullfrogArchive(BinaryArchive, ITransformAsset):
     def __init__(self, parent: Archive, state: BinaryState):
         super().__init__(parent, state, self.getArcBinary(state.game, state.path))
         self.assetFactoryFunc = self.assetFactory
@@ -66,5 +70,12 @@ class BullfrogArchive(BinaryArchive):
             case 'P' | 'P2' | 'P3': return Binary_Populus.assetFactory(source, game)
             case 'S' | 'S2': return Binary_Syndicate.assetFactory(source, game)
             case _: raise Exception(f'Unknown: {game.id}')
+
+    #endregion
+
+    #region Transforms
+
+    def canTransformAsset(self, source: object, transformTo: Archive) -> bool: return False
+    def transformAsset(self, source: object, transformTo: Archive): raise NotImplementedError()
 
     #endregion

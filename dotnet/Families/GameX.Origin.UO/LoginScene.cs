@@ -22,16 +22,19 @@ public enum LoginSteps {
 
 /// <summary>
 /// ClassicUO's LoginScene. SceneBase so MgClientHost.SetScene can run it.
-/// Load does not build gumps, play music, or resize the window yet.
+/// Load builds the login gumps. It does not play music, resize to 640x480, or open a socket.
+/// Draw walks the gump tree. The host does not pass a batcher, so nothing is uploaded.
 /// </summary>
 public sealed class LoginScene : SceneBase {
     readonly World _world;
+    Gump _currentGump;
     LoginSteps _lastLoginStep;
     bool _autoLogin;
 
     public LoginScene(World world) => _world = world;
 
     public World World => _world;
+    public Gump CurrentGump => _currentGump;
     public bool Reconnect { get; set; }
     public LoginSteps CurrentLoginStep { get; set; } = LoginSteps.Main;
     public CityInfo[] Cities { get; set; }
@@ -45,24 +48,52 @@ public sealed class LoginScene : SceneBase {
 
     public override void Load() {
         base.Load();
-        // ClassicUO reads Settings.GlobalSettings.AutoLogin, adds LoginBackground and LoginGump,
-        // plays login music, and sets the window to 640x480. Those types are not in this project yet.
+        // Login music and SetWindowSize(640, 480) stay on the host. This project has no MonoGame device.
+        UIManager.Clear();
         _autoLogin = false;
+        UIManager.Add(new LoginBackground(_world));
+        UIManager.Add(_currentGump = new LoginGump(_world, this));
     }
 
     public override void Unload() {
         if (IsDestroyed) return;
+        UIManager.Clear();
+        _currentGump = null;
         base.Unload();
     }
 
     public override void Update() {
         base.Update();
-        if (_lastLoginStep == CurrentLoginStep) return;
-        // ClassicUO removes each Item and Mobile here, then builds the gump for the step.
-        _world.Items.Clear();
-        _world.Mobiles.Clear();
-        _lastLoginStep = CurrentLoginStep;
+        if (_lastLoginStep != CurrentLoginStep) {
+            _world.Items.Clear();
+            _world.Mobiles.Clear();
+            var next = GumpForStep();
+            if (next != null) {
+                var prev = _currentGump;
+                UIManager.Add(_currentGump = next);
+                prev?.Dispose();
+            }
+            _lastLoginStep = CurrentLoginStep;
+        }
+        UIManager.Update();
     }
+
+    public override bool Draw() {
+        RenderedObjectsCount = UIManager.Draw();
+        return base.Draw();
+    }
+
+    /// <summary>
+    /// Stores the account from LoginGump. Does not open a socket.
+    /// </summary>
+    internal void RememberLogin(string account, string password, bool autoLogin) {
+        Account = account;
+        Password = password;
+        _autoLogin = autoLogin;
+    }
+
+    // Character, server, and loading gumps are not in this project yet.
+    Gump GumpForStep() => CurrentLoginStep == LoginSteps.Main ? new LoginGump(_world, this) : null;
 }
 
 /// <summary>

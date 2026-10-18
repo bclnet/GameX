@@ -17,7 +17,7 @@ GameX loads game assets (textures, models, levels, audio) out of the archive for
 | `third_party/` | Proprietary DLLs (Oodle, XCompress), excluded from the MIT license. Don't copy them elsewhere |
 | `book/`, `docs/`, `resources/`, `posters/` | Documentation and data; rarely relevant to code changes |
 
-Each engine exists at two layers: `OpenX.Engine.X` (implements `Engine` and the `IOpenGfx*` slots) and `GameX.Engine.X` (`XRenderer.CreateRenderer`, family object builders). Engine codes: `GL` OpenGL, `UN` Unity, `UR` Unreal, `GD` Godot, `SD` SDL, `ST` Stride, `OG` Ogre, `MG` MonoGame, `EX` EginX, `MR` Mirage, `TT` Test, `UK` Unknown.
+Each engine exists at two layers: `OpenX.Engine.X` (implements `Engine` and the `IOpenGfx*` slots) and `GameX.Engine.X` (`XRenderer.CreateRenderer`, family object builders). Engine codes: `GL` OpenGL, `UN` Unity, `UR` Unreal, `GD` Godot, `SD` SDL, `ST` Stride, `OG` Ogre, `MG` MonoGame, `EX` EginX, `MR` Mirage, `O3` O3DE, `VK` Vulkan, `RL` Raylib, `BX` bgfx, `BV` Bevy, `WG` wgpu, `DN` Diligent, `TT` Test, `UK` Unknown. Register an id only in a language that can host that engine. `BV` is Rust only: no C# project and no Python module. `RL`, `BX`, `WG`, and `DN` are registration stubs in all three. The Explorer does not list the stubs.
 
 ## Build and test
 
@@ -58,7 +58,7 @@ Python: put `python/` and `OpenX/python/` on `sys.path`, then `import gamex` (wh
 - **`dotnet/Core/GameX/_Config.cs` and `python/gamex/_config.py`** select a debug family/game via `#define` / options. Also owner-toggled; not a bug.
 - **`import gamex` has side effects** — it runs `init()`, which opens archives.
 - **Store paths are personal** (`E:\AbandonLibrary`, `G:\...`). Game detection in `Core/GameX/Store.cs` only fully works on Windows.
-- **Every change goes to every language** ([ADR 0001](docs/ADR/0001-ports-stay-one-to-one.md)). A change to C# is made to its Python twin (`python/gamex/...`, `OpenX/python/...`) and its Rust twin (listed in `PORT_MAP.tsv`) in the same change, with the same names and shape. Where a twin doesn't exist yet, say so; list each language as updated, not applicable, or still to do. The MAUI explorer (`dotnet/Apps/GameX.App.ExplorerM`) is C#-only: it has no Python or Rust port and doesn't need one. UI: C# WPF, Python PyQt6, Rust egui (eframe), with each XAML view and its code-behind one `.rs` file (`views/file_explorer_xaml.rs`) ([ADR 0005](docs/ADR/0005-rust-ui-egui.md)).
+- **Every change goes to every language** ([ADR 0001](docs/ADR/0001-ports-stay-one-to-one.md)). A change to C# is made to its Python twin (`python/gamex/...`, `OpenX/python/...`) and its Rust twin (listed in `PORT_MAP.tsv`) in the same change, with the same names and shape. Where a twin doesn't exist yet, say so; list each language as updated, not applicable, or still to do. The MAUI explorer (`dotnet/Apps/GameX.App.ExplorerM`) is C#-only: it has no Python or Rust port and doesn't need one. The Ultima Online client port is also C# only until it is merged into GameX (see Known, accepted exceptions). UI: C# WPF, Python PyQt6, Rust egui (eframe), with each XAML view and its code-behind one `.rs` file (`views/file_explorer_xaml.rs`) ([ADR 0005](docs/ADR/0005-rust-ui-egui.md)).
 - **Porting a file to Rust: follow the `port-to-rust` skill** (`.claude/skills/port-to-rust/SKILL.md`). It covers the `PORT-SOURCE` / `PORT-SHA` / `PORT-STATUS` headers (keep them when editing, and don't trust a `done` header), `PORT_MAP.tsv`, and registering spec types, since Rust has no `Type.GetType`. An unregistered family fails with "unknown ArchiveType".
 - **Stale tests exist in all three ports.** A test module referring to names that no longer exist is stale, not a signal the code is wrong.
 - **Line endings on Windows.** `.rs`, `.md` and `.tsv` files are LF; `.cs` are CRLF + BOM (see Conventions); `.py` files are mixed (about 60% CRLF), so keep each file's endings. Python's text mode writes CRLF on Windows (open with `newline="\n"`), Git Bash's `sed -i` drops the CRs of a CRLF file, and PowerShell's `Set-Content -Encoding utf8` adds a BOM; check with `file` after a scripted edit.
@@ -82,6 +82,7 @@ Python: put `python/` and `OpenX/python/` on `sys.path`, then `import gamex` (wh
 Don't fix or report these:
 
 - **Archive paths aren't sanitized.** `ExportManager`/`ImportManager` (C#) and `exportManager.py` combine archive entry names with the output folder unchecked, so a `../` or rooted entry name can write (or, on import, read) outside that folder. This is deliberate: GameX trusts the archives it opens.
+- **Ultima Online is C# until it is merged.** The client port (`dotnet/Families/GameX.Origin.UO`, `dotnet/Families/GameX.Origin/Clients/UO`, and MonoGame host changes that exist only to run that client) does not get a Python or Rust twin yet. Do not add `gamex-origin-uo` to the Rust workspace or keep `GameX_Origin_UO.py` in step. ADR 0001 applies again when the owner says the client is merged. Origin resource parsers that already have twins stay in all three languages.
 
 ## Git
 

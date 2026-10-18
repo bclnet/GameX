@@ -33,6 +33,16 @@ class OpenGLObjectModelBuilder(ObjectModelBuilder):
         except Exception as e: print(e); traceback.print_exc()
     def ensure(self) -> None: pass
 
+# OpenGLObjectBuilder. Key is the type, and a missing builder is not caught.
+class OpenGLObjectBuilder(ObjectModelBuilder):
+    def instance(self, src: object, parent: object = None) -> object:
+        return 'clone'
+    async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
+        builder = OpenGLX.buildersByType[type(path)]
+        s = await builder(source, path, static_, materialManager)
+        return s
+    def ensure(self) -> None: pass
+
 # OpenGLShaderBuilder
 class OpenGLShaderBuilder(ShaderBuilder):
     RenderMode: str = 'renderMode_'; RenderModeLength: int = len(RenderMode)
@@ -365,9 +375,10 @@ class OpenGLGfxModel(IOpenGfxModel):
     def __init__(self):
         self.textureManager: TextureManager = TextureManager(OpenGLTextureBuilder())
         self.materialManager: MaterialManager = MaterialManager(self.textureManager, OpenGLMaterialBuilder(self.textureManager))
-        self.objectManager: ObjectModelManager = ObjectModelManager(self.materialManager, OpenGLObjectModelBuilder())
+        self.objectManager: ObjectModelManager = ObjectModelManager(self.materialManager, OpenGLObjectBuilder())
         self.shaderManager: ShaderManager = ShaderManager(OpenGLShaderBuilder())
         self.meshBufferCache: GLMeshBufferCache = GLMeshBufferCache()
+        self._quadIndices = None
     def preload(self, source: ISource, path: object) -> None: self.objectManager.preload(source, path)
     def preloadTexture(self, source: ISource, path: object) -> None: self.textureManager.preloadTexture(source, path)
     def create(self, source: ISource, path: object, static_: bool, parent: object = None) -> tuple[object, object]: return self.objectManager.create(source, path, static_, parent)

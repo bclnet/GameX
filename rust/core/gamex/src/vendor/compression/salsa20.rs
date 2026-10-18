@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Salsa20.cs
 // PORT-SHA: e78b3e1000ac0577
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — hand-writing a stream cipher is the one thing I will not do
 // blind.

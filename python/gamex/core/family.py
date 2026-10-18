@@ -4,10 +4,10 @@ from enum import Enum
 from datetime import datetime
 from urllib.parse import urlparse
 from importlib import resources
-from openx.core import findType, _throw, YamlDict, EngineX
+from openx.core import findType, _throw, YamlDict, EngineX, decodeUri
 from openx.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from gamex import option, familyIds 
-from gamex.core.binary import BinaryState, ManyArchive, MultiArchive
+from gamex.core.binary import BinaryState, ManyArchive, MultiArchive, Archive, EmptyArchive
 from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _valueF, _value, _list, _related, _dictTrim
 
@@ -210,15 +210,16 @@ games: {[x for x in self.games.values()]}'''
     def parseResource(self, uri: str, throwOnError: bool = True) -> Resource:
         if uri is None or not (uri := urlparse(uri)).fragment:
             return Resource(Game = FamilyGame(self, None, None, None))
+        path = decodeUri(uri.path)
         game, edition = self.getGame(uri.fragment)
-        searchPattern = '' if uri.scheme == 'file' else uri.path[1:]
+        searchPattern = '' if uri.scheme == 'file' else path[1:]
         virtuals = game.virtuals
         found = game.found
         subPath = edition.path if edition else None
         vfxType = game.vfxType
         vfx = \
             (createFileSystem(vfxType, found, subPath) if found else None) if uri.scheme == 'game' else \
-            (createFileSystem(vfxType, SystemPath(uri.path, None, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
+            (createFileSystem(vfxType, SystemPath(path, None, None), subPath) if path else None) if uri.scheme == 'file' else \
             (createFileSystem(vfxType, found, subPath, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
         if not vfx:
             if throwOnError: raise Exception(f'{game.id}: unable to find game')
@@ -551,13 +552,13 @@ def _familyJsonLoader(path: str) -> dict[str, object]:
     return json.loads(_commentRemover(body).encode().decode('utf-8-sig'))
 
 def getFamily(id: str, throwOnError: bool = True) -> Family:
-    family = _value(Families, id)
+    family = _value(FamilyManager.Families, id)
     if family: return family
     # load
     path = f'{id}Family.json'
     try:
-        family = createFamily(path, _familyJsonLoader, loadSamples)
-        Families[family.id] = family
+        family = createFamily(path, _familyJsonLoader, FamilyManager.loadSamples)
+        FamilyManager.Families[family.id] = family
         return family
     except ImportError as e: print(f'Import Error: {path}: {e}')
     except Exception as e:
@@ -570,7 +571,57 @@ def loadFamilies(ids: list[str] = None, throwOnError: bool = True) -> None:
     for s in ids or familyIds: getFamily(s, throwOnError)
 
 def init():
-    uncore = getFamily('Uncore')
-    uncoreArchive = uncore.getArchive('game:/#APP', False)
+    if FamilyManager.Uncore is not None: return
+    global uncore, uncoreArchive
+    uncore = FamilyManager.uncore = FamilyManager.Uncore = getFamily('Uncore')
+    uncoreArchive = FamilyManager.uncoreArchive = FamilyManager.UncoreArchive = uncore.getArchive('game:/#APP', False)
+
+class ShellState:
+    def __init__(self, familyId: str = None, arcUri: str = None, path: str = None, type_: str = None):
+        self.familyId = familyId
+        self.arcUri = arcUri
+        self.path = path
+        self.type_ = type_
+    def __str__(self) -> str:
+        z = lambda s: '' if s is None else str(s)
+        return f'ST|{z(self.familyId)}|{z(self.arcUri)}|{z(self.path)}|{z(self.type_)}'
+    @staticmethod
+    def create(source: object, path: object, value: object, type_: str) -> ShellState:
+        i = path; a = i.archive
+        uris = a.game.toUris(a.edition.id if a.edition else None)
+        src = i.source
+        itemPath = f'Morrowind.bsa:{src.path}' if src is not None and src.__class__.__name__ == 'FileSource' else None
+        return ShellState(a.family.id, uris[0] if uris else None, itemPath, type_)
+    @staticmethod
+    def parse(state: str) -> ShellState:
+        p = state.split('|') if state is not None else None
+        return ShellState(p[1], p[2], p[3], p[4]) if p is not None and p[0] == 'ST' else None
+
+class FamilyManager:
+    loadSamples: bool = True
+    Families: dict = Families
+    uncore: Family = None
+    uncoreArchive: Archive = None
+    Uncore: Family = None
+    UncoreArchive: Archive = None
+    @staticmethod
+    def getFamily(id: str, throwOnError: bool = True) -> Family:
+        init(); return getFamily(id, throwOnError)
+    @staticmethod
+    def loadFamilies(ids: list[str] = None, throwOnError: bool = True) -> None:
+        init(); return loadFamilies(ids, throwOnError)
+
+# C# Family.Empty / FamilyGame.Empty / Archive.Empty. Built here: binary.py imports this module's types only as names.
+Family.Empty = Family.__new__(Family)
+Family.Empty.id = ''
+Family.Empty.name = 'Empty'
+Family.Empty.games = {}
+FamilyGame.Empty = FamilyGame.__new__(FamilyGame)
+FamilyGame.Empty.family = Family.Empty
+FamilyGame.Empty.id = 'Empty'
+FamilyGame.Empty.name = 'Empty'
+Archive.Empty = EmptyArchive(None, BinaryState(DirectoryFileSystem('', None), FamilyGame.Empty))
+Archive.Empty.name = 'Empty'
+Archive.empty = Archive.Empty
 
 #endregion

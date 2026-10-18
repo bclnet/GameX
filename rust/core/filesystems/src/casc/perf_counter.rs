@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX.FileSystems/Casc/PerfCounter.cs
 // PORT-SHA: a1e925578336ad2a
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — a `Stopwatch` wrapper whose `Dispose` prints the elapsed time. It writes to **both** `Console.WriteLine` and `Logger.WriteLine`, so every measurement appears twice, and it is unconditional — a release build prints timing for every counter.
 //

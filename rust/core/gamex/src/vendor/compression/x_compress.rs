@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/XCompress.cs
 // PORT-SHA: 29a67366328fbe1f
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — P/Invoke declarations, not logic.
 //

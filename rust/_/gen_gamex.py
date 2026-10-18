@@ -14,8 +14,9 @@ import re
 import sys
 from pathlib import Path
 
-SRC = Path("/home/claude/src/gamex/dotnet")
-OUT = Path("/home/claude/gamex-rust")
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "dotnet"
+OUT = ROOT / "rust"
 # Where the ported OpenX crates live, relative to a GameX crate directory.
 OPENX_REL = "../../../rust"
 SKIP = {"bin", "obj", ".vs", "packages", "node_modules"}

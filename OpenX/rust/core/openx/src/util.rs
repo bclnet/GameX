@@ -1,5 +1,5 @@
 // PORT-SOURCE: Core/OpenX/Util.cs
-// PORT-SHA: 8b5ee25c93d41286
+// PORT-SHA: 25073859b079bfe0
 // PORT-STATUS: done
 //
 // Path-token expansion and a YAML-backed settings dictionary.
@@ -28,6 +28,45 @@ pub fn decodePath(applicationPath: &str, path: &str, rootPath: Option<&str>) -> 
     else if startsWith("%AppData%") { format!("{}{}", std::env::var("APPDATA").unwrap_or_else(|_| format!("{}/.config", home())), &path[9..]) }
     else if startsWith("%LocalAppData%") { format!("{}{}", std::env::var("LOCALAPPDATA").unwrap_or_else(|_| format!("{}/.local/share", home())), &path[14..]) }
     else { path.to_string() }
+}
+
+fn decodeHex(a: char, b: char) -> Option<u8> {
+    Some(((a.to_digit(16)? << 4) | b.to_digit(16)?) as u8)
+}
+
+/// C# `Util.DecodeUri`. `Uri.UnescapeDataString`: `+` stays `+`, a bad `%` sequence stays escaped.
+pub fn decodeUri(path: &str) -> String {
+    if !path.contains('%') { return path.to_string(); }
+    let chars: Vec<char> = path.chars().collect();
+    let n = chars.len();
+    let mut out = String::new();
+    let mut i = 0;
+    while i < n {
+        if chars[i] == '%' && i + 2 < n {
+            if let Some(b) = decodeHex(chars[i + 1], chars[i + 2]) {
+                if b < 128 { out.push(b as char); i += 3; continue; }
+                let need = if b & 0xE0 == 0xC0 { 2 } else if b & 0xF0 == 0xE0 { 3 } else if b & 0xF8 == 0xF0 { 4 } else { 0 };
+                if need == 0 { out.push('%'); out.push(chars[i + 1]); out.push(chars[i + 2]); i += 3; continue; }
+                let mut raw = vec![b];
+                let mut j = i + 3;
+                let mut ok = true;
+                while raw.len() < need {
+                    if j + 2 >= n || chars[j] != '%' { ok = false; break; }
+                    match decodeHex(chars[j + 1], chars[j + 2]) {
+                        Some(nb) if nb >= 128 => { raw.push(nb); j += 3; }
+                        _ => { ok = false; break; }
+                    }
+                }
+                if ok {
+                    if let Ok(s) = std::str::from_utf8(&raw) { out.push_str(s); i = j; continue; }
+                }
+                out.push('%'); out.push(chars[i + 1]); out.push(chars[i + 2]); i += 3; continue;
+            }
+            out.push('%'); i += 1; continue;
+        }
+        out.push(chars[i]); i += 1;
+    }
+    out
 }
 
 /// C# `class YamlDict : Dictionary<string, object>`.

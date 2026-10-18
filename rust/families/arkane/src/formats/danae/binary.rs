@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.Arkane/Formats/Danae/Binary.cs
-// PORT-SHA: 9f89528785e1195b
+// PORT-SHA: 065bd41b556fd195
 // PORT-STATUS: done
 //
 // C#'s nested header structs are module-level here (Rust has no nested types),
@@ -720,6 +720,8 @@ impl Binary_Fts {
             else { Level.NumRoomDistance = 0; Level.RoomDistance = None; }
             //eprintln!("RoomDistance: {:x}", r2.tell()?);
         }
+        // C# shares this array. Rust clones it; `Bkg` stays on the archive.
+        Level.Backg = Some(Bkg.Backg.clone());
         Self::computePolyIn();
         //PATHFINDER_Create();
         //PORTAL_Blend_Portals_And_Rooms();

@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Lzss.cs
 // PORT-SHA: 27b86660194294e8
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — 84 lines of classic LZSS.
 //

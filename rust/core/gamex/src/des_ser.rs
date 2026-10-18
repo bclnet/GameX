@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/DesSer.cs
 // PORT-SHA: 899d278ef9371987
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — `System.Text.Json` configuration and 14 custom converters.
 //

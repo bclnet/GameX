@@ -593,6 +593,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
                         setRoomDistance(self.level, m, n, r2.readS(Binary_Fts.ROOM_DIST_DATA))
             else: self.level.numRoomDistance = 0; self.level.roomDistance = None
             #log.info(f'RoomDistance: {r2.tell()}')
+        self.level.backg = self.bkg.backg
 
     def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
     def __repr__(self): return DesSer.serialize(self)

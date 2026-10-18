@@ -353,7 +353,7 @@ internal unsafe class Blast {
                 return len;
             }
             int outf(object how, byte* buf, int length) {
-                if (outputLen <= 0) return 0;
+                if (length > outputLen) return 1;
                 UnsafeX.Memcpy((void*)outputPtr, (void*)buf, (uint)length);
                 outputPtr += length;
                 outputLen -= length;

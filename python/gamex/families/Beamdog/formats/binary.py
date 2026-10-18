@@ -1,124 +1,31 @@
-import os
+from __future__ import annotations
 from io import BytesIO
 from openx.core import BinaryReader
-from gamex.core.binary import ArcBinaryT
-from gamex.core.meta import FileSource
-from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib
+from gamex import ArcBinaryT, FileSource, MetaInfo, IHaveMetaInfo
 
-# typedefs
-class BinaryArchive: pass
+#region Binary_Abc
 
-#region Binary_Hogg
+# Binary_Abc
+class Binary_Abc(IHaveMetaInfo):
+    def __init__(self, r: BinaryReader):
+        pass
 
-# Binary_Hogg
-class Binary_Hogg(ArcBinaryT):
-    #region Headers
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo('BinaryPak', items = [
+            # MetaInfo(f'Type: {self.type}'),
+        ])
+    ]
 
-    MAGIC = 0xDEADF00D
+#endregion
 
-    class Header:
-        _struct = ('<IHHIIII', 24)
-        def __init__(self, t):
-            (self.magic,
-            self.version,
-            self.operationJournalSection,
-            self.fileEntrySection,
-            self.attributeEntrySection,
-            self.dataFileNumber,
-            self.fileJournalSection) = t
+#region Binary_XXX
 
-    class FileJournalHeader:
-        _struct = ('<III', 12)
-        def __init__(self, t):
-            (self.unknown1,
-            self.size,
-            self.size2) = t
-
-    class FileEntry:
-        _struct = ('<qiIIIHHi', 32)
-        def __init__(self, t):
-            (self.offset,
-            self.fileSize,
-            self.timestamp,
-            self.checksum,
-            self.unknown4,
-            self.unknown5,
-            self.unknown6,
-            self.id) = t
-
-    class AttributeEntry:
-        _struct = ('<iiII', 16)
-        def __init__(self, t):
-            (self.pathId,
-            self.excerptId,
-            self.uncompressedSize,
-            self.flags) = t
-
-    #endregion
-
-    # read
+# Binary_XXX
+class Binary_XXX(ArcBinaryT):
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        # read header
-        header = r.readS(self.Header)
-        if header.magic != self.MAGIC: raise Exception('BAD MAGIC')
-        if header.version < 10 or header.version > 11: raise Exception('BAD Version')
-        if header.operationJournalSection > 1024: raise Exception('BAD Journal')
-        if header.fileEntrySection != header.attributeEntrySection << 1: raise Exception('data entry / compression info section size mismatch')
-        numFiles = header.attributeEntrySection >> 4
+        source.files = []
 
-        # skip journals
-        r.skip(header.operationJournalSection)
-        fileJournalPosition = r.tell()
-        r.skip(header.fileJournalSection)
-
-        # read files
-        fileEntries = r.readTArray(self.FileEntry, numFiles)
-        attributeEntries = r.readTArray(self.AttributeEntry, numFiles)
-        files = [None] * numFiles
-        for i in range(numFiles):
-            s = fileEntries[i]
-            a = attributeEntries[i]
-            files[i] = FileSource(
-                id = s.id,
-                offset = s.offset,
-                fileSize = s.fileSize,
-                packedSize = a.uncompressedSize,
-                compressed = 1 if a.uncompressedSize > 0 else 0)
-
-        # read "Datalist" file
-        dataListFile = files[0]
-        if dataListFile.id != 0 or dataListFile.fileSize == -1: raise Exception('BAD DataList')
-        fileAttribs = {}
-        with BinaryReader(self.readData(source, r, dataListFile)) as r2:
-            if r2.readUInt32() != 0: raise Exception('BAD DataList')
-            count = r2.readInt32()
-            for i in range(count): fileAttribs[i] = r2.readBytes(r2.readUInt32())
-
-        # read file journal
-        r.seek(fileJournalPosition)
-        fileJournalHeader = r.readS(self.FileJournalHeader)
-        endPosition = r.tell() + fileJournalHeader.size
-        while r.tell() < endPosition:
-            action = r.readByte()
-            targetId = r.readInt32()
-            match action:
-                case 1: fileAttribs[targetId] = r.readBytes(r.readUInt32())
-                case 2: del fileAttribs[targetId]
-
-        # assign file path
-        for i in range(numFiles):
-            file = files[i]
-            file.path = fileAttribs[attributeEntries[i].pathId][:-1].decode('ascii')
-            if file.path.endswith('.hogg'): file.arc = self.SubArchive(source, file, file.path)
-        
-        # remove filesize of -1 and file 0
-        source.files = [x for x in files if x.fileSize != -1 and x.id != 0]
-
-    # readData
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
-        r.seek(file.offset)
-        return BytesIO(
-            decompressZlib(r, file.packedSize, file.fileSize) if file.compressed != 0 else \
-            r.readBytes(file.fileSize))
-            
+        raise NotImplementedError()
+
 #endregion

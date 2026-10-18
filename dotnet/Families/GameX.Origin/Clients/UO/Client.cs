@@ -1,7 +1,9 @@
+﻿using GameX;
 using GameX.Origin.Formats.UO;
 using GameX.Xbox;
 using OpenX.Client;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -89,6 +91,29 @@ public class Assets(UOGame game) {
         //BuffTable.Load();
         //ChairTable.Load();
         ////UltimaLive.Enable();
+    }
+
+    /// <summary>
+    /// Width and height packed in the gump index extra (<see cref="FileSource.Compressed"/>). Does not decode pixels.
+    /// </summary>
+    public bool TryGumpSize(int graphic, out int width, out int height) {
+        width = height = 0;
+        if (Gumps is not BinaryArchive bin || bin.Files == null || graphic < 0) return false;
+        IList<FileSource> files = bin.Files;
+        FileSource file = null;
+        if (graphic < files.Count) {
+            var at = files[graphic];
+            if (at != null && at.Id == graphic) file = at;
+        }
+        if (file == null)
+            for (var i = 0; i < files.Count; i++) {
+                var at = files[i];
+                if (at != null && at.Id == graphic) { file = at; break; }
+            }
+        if (file == null || file.Offset < 0) return false;
+        width = (file.Compressed >> 16) & 0xFFFF;
+        height = file.Compressed & 0xFFFF;
+        return width > 0 && height > 0;
     }
 }
 

@@ -5,6 +5,17 @@ from numpy import float32
 from openx.core.core import ISource
 from openx.core.util import decodePath, YamlDict
 
+def _inTestHost() -> bool:
+    # C#: AppDomain assemblies whose FullName starts with "testhost,".
+    # A library import of unittest (numpy.testing, via quaternion) is not the host.
+    argv0 = os.path.basename(sys.argv[0]).lower() if sys.argv and sys.argv[0] else ''
+    stem = os.path.splitext(argv0)[0]
+    if stem in ('pytest', 'py.test', 'testhost') or stem.startswith('pytest') or stem.startswith('testhost'): return True
+    main = sys.modules.get('__main__')
+    spec = getattr(main, '__spec__', None) if main is not None else None
+    name = getattr(spec, 'name', None) or ''
+    return name == 'unittest.__main__' or name.startswith('unittest.') or name == 'pytest' or name.startswith('pytest.') or name.startswith('_pytest.')
+
 #region Engine
 
 # Engine
@@ -85,7 +96,7 @@ class EngineX:
         OS.Linux if sys.platform.startswith('linux') else \
         OS.Unknown
     engines: set[object] = {}
-    inTestHost: bool = 'unittest' in sys.modules.keys()
+    inTestHost: bool = _inTestHost()
     applicationPath = os.getcwd()
     options = YamlDict('~/.gamex.yaml')
     current: Engine = None

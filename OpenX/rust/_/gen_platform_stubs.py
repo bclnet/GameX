@@ -7,8 +7,8 @@ reasoning travels with the code rather than living only in PORTING.md.
 import csv
 from pathlib import Path
 
-OUT = Path("/home/claude/rust")
-MAP = OUT / "PORT_MAP.tsv"
+OUT = Path(__file__).resolve().parents[1]
+MAP = OUT / "_" / "PORT_MAP.tsv"
 
 # ---------------------------------------------------------------------------
 # Rationale per crate. Keyed by crate name.

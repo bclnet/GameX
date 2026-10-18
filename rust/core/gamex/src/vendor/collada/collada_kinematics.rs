@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Collada/Collada_Kinematics.cs
 // PORT-SHA: 8ab57542b40ea9a6
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — COLLADA schema binding, 2,533 lines across six files.
 //

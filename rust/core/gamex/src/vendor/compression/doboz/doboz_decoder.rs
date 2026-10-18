@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/Doboz/DobozDecoder.cs
 // PORT-SHA: 30dd144464819b79
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED YET — the decode half of the Doboz codec.
 //

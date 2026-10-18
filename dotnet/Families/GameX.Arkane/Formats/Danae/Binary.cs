@@ -1,4 +1,4 @@
-using GameX.Bullfrog;
+﻿using GameX.Bullfrog;
 using GameX.Uncore.Formats;
 using System;
 using System.Collections.Generic;
@@ -615,6 +615,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
             //Log.Info($"RoomDistance: {r2.Tell():x}");
         }
         ComputePolyIn();
+        Level.Backg = Bkg.Backg;
         //PATHFINDER_Create();
         //PORTAL_Blend_Portals_And_Rooms();
         //ComputePortalVertexBuffer();

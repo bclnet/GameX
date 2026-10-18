@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX/_LIB/Compression/OodleLZ.cs
 // PORT-SHA: d2d2332aab4d9322
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — P/Invoke declarations, not logic.
 //

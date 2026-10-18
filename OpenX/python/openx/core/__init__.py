@@ -11,7 +11,7 @@ from openx.core.core import ISource, IHaveSource, IStream, IWriteToStream
 from openx.core.manager import IDatabase, ICellDatabase, CellManager, CellBuilder
 from openx.core.engine import Engine, EngineX
 from openx.core.stream import StreamIterators, ForwardStream, SeekableStream
-from openx.core.util import _throw, _pathExtension, _pathTempFile, decodePath, _int_tryParse, YamlDict
+from openx.core.util import _throw, _pathExtension, _pathTempFile, decodePath, decodeUri, _int_tryParse, YamlDict
 __all__ = [
     'findType',
     'log',
@@ -25,4 +25,4 @@ __all__ = [
     'IDatabase', 'ICellDatabase', 'CellManager', 'CellBuilder',
     'Engine', 'EngineX',
     'StreamIterators', 'ForwardStream', 'SeekableStream',
-    '_throw', '_pathExtension', '_pathTempFile', 'decodePath', '_int_tryParse', 'YamlDict']
+    '_throw', '_pathExtension', '_pathTempFile', 'decodePath', 'decodeUri', '_int_tryParse', 'YamlDict']

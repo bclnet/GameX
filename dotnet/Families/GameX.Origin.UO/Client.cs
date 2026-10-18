@@ -32,6 +32,11 @@ public class UltimaOnline {
     public ClientVersion Version { get; set; }
 
     /// <summary>
+    /// Version string from the game options or client.exe. Null when neither has one.
+    /// </summary>
+    public string VersionText { get; set; }
+
+    /// <summary>
     /// Install directory. Set from FamilyGame.Found.Root, which is public.
     /// </summary>
     public string ClientPath { get; set; }
@@ -41,7 +46,7 @@ public class UltimaOnline {
     /// </summary>
     public static readonly string[] Map = [
         "ClassicUO.Assets and ClassicUO.IO -> stay in GameX.Origin formats (already the resource parsers). Do not re-port them here.",
-        "ClassicUO.Client Game/ scenes and UI -> GameX.Origin.UO. LoginScene is the first scene. The gumps are not in yet.",
+        "ClassicUO.Client Game/ scenes and UI -> GameX.Origin.UO. LoginScene builds LoginBackground and LoginGump. Pixels, music, and the socket are not in yet.",
         "ClassicUO.Renderer -> GameX.Engine.Mg, later.",
         "ClassicUO.Utility -> only if a later slice needs a specific helper; not copied now.",
     ];

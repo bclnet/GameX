@@ -17,8 +17,9 @@
 
 set -uo pipefail
 
-DOTNET_ROOT="${1:-../src/dotnet}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUST="$(dirname "$HERE")"
+DOTNET_ROOT="${1:-$RUST/../dotnet}"
 MAP="$HERE/PORT_MAP.tsv"
 
 [[ -f "$MAP" ]] || { echo "no PORT_MAP.tsv next to $0" >&2; exit 2; }

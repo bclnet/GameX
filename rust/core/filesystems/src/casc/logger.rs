@@ -1,6 +1,6 @@
 // PORT-SOURCE: Core/GameX.FileSystems/Casc/Logger.cs
 // PORT-SHA: 2470ebc0f3b8a337
-// PORT-STATUS: done
+// PORT-STATUS: todo
 //
 // NOT PORTED — three static fields (FileStream, StreamWriter, ILoggerOptions) with no synchronisation. `Init` opens the log with `FileMode.Create`, which truncates, and calling it twice leaks the first `FileStream` — nothing disposes the old one. Every `WriteLine` goes through the shared static writer from whatever thread reaches it.
 //

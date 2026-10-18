@@ -1,7 +1,8 @@
-//! `openx-engine-vk` — 1:1 mapping of its .NET project.
+//! `openx-engine-vk` — Vulkan engine provider.
 //!
-//! Nothing here is translated. Each module states why at the file; the
-//! summary is in PORTING.md under "Platform backends: the viability
-//! assessment".
+//! `VkEngine::This` registers id `VK` / name `Vulkan`. `VkInstance::createInstance`
+//! calls `vkCreateInstance` through `ash` and destroys the instance on drop.
+//! Sprite, model, and host slots are not ported.
 
-pub mod vk;
+pub mod engine_vk;
+pub mod gfx;

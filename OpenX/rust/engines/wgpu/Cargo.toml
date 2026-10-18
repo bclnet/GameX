@@ -1,0 +1,15 @@
+[package]
+name = "openx-engine-wgpu"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+openx = { path = "../../core/openx" }
+# 22.1.0 is the last wgpu whose MSRV (1.74) fits the workspace rust-version 1.75.
+# wgpu 23+ needs 1.76, and current wgpu (30.x) needs 1.87.
+wgpu = "=22.1.0"

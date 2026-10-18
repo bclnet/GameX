@@ -1,0 +1,13 @@
+[package]
+name = "gamex-engine-bgfx"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gamex = { path = "../../core/gamex" }
+openx-engine-bgfx = { path = "../../../OpenX/rust/engines/bgfx" }

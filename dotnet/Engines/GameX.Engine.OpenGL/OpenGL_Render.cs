@@ -1,4 +1,5 @@
-﻿using GameX.Gamebryo.Formats;
+﻿using GameX.Arkane.Formats.Danae;
+using GameX.Gamebryo.Formats;
 using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.OpenGL;
@@ -8,6 +9,7 @@ namespace GameX.Engines.OpenGL;
 public static class OpenGLRenderer {
     static OpenGLRenderer() {
         OpenGLX.BuildersByType[typeof(Binary_Nif)] = OpenGLNifObjectBuilder.BuildObject;
+        OpenGLX.BuildersByType[typeof(Binary_Ftl)] = OpenGLFtlObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

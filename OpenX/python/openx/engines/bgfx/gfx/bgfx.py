@@ -1,0 +1,3 @@
+# BgfxX
+class BgfxX:
+    buildersByType = {}

@@ -8,7 +8,7 @@ GameX is an open-source framework for scalable game asset delivery as a service.
 * Loads textures, models, animations, sounds, and levels
 * Avaliable with streaming assets (cached)
 * References assets with a uniform resource location (url)
-* Loaders for OpenGL, Unreal, Unity and Vulken
+* Loaders for OpenGL, Unreal, Unity and Vulkan
 * Locates installed games
 * Includes a desktop app to explore assets
 * Includes a command line interface to export assets (list, unpack, shred)

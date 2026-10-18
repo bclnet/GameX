@@ -12,6 +12,7 @@ public static class UnityRenderer {
     static UnityRenderer() {
         UnityX.BuildersByType[typeof(Binary_Nif)] = UnityNifObjectBuilder.BuildObject;
         UnityX.BuildersByType[typeof(Binary_Ftl)] = UnityFtlObjectBuilder.BuildObject;
+        UnityX.BuildersByType[typeof(Binary_Fts)] = UnityFtsObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (gfx == null) return null;

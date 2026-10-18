@@ -100,6 +100,13 @@ class Archive(Binary, ISource):
     #endregion
 # end::Archive[]
 
+# EmptyArchive. C# throws at the call, before a Task is returned.
+class EmptyArchive(Archive):
+    def contains(self, path) -> bool: return False
+    def getSource(self, path, throwOnError: bool = True): raise NotImplementedError()
+    def getData(self, path, option: object = None, throwOnError: bool = True): raise NotImplementedError()
+    def getAsset(self, t, path, option: object = None, throwOnError: bool = True): raise NotImplementedError()
+
 # BinaryArchive
 class BinaryArchive(Archive):
     def __init__(self, parent: Archive, state: BinaryState, arcBinary: ArcBinary):
@@ -406,6 +413,15 @@ class ArcBinaryT(ArcBinary):
         #     with BinaryReader(self.readData(self.source.getReader(), self.file)) as r2:
         #         self.arcBinary.read(self, r2, tag)
 # end::ArcBinary[]
+
+# ArcBinary.Stream is PakBinaryCanStream. Import it on first use so formats.stream can import this module.
+class _StreamBinary:
+    def __get__(self, instance, owner):
+        from .formats.stream import PakBinaryCanStream
+        value = PakBinaryCanStream()
+        setattr(owner, 'Stream', value)
+        return value
+ArcBinary.Stream = _StreamBinary()
 
 # ITransformAsset
 class ITransformAsset:

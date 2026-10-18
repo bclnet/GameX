@@ -26,5 +26,5 @@ pub mod prelude {
     pub use crate::engine::{Engine, EngineX};
     pub use crate::client::{ClientHost, GlobalTime, Scene, SceneState};
     pub use crate::profiler::{ProfileData, Profiler, ProfilerError};
-    pub use crate::util::{decodePath, YamlDict};
+    pub use crate::util::{decodePath, decodeUri, YamlDict};
 }

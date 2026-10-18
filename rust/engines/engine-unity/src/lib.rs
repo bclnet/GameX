@@ -5,5 +5,6 @@
 
 pub mod scripts;
 pub mod unity_ftl_object_builder;
+pub mod unity_fts_object_builder;
 pub mod unity_nif_object_builder;
 pub mod unity_render;

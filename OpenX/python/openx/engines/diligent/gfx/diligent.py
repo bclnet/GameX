@@ -1,0 +1,3 @@
+# DiligentX
+class DiligentX:
+    buildersByType = {}

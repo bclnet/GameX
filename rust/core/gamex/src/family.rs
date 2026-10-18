@@ -38,7 +38,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use indexmap::IndexMap;
 use md5::{Digest, Md5};
-use openx::util::{decodePath, YamlDict};
+use openx::util::{decodePath, decodeUri, YamlDict};
 use openx_poly::log::Log;
 use openx_vfx::vfx::{AggregateFileSystem, DirectoryFileSystem, FileSystem, NetworkFileSystem, VfsRead, VfsWrite, VirtualFileSystem};
 use serde_json::Value;
@@ -250,6 +250,7 @@ impl Uri {
         let scheme = scheme.to_lowercase();
         let isFile = scheme == "file";
         let localPath = if isFile && path.get(2..3) == Some(":") { path[1..].to_string() } else { path.to_string() };
+        let localPath = decodeUri(&localPath);
         Ok(Uri { scheme, host: host.to_string(), localPath, fragment, isFile })
     }
 }
@@ -1171,6 +1172,12 @@ mod tests {
         assert_eq!((u.host.as_str(), u.localPath.as_str()), ("", r"C:\tmp\x"));
         let u = Uri::parse("file:///C:/tmp/x#APP").unwrap();
         assert_eq!(u.localPath.as_str(), "C:/tmp/x");
+        let u = Uri::parse("file:///tmp/a%20b#APP").unwrap();
+        assert_eq!(u.localPath.as_str(), "/tmp/a b");
+        let u = Uri::parse("game:/main%20.yaml#CAT").unwrap();
+        assert_eq!(u.localPath.as_str(), "/main .yaml");
+        let u = Uri::parse("C:/foo%20bar").unwrap();
+        assert_eq!(u.localPath.as_str(), "C:/foo%20bar");
         assert_eq!(FamilyGame::toUri("APP", Some("e"), None), "game:/#APP.e");
     }
 

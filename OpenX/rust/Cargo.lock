@@ -708,6 +708,7 @@ dependencies = [
 name = "openx-engine-unreal"
 version = "0.1.0"
 dependencies = [
+ "cc",
  "openx",
  "openx-gfx",
 ]

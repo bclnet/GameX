@@ -1,9 +1,10 @@
 import os, copy
 from io import BytesIO
 from numpy import linalg, ndarray, array, zeros
+from quaternion import quaternion
 from openx.core import log, IWriteToStream, BinaryReader, unsafe
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
-from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_POLY, E_FACE, PROGRESSIVE_DATA, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_SAVE_PORTALS, E_PORTALS, EP_DATA, E_ROOM_DATA, E_SAVE_ROOM_DATA, E_PORTAL_DATA
+from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_POLY, E_FACE, PROGRESSIVE_DATA, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_FRAME, E_GROUP, E_ANIM, E_SAVE_PORTALS, E_PORTALS, EP_DATA, E_ROOM_DATA, E_SAVE_ROOM_DATA, E_PORTAL_DATA
 from gamex.families.Uncore.formats.compression import decompressBlast
 
 # typedefs
@@ -604,18 +605,161 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
 
 #region Binary_Tea
 
-# Binary_Tea
+# https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEobject.cpp#L264
+
+_DIV24 = 0.0416666666666666666667
+
+def _i16(v: int) -> int:
+    v &= 0xFFFF
+    return v - 0x10000 if v & 0x8000 else v
+
+def _getTimeBetweenKeyFrames(ea: E_ANIM, f1: int, f2: int) -> float:
+    if ea is None: return 0
+    if f1 < 0: return 0
+    if f1 > ea.nbKeyFrames - 1: return 0
+    if f2 < 0: return 0
+    if f2 > ea.nbKeyFrames - 1: return 0
+    time = 0.
+    for kk in range(f1 + 1, f2 + 1): time += ea.frames[kk].time
+    return time
+
 class Binary_Tea(IHaveMetaInfo):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Tea(r)
 
-    # https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEAnim.cpp#L355
+    class THEA_HEADER:
+        _struct = ('<20sI256s3i', 292)
+        def __init__(self, t):
+            (self.identity, self.version, self.animName, self.nbFrames, self.nbGroups, self.nbKeyFrames) = t
+            self.identity = unsafe.fixedAStringScan(self.identity, 20)
+            self.animName = unsafe.fixedAStringScan(self.animName, 256)
+
+    class THEA_KEYFRAME:
+        _struct = ('<8i', 32)
+        def __init__(self, t):
+            (self.numFrame, self.flagFrame, self.masterKeyFrame, self.keyFrame, self.keyMove, self.keyOrient, self.keyMorph, self.timeFrame) = t
+
+    class THEA_KEYFRAME_2015:
+        _struct = ('<2i256s6i', 288)
+        def __init__(self, t):
+            (self.numFrame, self.flagFrame, self.infoFrame, self.masterKeyFrame, self.keyFrame, self.keyMove, self.keyOrient, self.keyMorph, self.timeFrame) = t
+            self.infoFrame = unsafe.fixedAStringScan(self.infoFrame, 256)
+
+    class THEA_KEYMOVE:
+        _struct = ('<3f', 12)
+        def __init__(self, t):
+            (self.x, self.y, self.z) = t
+
+    # on disk w, x, y, z. quaternion() stores w first
+    class ArxQuat:
+        _struct = ('<4f', 16)
+        def __init__(self, t):
+            (self.w, self.x, self.y, self.z) = t
+
+    class THEO_GROUPANIM:
+        _struct = ('<i8s4f3f3f', 52)
+        def __init__(self, t):
+            (self.keyGroup, self.angle, self.quatW, self.quatX, self.quatY, self.quatZ, tx, ty, tz, zx, zy, zz) = t
+            self.translate = array([tx, ty, tz])
+            self.zoom = array([zx, zy, zz])
+
+    class THEA_SAMPLE:
+        _struct = ('<256si', 260)
+        def __init__(self, t):
+            (self.sampleName, self.sampleSize) = t
+            self.sampleName = unsafe.fixedAStringScan(self.sampleName, 256)
+
     def __init__(self, r: BinaryReader):
-        pass
+        th = r.readS(Binary_Tea.THEA_HEADER)
+        if th.version < 2014: raise Exception(f'Invalid TEA Version: {th.version}')
+        self.name = th.animName
+        self.version = th.version
+        eerie = self.anim = E_ANIM()
+        eerie.nbGroups = th.nbGroups
+        eerie.nbKeyFrames = th.nbKeyFrames
+        eerie.frames = [E_FRAME() for _ in range(th.nbKeyFrames)]
+        eerie.groups = [E_GROUP() for _ in range(th.nbKeyFrames * th.nbGroups)]
+        eerie.voidGroups = [0] * th.nbGroups
+        for i in range(th.nbKeyFrames):
+            if th.version >= 2015: tkf = r.readS(Binary_Tea.THEA_KEYFRAME_2015)
+            else:
+                tk = r.readS(Binary_Tea.THEA_KEYFRAME)
+                tkf = Binary_Tea.THEA_KEYFRAME_2015((tk.numFrame, tk.flagFrame, bytes(256), tk.masterKeyFrame, tk.keyFrame, tk.keyMove, tk.keyOrient, tk.keyMorph, tk.timeFrame))
+            fr = eerie.frames[i]
+            fr.masterKeyFrame = tkf.masterKeyFrame
+            fr.numFrame = tkf.numFrame
+            fr.fRotate = _i16(tkf.keyOrient)
+            fr.fTranslate = _i16(tkf.keyMove)
+            tkf.timeFrame = tkf.numFrame * 1000 # file time_frame is discarded
+            fr.time = tkf.timeFrame * _DIV24
+            eerie.animTime += tkf.timeFrame
+            fr.flag = tkf.flagFrame
+            if tkf.keyMove == 1:
+                tkm = r.readS(Binary_Tea.THEA_KEYMOVE)
+                fr.translate = array([tkm.x, tkm.y, tkm.z])
+            if tkf.keyOrient == 1:
+                r.skip(8) # THEO_ANGLE
+                quat = r.readS(Binary_Tea.ArxQuat)
+                fr.quat = quaternion(quat.w, quat.x, quat.y, quat.z)
+            if tkf.keyMorph == 1: r.skip(16) # THEA_MORPH
+            for j in range(th.nbGroups):
+                tga = r.readS(Binary_Tea.THEO_GROUPANIM)
+                eg = eerie.groups[j + i * th.nbGroups]
+                eg.key = tga.keyGroup
+                eg.quat = quaternion(tga.quatW, tga.quatX, tga.quatY, tga.quatZ)
+                eg.translate = tga.translate
+                eg.zoom = tga.zoom
+            numSample = r.readInt32()
+            fr.sample = -1
+            if numSample != -1:
+                ts = r.readS(Binary_Tea.THEA_SAMPLE)
+                r.skip(ts.sampleSize)
+                fr.sampleName = ts.sampleName
+            r.readInt32() # num_sfx, discarded
+        for i in range(th.nbKeyFrames):
+            if not eerie.frames[i].fTranslate:
+                k = i
+                while k >= 0 and not eerie.frames[k].fTranslate: k -= 1
+                j = i
+                while j < th.nbKeyFrames and not eerie.frames[j].fTranslate: j += 1
+                if j < th.nbKeyFrames and k >= 0:
+                    r1 = _getTimeBetweenKeyFrames(eerie, k, i)
+                    r2 = _getTimeBetweenKeyFrames(eerie, i, j)
+                    tot = float(array(1.) / (r1 + r2))
+                    r1 *= tot; r2 *= tot
+                    eerie.frames[i].translate = eerie.frames[j].translate * r1 + eerie.frames[k].translate * r2
+            if not eerie.frames[i].fRotate:
+                k = i
+                while k >= 0 and not eerie.frames[k].fRotate: k -= 1
+                j = i
+                while j < th.nbKeyFrames and not eerie.frames[j].fRotate: j += 1
+                if j < th.nbKeyFrames and k >= 0:
+                    r1 = _getTimeBetweenKeyFrames(eerie, k, i)
+                    r2 = _getTimeBetweenKeyFrames(eerie, i, j)
+                    tot = float(array(1.) / (r1 + r2))
+                    r1 *= tot; r2 *= tot
+                    qj = eerie.frames[j].quat; qk = eerie.frames[k].quat
+                    eerie.frames[i].quat = quaternion(qj.w * r1 + qk.w * r2, qj.x * r1 + qk.x * r2, qj.y * r1 + qk.y * r2, qj.z * r1 + qk.z * r2)
+        for i in range(th.nbKeyFrames):
+            eerie.frames[i].fTranslate = 1
+            eerie.frames[i].fRotate = 1
+        for i in range(eerie.nbGroups):
+            voidd = 1
+            for j in range(eerie.nbKeyFrames):
+                g = eerie.groups[i + j * eerie.nbGroups]
+                if (g.quat.x != 0. or g.quat.y != 0. or g.quat.z != 0. or g.quat.w != 1.
+                    or g.translate[0] != 0. or g.translate[1] != 0. or g.translate[2] != 0.
+                    or g.zoom[0] != 0. or g.zoom[1] != 0. or g.zoom[2] != 0.):
+                    voidd = 0
+                    break
+            if voidd: eerie.voidGroups[i] = 1
+        eerie.animTime = float(th.nbFrames) * 1000. * _DIV24
+        if eerie.animTime < 1: eerie.animTime = 1
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo('BinaryTEA', items = [
-            MetaInfo(f'Type: Center')
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
+        MetaInfo('TEA', items = [
+            MetaInfo(f'Anim: {self.anim}')
             ])
         ]
 

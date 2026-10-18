@@ -640,21 +640,229 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
 #endregion
 
 #region Binary_Tea
+// https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEobject.cpp#L264
 
-public class Binary_Tea : IHaveMetaInfo {
+public unsafe class Binary_Tea : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Tea(r));
 
-    // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEAnim.cpp#L355
+    #region Headers
+
+    const float DIV24 = 0.0416666666666666666667f;
+
+    [StructLayout(LayoutKind.Sequential)]
+    unsafe struct THEA_HEADER {
+        public static (string, int) Struct = ("<20sI256s3i", 292);
+        public fixed byte Identity[20];
+        public uint Version;
+        public fixed byte AnimName[256];
+        public int NbFrames;
+        public int NbGroups;
+        public int NbKeyFrames;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct THEA_KEYFRAME {
+        public static (string, int) Struct = ("<8i", 32);
+        public int NumFrame;
+        public int FlagFrame;
+        public int MasterKeyFrame;
+        public int KeyFrame;
+        public int KeyMove;
+        public int KeyOrient;
+        public int KeyMorph;
+        public int TimeFrame;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    unsafe struct THEA_KEYFRAME_2015 {
+        public static (string, int) Struct = ("<2i256s6i", 288);
+        public int NumFrame;
+        public int FlagFrame;
+        public fixed byte InfoFrame[256];
+        public int MasterKeyFrame;
+        public int KeyFrame;
+        public int KeyMove;
+        public int KeyOrient;
+        public int KeyMorph;
+        public int TimeFrame;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct THEA_KEYMOVE {
+        public static (string, int) Struct = ("<3f", 12);
+        public float X;
+        public float Y;
+        public float Z;
+    }
+
+    // On disk w, x, y, z. Runtime Quaternion is x, y, z, w.
+    [StructLayout(LayoutKind.Sequential)]
+    struct ArxQuat {
+        public static (string, int) Struct = ("<4f", 16);
+        public float W;
+        public float X;
+        public float Y;
+        public float Z;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    unsafe struct THEO_GROUPANIM {
+        public static (string, int) Struct = ("<i8s4f3f3f", 52);
+        public int KeyGroup;
+        public fixed byte Angle[8];
+        public float QuatW;
+        public float QuatX;
+        public float QuatY;
+        public float QuatZ;
+        public Vector3 Translate;
+        public Vector3 Zoom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    unsafe struct THEA_SAMPLE {
+        public static (string, int) Struct = ("<256si", 260);
+        public fixed byte SampleName[256];
+        public int SampleSize;
+    }
+
+    #endregion
+
+    public readonly string Name;
+    public readonly uint Version;
+    public readonly E_ANIM Anim;
+
     public Binary_Tea(BinaryReader r) {
+        var th = r.ReadS<THEA_HEADER>();
+        if (th.Version < 2014) throw new FormatException($"Invalid TEA Version: {th.Version}");
+        _ = UnsafeX.FixedAStringScan(th.Identity, 20);
+        Name = UnsafeX.FixedAStringScan(th.AnimName, 256);
+        Version = th.Version;
+        var eerie = Anim = new E_ANIM();
+        eerie.NbGroups = th.NbGroups;
+        eerie.NbKeyFrames = th.NbKeyFrames;
+        eerie.Frames = new E_FRAME[th.NbKeyFrames];
+        eerie.Groups = new E_GROUP[th.NbKeyFrames * th.NbGroups];
+        eerie.VoidGroups = new byte[th.NbGroups];
+        for (var i = 0; i < th.NbKeyFrames; i++) {
+            THEA_KEYFRAME_2015 tkf2015;
+            if (th.Version >= 2015) tkf2015 = r.ReadS<THEA_KEYFRAME_2015>();
+            else {
+                var tkf = r.ReadS<THEA_KEYFRAME>();
+                tkf2015 = default;
+                tkf2015.NumFrame = tkf.NumFrame;
+                tkf2015.FlagFrame = tkf.FlagFrame;
+                tkf2015.MasterKeyFrame = tkf.MasterKeyFrame;
+                tkf2015.KeyFrame = tkf.KeyFrame;
+                tkf2015.KeyMove = tkf.KeyMove;
+                tkf2015.KeyOrient = tkf.KeyOrient;
+                tkf2015.KeyMorph = tkf.KeyMorph;
+                tkf2015.TimeFrame = tkf.TimeFrame;
+            }
+            eerie.Frames[i].MasterKeyFrame = tkf2015.MasterKeyFrame;
+            eerie.Frames[i].NumFrame = tkf2015.NumFrame;
+            eerie.Frames[i].FRotate = (short)tkf2015.KeyOrient;
+            eerie.Frames[i].FTranslate = (short)tkf2015.KeyMove;
+            tkf2015.TimeFrame = tkf2015.NumFrame * 1000; // file time_frame is discarded
+            eerie.Frames[i].Time = tkf2015.TimeFrame * DIV24;
+            eerie.AnimTime += tkf2015.TimeFrame;
+            eerie.Frames[i].Flag = tkf2015.FlagFrame;
+            if (tkf2015.KeyMove == 1) {
+                var tkm = r.ReadS<THEA_KEYMOVE>();
+                eerie.Frames[i].Translate = new Vector3(tkm.X, tkm.Y, tkm.Z);
+            }
+            if (tkf2015.KeyOrient == 1) {
+                r.Skip(8); // THEO_ANGLE
+                var quat = r.ReadS<ArxQuat>();
+                eerie.Frames[i].Quat = new Quaternion(quat.X, quat.Y, quat.Z, quat.W);
+            }
+            if (tkf2015.KeyMorph == 1) r.Skip(16); // THEA_MORPH
+            for (var j = 0; j < th.NbGroups; j++) {
+                var tga = r.ReadS<THEO_GROUPANIM>();
+                var idx = j + i * th.NbGroups;
+                eerie.Groups[idx].Key = tga.KeyGroup;
+                eerie.Groups[idx].Quat = new Quaternion(tga.QuatX, tga.QuatY, tga.QuatZ, tga.QuatW);
+                eerie.Groups[idx].Translate = tga.Translate;
+                eerie.Groups[idx].Zoom = tga.Zoom;
+            }
+            var numSample = r.ReadInt32();
+            eerie.Frames[i].Sample = -1;
+            if (numSample != -1) {
+                var ts = r.ReadS<THEA_SAMPLE>();
+                r.Skip(ts.SampleSize);
+                eerie.Frames[i].SampleName = UnsafeX.FixedAStringScan(ts.SampleName, 256);
+            }
+            r.ReadInt32(); // num_sfx, discarded
+        }
+        for (var i = 0; i < th.NbKeyFrames; i++) {
+            if (eerie.Frames[i].FTranslate == 0) {
+                var k = i;
+                while (k >= 0 && eerie.Frames[k].FTranslate == 0) k--;
+                var j = i;
+                while (j < th.NbKeyFrames && eerie.Frames[j].FTranslate == 0) j++;
+                if (j < th.NbKeyFrames && k >= 0) {
+                    var r1 = GetTimeBetweenKeyFrames(eerie, k, i);
+                    var r2 = GetTimeBetweenKeyFrames(eerie, i, j);
+                    var tot = 1f / (r1 + r2);
+                    r1 *= tot;
+                    r2 *= tot;
+                    var a = eerie.Frames[j].Translate;
+                    var b = eerie.Frames[k].Translate;
+                    eerie.Frames[i].Translate = new Vector3(a.X * r1 + b.X * r2, a.Y * r1 + b.Y * r2, a.Z * r1 + b.Z * r2);
+                }
+            }
+            if (eerie.Frames[i].FRotate == 0) {
+                var k = i;
+                while (k >= 0 && eerie.Frames[k].FRotate == 0) k--;
+                var j = i;
+                while (j < th.NbKeyFrames && eerie.Frames[j].FRotate == 0) j++;
+                if (j < th.NbKeyFrames && k >= 0) {
+                    var r1 = GetTimeBetweenKeyFrames(eerie, k, i);
+                    var r2 = GetTimeBetweenKeyFrames(eerie, i, j);
+                    var tot = 1f / (r1 + r2);
+                    r1 *= tot;
+                    r2 *= tot;
+                    var a = eerie.Frames[j].Quat;
+                    var b = eerie.Frames[k].Quat;
+                    eerie.Frames[i].Quat = new Quaternion(a.X * r1 + b.X * r2, a.Y * r1 + b.Y * r2, a.Z * r1 + b.Z * r2, a.W * r1 + b.W * r2);
+                }
+            }
+        }
+        for (var i = 0; i < th.NbKeyFrames; i++) {
+            eerie.Frames[i].FTranslate = 1;
+            eerie.Frames[i].FRotate = 1;
+        }
+        for (var i = 0; i < eerie.NbGroups; i++) {
+            var voidd = 1;
+            for (var j = 0; j < eerie.NbKeyFrames; j++) {
+                var g = eerie.Groups[i + j * eerie.NbGroups];
+                if (g.Quat.X != 0f || g.Quat.Y != 0f || g.Quat.Z != 0f || g.Quat.W != 1f
+                    || g.Translate.X != 0f || g.Translate.Y != 0f || g.Translate.Z != 0f
+                    || g.Zoom.X != 0f || g.Zoom.Y != 0f || g.Zoom.Z != 0f) { voidd = 0; break; }
+            }
+            if (voidd != 0) eerie.VoidGroups[i] = 1;
+        }
+        eerie.AnimTime = (float)th.NbFrames * 1000f * DIV24;
+        if (eerie.AnimTime < 1) eerie.AnimTime = 1;
+    }
+
+    static float GetTimeBetweenKeyFrames(E_ANIM ea, int f1, int f2) {
+        if (ea == null) return 0;
+        if (f1 < 0) return 0;
+        if (f1 > ea.NbKeyFrames - 1) return 0;
+        if (f2 < 0) return 0;
+        if (f2 > ea.NbKeyFrames - 1) return 0;
+        var time = 0f;
+        for (var kk = f1 + 1; kk <= f2; kk++) time += ea.Frames[kk].Time;
+        return time;
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-        => [
-            new("BinaryTEA", items: [
-                new($"Type: Center"),
-            ])
-        ];
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
+        new("TEA", items: [
+            new($"Anim: {Anim}"),
+        ])
+    ];
 }
 
 #endregion

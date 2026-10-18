@@ -623,26 +623,26 @@ class E_3DOBJ:
 #Vector3 point0;
 #} EERIE_MULTI3DSCENE; # Aligned 1 2 4
 
-#struct
-#{
-#    long num_frame;
-#long flag;
-#int master_key_frame;
-#short f_translate; #int
-#short f_rotate; #int
-#float time;
-#Vector3 translate;
-#EERIE_QUAT quat;
-#long sample;
-#} EERIE_FRAME; # Aligned 1 2 4
+class E_FRAME:
+    # quat is quaternion(0, 0, 0, 0), not the identity quaternion()
+    def __init__(self):
+        self.numFrame = 0
+        self.flag = 0
+        self.masterKeyFrame = 0
+        self.fTranslate = 0
+        self.fRotate = 0
+        self.time = 0.
+        self.translate = array([0., 0., 0.])
+        self.quat = quaternion(0, 0, 0, 0)
+        self.sample = 0
+        self.sampleName = None
 
-#struct
-#{
-#    int key;
-#Vector3 translate;
-#EERIE_QUAT quat;
-#Vector3 zoom;
-#} EERIE_GROUP; # Aligned 1 2 4
+class E_GROUP:
+    def __init__(self):
+        self.key = 0
+        self.translate = array([0., 0., 0.])
+        self.quat = quaternion(0, 0, 0, 0)
+        self.zoom = array([0., 0., 0.])
 
 ## Animation playing flags
 ##define EA_LOOP			1	# Must be looped at end (indefinitely...)
@@ -653,16 +653,15 @@ class E_3DOBJ:
 ##define	EA_STOPEND		32	# Must Be Stopped at end.
 ##define EA_FORCEPLAY	64	# User controlled... MUST be played...
 ##define EA_EXCONTROL	128	# ctime externally set, no update.
-#struct
-#{
-#    float anim_time;
-#unsigned long flag;
-#long nb_groups;
-#long nb_key_frames;
-#EERIE_FRAME* frames;
-#EERIE_GROUP* groups;
-#unsigned char* voidgroups;
-#} EERIE_ANIM; # Aligned 1 2 4
+class E_ANIM:
+    def __init__(self):
+        self.animTime = 0.
+        self.flag = 0
+        self.nbGroups = 0
+        self.nbKeyFrames = 0
+        self.frames = None
+        self.groups = None
+        self.voidGroups = None
 
 ##-------------------------------------------------------------------------
 #Portal Data;

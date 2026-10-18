@@ -54,8 +54,9 @@ done	5	d2e2168c5ee5658b	Apps/GameX.App.Explorer/Views/OptionsPage.xaml.cs	apps/a
 done	10	d9099898c58f17fd	Apps/GameX.App.Explorer/Views/ViewExtensions.cs	apps/app-explorer/src/views/view_extensions.rs	gamex-app-explorer
 done	48	866f5a89aa4107c9	Families/GameX.Arkane/Arkane.cs	families/arkane/src/arkane.rs	gamex-arkane
 done	166	0a45a0a3dc4309a2	Families/GameX.Arkane/Formats/Binary.cs	families/arkane/src/formats/binary.rs	gamex-arkane
-done	541	3607dda776927c03	Families/GameX.Arkane/Formats/Danae/Binary.cs	families/arkane/src/formats/danae/binary.rs	gamex-arkane
-done	449	4fc558a841a8aa24	Families/GameX.Arkane/Formats/Danae/EerieTypes.cs	families/arkane/src/formats/danae/eerie_types.rs	gamex-arkane
+done	736	9f89528785e1195b	Families/GameX.Arkane/Formats/Danae/Binary.cs	families/arkane/src/formats/danae/binary.rs	gamex-arkane
+done	476	19857972a796a253	Families/GameX.Arkane/Formats/Danae/EerieTypes.cs	families/arkane/src/formats/danae/eerie_types.rs	gamex-arkane
+done	71	1971770a048b3a14	Families/GameX.Arkane/Engines/FtlObjectBuilder.cs	families/arkane/src/engines/ftl_object_builder.rs	gamex-arkane
 todo	28	403c140a86235ec6	Families/GameX.Beamdog/Beamdog.cs	families/beamdog/src/beamdog.rs	gamex-beamdog
 todo	54	1450fb7ae631b989	Families/GameX.Bethesda/Bethesda.cs	families/bethesda/src/bethesda.rs	gamex-bethesda
 todo	32	4a788d7275d06391	Families/GameX.Bethesda/Builders/MapImageBuilder.cs	families/bethesda/src/builders/map_image_builder.rs	gamex-bethesda
@@ -128,6 +129,7 @@ done	25	99d8e15c15f9daff	Families/GameX.Cig.Explorer/Apps/Subsumption/Views/Vari
 todo	42	0cbe6d347c3d6020	Families/GameX.Cig.Explorer/ResourceManagerProvider.cs	families/cig-explorer/src/resource_manager_provider.rs	gamex-cig-explorer
 todo	31	712494b4aa548ef6	Families/GameX.Cryptic/Cryptic.cs	families/cryptic/src/cryptic.rs	gamex-cryptic
 todo	45	abde3611233d078b	Families/GameX.Crytek/Crytek.cs	families/crytek/src/crytek.rs	gamex-crytek
+todo	726	d2ed882b020ae856	Families/GameX.Crytek/Formats/Binary.cs	families/crytek/src/formats/binary.rs	gamex-crytek
 todo	2306	98476f7e63154ec6	Families/GameX.Crytek/Formats/Core/Chunks.cs	families/crytek/src/formats/core/chunks.rs	gamex-crytek
 todo	6	abe3e2cdca1d962e	Families/GameX.Crytek/Formats/Core/IBinaryChunk.cs	families/crytek/src/formats/core/i_binary_chunk.rs	gamex-crytek
 todo	153	420ce4e9178cf0b3	Families/GameX.Crytek/Formats/Core/Material.cs	families/crytek/src/formats/core/material.rs	gamex-crytek
@@ -149,6 +151,7 @@ todo	8	505896b958fa98b5	Families/GameX.Crytek/Transforms/UnknownTransform.cs	fam
 todo	24	0478b9e5f4f45d12	Families/GameX.Cyanide/Cyanide.cs	families/cyanide/src/cyanide.rs	gamex-cyanide
 todo	23	57503dcba65a42bd	Families/GameX.EA/EA.cs	families/ea/src/ea.rs	gamex-ea
 todo	23	d6a6da390e1e0e09	Families/GameX.Epic/Epic.cs	families/epic/src/epic.rs	gamex-epic
+todo	31	d88dfb8a790847ac	Families/GameX.Epic/Formats/Binary.cs	families/epic/src/formats/binary.rs	gamex-epic
 todo	62	440b9067a17d60c6	Families/GameX.Epic/Formats/Core/ReaderExtensions.cs	families/epic/src/formats/core/reader_extensions.rs	gamex-epic
 todo	659	dd484818b283361f	Families/GameX.Epic/Formats/Core/UCore.cs	families/epic/src/formats/core/u_core.rs	gamex-epic
 todo	76	907c8a0021a7b232	Families/GameX.Epic/Formats/Core/UDecrypt.cs	families/epic/src/formats/core/u_decrypt.rs	gamex-epic
@@ -201,6 +204,7 @@ done	3263	819ee5fa3e230c82	Families/GameX.Gamebryo/Formats/Nif.cs	families/gameb
 done	3173	b862973ab9639351	Families/GameX.Gamebryo/Formats/Nif.o.cs	families/gamebryo/src/formats/nif_o.rs	gamex-gamebryo
 todo	44	e4320935231d4404	Families/GameX.Gamebryo/Gamebryo.cs	families/gamebryo/src/gamebryo.rs	gamex-gamebryo
 todo	70	0586c71786bfa4f5	Families/GameX.Gamebryo/Platforms/NifObjectBuilder.cs	families/gamebryo/src/platforms/nif_object_builder.rs	gamex-gamebryo
+todo	917	b289df2afadc91c2	Families/GameX.ID/Formats/Binary.cs	families/id/src/formats/binary.rs	gamex-id
 todo	11	fb73b739d975a070	Families/GameX.ID/Games/Q/Database.cs	families/id/src/games/q/database.rs	gamex-id
 todo	46	9e143a7100ea21b5	Families/GameX.ID/ID.cs	families/id/src/id.rs	gamex-id
 todo	182	2ca6331db37cfe96	Families/GameX.IW/Formats/FastFile+AssetType.cs	families/iw/src/formats/fast_file_asset_type.rs	gamex-iw
@@ -269,6 +273,7 @@ todo	0	5688d2f7debf2b70	Engines/GameX.Engine.Unity/Scripts/Engine/UI/UIUtils.cs	
 todo	0	8005884084e00341	Engines/GameX.Engine.Unity/Scripts/Engine/XR/XRInput.cs	engines/engine-unity/src/scripts/engine/xr/xr_input.rs	gamex-engine-unity
 todo	0	0719675d73515431	Engines/GameX.Engine.Unity/Scripts/TestAsset.cs	engines/engine-unity/src/scripts/test_asset.rs	gamex-engine-unity
 todo	144	1d81ca7efda8f486	Engines/GameX.Engine.Unity/UnityNifObjectBuilder.cs	engines/engine-unity/src/unity_nif_object_builder.rs	gamex-engine-unity
+todo	52	109b7c555d122d79	Engines/GameX.Engine.Unity/UnityFtlObjectBuilder.cs	engines/engine-unity/src/unity_ftl_object_builder.rs	gamex-engine-unity
 todo	50	11b1a2e1f72e1bc5	Engines/GameX.Engine.Unity/Unity_Render.cs	engines/engine-unity/src/unity_render.rs	gamex-engine-unity
 todo	28	891999e8434805e4	Engines/GameX.Engine.Unreal/Unreal_Render.cs	engines/engine-unreal/src/unreal_render.rs	gamex-engine-unreal
 todo	25	7c93fb5fce0df415	Families/GameX.Red/Red.cs	families/red/src/red.rs	gamex-red
@@ -359,6 +364,7 @@ todo	42	d43ab6d27f0390c3	Families/GameX.Uncore.Program/Program.cs	families/uncor
 todo	23	2bf84501d082f766	Families/GameX.Unity/Unity.cs	families/unity/src/unity.rs	gamex-unity
 todo	132	f451a43173b216a2	Families/GameX.Valve/Algorithms/MeshOptimizerIndexDecoder.cs	families/valve/src/algorithms/mesh_optimizer_index_decoder.rs	gamex-valve
 todo	141	074be0d5e8d92102	Families/GameX.Valve/Algorithms/MeshOptimizerVertexDecoder.cs	families/valve/src/algorithms/mesh_optimizer_vertex_decoder.rs	gamex-valve
+todo	1240	5db52ffb714470c8	Families/GameX.Valve/Formats/Binary.cs	families/valve/src/formats/binary.rs	gamex-valve
 todo	467	922f0a96ff7d96a0	Families/GameX.Valve/Formats/Vpk/Animations.cs	families/valve/src/formats/vpk/animations.rs	gamex-valve
 todo	9187	551054370affe67b	Families/GameX.Valve/Formats/Vpk/Blocks.cs	families/valve/src/formats/vpk/blocks.rs	gamex-valve
 todo	779	0152ba49a45e7b71	Families/GameX.Valve/Formats/Vpk/Extras.cs	families/valve/src/formats/vpk/extras.rs	gamex-valve

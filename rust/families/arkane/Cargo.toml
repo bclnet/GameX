@@ -15,6 +15,7 @@ gamex-epic = { path = "../../families/epic" }
 gamex-id = { path = "../../families/id" }
 gamex-uncore = { path = "../../families/uncore" }
 gamex-valve = { path = "../../families/valve" }
+openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
 openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }
 bytemuck = { workspace = true }

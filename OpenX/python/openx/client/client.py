@@ -57,8 +57,14 @@ class IClientHost:
     def dispose(self) -> None: pass
     def run(self) -> None: pass
 
+# ISceneHost. MgClientHost implements this. Not every engine host does.
+class ISceneHost:
+    def setScene(self, scene: 'SceneBase') -> None: pass
+
 # ClientBase
 class ClientBase:
+    def __init__(self):
+        self.host = None
     def dispose(self) -> None: pass
     def loadContent(self) -> None: pass
     def unloadContent(self) -> None: pass

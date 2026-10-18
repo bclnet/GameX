@@ -3,13 +3,13 @@ import traceback
 from openx.core import ISource, Engine
 from openx.engines.system import SystemSfx
 from openx.gfx import IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel, ObjectModelBuilder, ObjectModelManager, MaterialBuilder, MaterialManager, ShaderBuilder, ShaderManager, TextureManager, TextureBuilder
-from openx.client import IClientHost
+from openx.client import IClientHost, ISceneHost
 from openx.gfx.egin import Game, GraphicsDeviceManager
 
 #region Client
 
 # EginXClientHost
-class EginXClientHost(Game, IClientHost):
+class EginXClientHost(Game, IClientHost, ISceneHost):
     def __init__(self, client: callable):
         super().__init__()
         # self.deviceManager = GraphicsDeviceManager(self)
@@ -26,6 +26,7 @@ class EginXClientHost(Game, IClientHost):
 
     def loadContent(self) -> None:
         super().loadContent()
+        self.client.host = self
         self.client.loadContent()
 
     def unloadContent(self) -> None:

@@ -635,26 +635,25 @@ public class E_3DOBJ {
 //Vector3 point0;
 //} E_MULTI3DSCENE; // Aligned 1 2 4
 
-//struct
-//{
-//    long num_frame;
-//long flag;
-//int master_key_frame;
-//short f_translate; //int
-//short f_rotate; //int
-//float time;
-//Vector3 translate;
-//EERIE_QUAT quat;
-//long sample;
-//} E_FRAME; // Aligned 1 2 4
+public struct E_FRAME {
+    public int NumFrame;
+    public int Flag;
+    public int MasterKeyFrame;
+    public short FTranslate;
+    public short FRotate;
+    public float Time;
+    public Vector3 Translate;
+    public Quaternion Quat;
+    public int Sample;
+    public string SampleName; // file string; there is no sound id
+}
 
-//struct
-//{
-//    int key;
-//Vector3 translate;
-//EERIE_QUAT quat;
-//Vector3 zoom;
-//} E_GROUP; // Aligned 1 2 4
+public struct E_GROUP {
+    public int Key;
+    public Vector3 Translate;
+    public Quaternion Quat;
+    public Vector3 Zoom;
+}
 
 //// Animation playing flags
 //#define EA_LOOP			1	// Must be looped at end (indefinitely...)
@@ -665,17 +664,15 @@ public class E_3DOBJ {
 //#define	EA_STOPEND		32	// Must Be Stopped at end.
 //#define EA_FORCEPLAY	64	// User controlled... MUST be played...
 //#define EA_EXCONTROL	128	// ctime externally set, no update.
-//struct
-//{
-
-//    float anim_time;
-//unsigned long flag;
-//long nb_groups;
-//long nb_key_frames;
-//E_FRAME* frames;
-//E_GROUP* groups;
-//unsigned char* voidgroups;
-//} E_ANIM; // Aligned 1 2 4
+public class E_ANIM {
+    public float AnimTime;
+    public uint Flag;
+    public int NbGroups;
+    public int NbKeyFrames;
+    public E_FRAME[] Frames;
+    public E_GROUP[] Groups;
+    public byte[] VoidGroups;
+}
 
 ////-------------------------------------------------------------------------
 //Portal Data;

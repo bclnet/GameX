@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.Arkane/Formats/Danae/Binary.cs
-// PORT-SHA: 3607dda776927c03
+// PORT-SHA: 9f89528785e1195b
 // PORT-STATUS: done
 //
 // C#'s nested header structs are module-level here (Rust has no nested types),
@@ -13,15 +13,15 @@
 //     through `DesSer`, which has no Rust counterpart yet. Here they write the
 //     `{:#?}` debug form of the same public fields. `Value = this` in the
 //     "Text" `MetaContent` is that string.
-//   * `$"Obj: {Obj}"`, `$"Level: {Level}"` and `$"Bkg: {Bkg}"`: those types
-//     don't override `ToString`, so C# prints their type names; so does this.
+//   * `$"Obj: {Obj}"`, `$"Level: {Level}"`, `$"Bkg: {Bkg}"` and `$"Anim: {Anim}"`:
+//     those types don't override `ToString`, so C# prints their type names; so does this.
 //   * `using GameX.Bullfrog;` is unused in the C#: nothing to port.
 
 use std::fmt;
 use std::io::{self, Cursor, Error, ErrorKind, Read, Seek, SeekFrom, Write};
 use std::sync::Arc;
 
-use glam::{I16Vec3, IVec3, U16Vec3, Vec2, Vec3};
+use glam::{I16Vec3, IVec3, Quat, U16Vec3, Vec2, Vec3};
 
 use gamex::binary::{Archive, Stream, Task};
 use gamex::meta::{FileSource, IHaveMetaInfo, MetaContent, MetaInfo, MetaManager, Tag};
@@ -757,23 +757,262 @@ impl IHaveMetaInfo for Binary_Fts {
 // #endregion
 
 // #region Binary_Tea
+// https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEobject.cpp#L264
+
+const DIV24: f32 = 0.0416666666666666666667;
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct THEA_HEADER {
+    Identity: [u8; 20],
+    Version: u32,
+    AnimName: [u8; 256],
+    NbFrames: i32,
+    NbGroups: i32,
+    NbKeyFrames: i32,
+}
+impl IStruct for THEA_HEADER { const Struct: (&'static str, usize) = ("<20sI256s3i", 292); }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct THEA_KEYFRAME {
+    NumFrame: i32,
+    FlagFrame: i32,
+    MasterKeyFrame: i32,
+    KeyFrame: i32,
+    KeyMove: i32,
+    KeyOrient: i32,
+    KeyMorph: i32,
+    TimeFrame: i32,
+}
+impl IStruct for THEA_KEYFRAME { const Struct: (&'static str, usize) = ("<8i", 32); }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct THEA_KEYFRAME_2015 {
+    NumFrame: i32,
+    FlagFrame: i32,
+    InfoFrame: [u8; 256],
+    MasterKeyFrame: i32,
+    KeyFrame: i32,
+    KeyMove: i32,
+    KeyOrient: i32,
+    KeyMorph: i32,
+    TimeFrame: i32,
+}
+impl IStruct for THEA_KEYFRAME_2015 { const Struct: (&'static str, usize) = ("<2i256s6i", 288); }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct THEA_KEYMOVE { V: Vec3 }
+impl IStruct for THEA_KEYMOVE { const Struct: (&'static str, usize) = ("<3f", 12); }
+
+// On disk w, x, y, z. Runtime `Quat` is x, y, z, w.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct ArxQuat {
+    W: f32,
+    X: f32,
+    Y: f32,
+    Z: f32,
+}
+impl IStruct for ArxQuat { const Struct: (&'static str, usize) = ("<4f", 16); }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct THEO_GROUPANIM {
+    KeyGroup: i32,
+    Angle: [u8; 8],
+    QuatW: f32,
+    QuatX: f32,
+    QuatY: f32,
+    QuatZ: f32,
+    Translate: Vec3,
+    Zoom: Vec3,
+}
+impl IStruct for THEO_GROUPANIM { const Struct: (&'static str, usize) = ("<i8s4f3f3f", 52); }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct THEA_SAMPLE {
+    SampleName: [u8; 256],
+    SampleSize: i32,
+}
+impl IStruct for THEA_SAMPLE { const Struct: (&'static str, usize) = ("<256si", 260); }
+
+fn getTimeBetweenKeyFrames(ea: &E_ANIM, f1: i32, f2: i32) -> f32 {
+    if f1 < 0 { return 0.0; }
+    if f1 > ea.NbKeyFrames - 1 { return 0.0; }
+    if f2 < 0 { return 0.0; }
+    if f2 > ea.NbKeyFrames - 1 { return 0.0; }
+    let mut time = 0.0f32;
+    let mut kk = f1 + 1;
+    while kk <= f2 {
+        time += ea.Frames[kk as usize].Time;
+        kk += 1;
+    }
+    time
+}
 
 #[derive(Debug)]
-pub struct Binary_Tea {}
+pub struct Binary_Tea {
+    pub Name: String,
+    pub Version: u32,
+    pub Anim: E_ANIM,
+}
 
 impl Binary_Tea {
-    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { Box::pin(async move { Ok(Tag::Info(Arc::new(Binary_Tea::new(r)))) }) }
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { Box::pin(async move { Ok(Tag::Info(Arc::new(Binary_Tea::new(r)?))) }) }
 
-    // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEAnim.cpp#L355
-    pub fn new<R: Read + Seek>(r: &mut R) -> Self {
-        Self {}
+    pub fn new<R: Read + Seek>(r: &mut R) -> io::Result<Self> {
+        let th = r.readS::<THEA_HEADER>()?;
+        if th.Version < 2014 { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid TEA Version: {}", th.Version))); }
+        let _identity = FixedAStringScan(&th.Identity, 20);
+        let name = FixedAStringScan(&th.AnimName, 256);
+        let (nbKey, nbGroups) = (th.NbKeyFrames, th.NbGroups);
+        let mut eerie = E_ANIM {
+            AnimTime: 0.0,
+            Flag: 0,
+            NbGroups: nbGroups,
+            NbKeyFrames: nbKey,
+            Frames: vec![E_FRAME::default(); nbKey as usize],
+            Groups: vec![E_GROUP::default(); (nbKey * nbGroups) as usize],
+            VoidGroups: vec![0u8; nbGroups as usize],
+        };
+        let mut i = 0i32;
+        while i < nbKey {
+            let mut tkf2015 = if th.Version >= 2015 {
+                r.readS::<THEA_KEYFRAME_2015>()?
+            } else {
+                let tkf = r.readS::<THEA_KEYFRAME>()?;
+                THEA_KEYFRAME_2015 {
+                    NumFrame: tkf.NumFrame,
+                    FlagFrame: tkf.FlagFrame,
+                    InfoFrame: [0u8; 256],
+                    MasterKeyFrame: tkf.MasterKeyFrame,
+                    KeyFrame: tkf.KeyFrame,
+                    KeyMove: tkf.KeyMove,
+                    KeyOrient: tkf.KeyOrient,
+                    KeyMorph: tkf.KeyMorph,
+                    TimeFrame: tkf.TimeFrame,
+                }
+            };
+            eerie.Frames[i as usize].MasterKeyFrame = tkf2015.MasterKeyFrame;
+            eerie.Frames[i as usize].NumFrame = tkf2015.NumFrame;
+            eerie.Frames[i as usize].FRotate = tkf2015.KeyOrient as i16;
+            eerie.Frames[i as usize].FTranslate = tkf2015.KeyMove as i16;
+            tkf2015.TimeFrame = tkf2015.NumFrame * 1000; // file time_frame is discarded
+            eerie.Frames[i as usize].Time = tkf2015.TimeFrame as f32 * DIV24;
+            eerie.AnimTime += tkf2015.TimeFrame as f32;
+            eerie.Frames[i as usize].Flag = tkf2015.FlagFrame;
+            if tkf2015.KeyMove == 1 {
+                let tkm = r.readS::<THEA_KEYMOVE>()?;
+                eerie.Frames[i as usize].Translate = tkm.V;
+            }
+            if tkf2015.KeyOrient == 1 {
+                r.skip(8)?; // THEO_ANGLE
+                let quat = r.readS::<ArxQuat>()?;
+                eerie.Frames[i as usize].Quat = Quat::from_xyzw(quat.X, quat.Y, quat.Z, quat.W);
+            }
+            if tkf2015.KeyMorph == 1 { r.skip(16)?; } // THEA_MORPH
+            let mut j = 0i32;
+            while j < nbGroups {
+                let tga = r.readS::<THEO_GROUPANIM>()?;
+                let eg = &mut eerie.Groups[(j + i * nbGroups) as usize];
+                eg.Key = tga.KeyGroup;
+                eg.Quat = Quat::from_xyzw(tga.QuatX, tga.QuatY, tga.QuatZ, tga.QuatW);
+                eg.Translate = tga.Translate;
+                eg.Zoom = tga.Zoom;
+                j += 1;
+            }
+            let numSample = r.readInt32()?;
+            eerie.Frames[i as usize].Sample = -1;
+            if numSample != -1 {
+                let ts = r.readS::<THEA_SAMPLE>()?;
+                r.skip(ts.SampleSize as i64)?;
+                eerie.Frames[i as usize].SampleName = Some(FixedAStringScan(&ts.SampleName, 256));
+            }
+            r.readInt32()?; // num_sfx, discarded
+            i += 1;
+        }
+        i = 0;
+        while i < nbKey {
+            if eerie.Frames[i as usize].FTranslate == 0 {
+                let mut k = i;
+                while k >= 0 && eerie.Frames[k as usize].FTranslate == 0 { k -= 1; }
+                let mut j = i;
+                while j < nbKey && eerie.Frames[j as usize].FTranslate == 0 { j += 1; }
+                if j < nbKey && k >= 0 {
+                    let mut r1 = getTimeBetweenKeyFrames(&eerie, k, i);
+                    let mut r2 = getTimeBetweenKeyFrames(&eerie, i, j);
+                    let tot = 1.0 / (r1 + r2);
+                    r1 *= tot;
+                    r2 *= tot;
+                    let tj = eerie.Frames[j as usize].Translate;
+                    let tk = eerie.Frames[k as usize].Translate;
+                    eerie.Frames[i as usize].Translate = tj * r1 + tk * r2;
+                }
+            }
+            if eerie.Frames[i as usize].FRotate == 0 {
+                let mut k = i;
+                while k >= 0 && eerie.Frames[k as usize].FRotate == 0 { k -= 1; }
+                let mut j = i;
+                while j < nbKey && eerie.Frames[j as usize].FRotate == 0 { j += 1; }
+                if j < nbKey && k >= 0 {
+                    let mut r1 = getTimeBetweenKeyFrames(&eerie, k, i);
+                    let mut r2 = getTimeBetweenKeyFrames(&eerie, i, j);
+                    let tot = 1.0 / (r1 + r2);
+                    r1 *= tot;
+                    r2 *= tot;
+                    let qj = eerie.Frames[j as usize].Quat;
+                    let qk = eerie.Frames[k as usize].Quat;
+                    eerie.Frames[i as usize].Quat = Quat::from_xyzw(
+                        qj.x * r1 + qk.x * r2,
+                        qj.y * r1 + qk.y * r2,
+                        qj.z * r1 + qk.z * r2,
+                        qj.w * r1 + qk.w * r2,
+                    );
+                }
+            }
+            i += 1;
+        }
+        for fr in &mut eerie.Frames {
+            fr.FTranslate = 1;
+            fr.FRotate = 1;
+        }
+        let mut gi = 0i32;
+        while gi < eerie.NbGroups {
+            let mut voidd = 1i32;
+            let mut j = 0i32;
+            while j < eerie.NbKeyFrames {
+                let g = eerie.Groups[(gi + j * eerie.NbGroups) as usize];
+                if g.Quat.x != 0.0 || g.Quat.y != 0.0 || g.Quat.z != 0.0 || g.Quat.w != 1.0
+                    || g.Translate.x != 0.0 || g.Translate.y != 0.0 || g.Translate.z != 0.0
+                    || g.Zoom.x != 0.0 || g.Zoom.y != 0.0 || g.Zoom.z != 0.0
+                {
+                    voidd = 0;
+                    break;
+                }
+                j += 1;
+            }
+            if voidd != 0 { eerie.VoidGroups[gi as usize] = 1; }
+            gi += 1;
+        }
+        eerie.AnimTime = th.NbFrames as f32 * 1000.0 * DIV24;
+        if eerie.AnimTime < 1.0 { eerie.AnimTime = 1.0; }
+        Ok(Self { Name: name, Version: th.Version, Anim: eerie })
     }
+}
+
+impl fmt::Display for Binary_Tea {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{self:#?}") }
 }
 
 impl IHaveMetaInfo for Binary_Tea {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
-        MetaInfo::new(Some("BinaryTEA".into()), Tag::None, vec![
-            MetaInfo::new(Some(format!("Type: Center")), Tag::None, vec![], false),
+        MetaInfo::new(None, Tag::MetaContent(Arc::new(MetaContent { type_: "Text".into(), name: "Name".into(), value: Tag::Str(self.to_string()), ..Default::default() })), vec![], false),
+        MetaInfo::new(Some("TEA".into()), Tag::None, vec![
+            MetaInfo::new(Some(format!("Anim: {}", "GameX.Arkane.Formats.Danae.E_ANIM")), Tag::None, vec![], false),
         ], false),
     ] }
 }
@@ -803,6 +1042,17 @@ mod tests {
         assert_eq!(size_of::<F_ANCHOR_DATA>(), F_ANCHOR_DATA::Struct.1);
         assert_eq!(size_of::<F_SCENE_INFO>(), F_SCENE_INFO::Struct.1);
         assert_eq!(size_of::<ROOM_DIST_DATA>(), ROOM_DIST_DATA::Struct.1);
+        assert_eq!(size_of::<THEA_HEADER>(), THEA_HEADER::Struct.1);
+        assert_eq!(size_of::<THEA_KEYFRAME>(), THEA_KEYFRAME::Struct.1);
+        assert_eq!(size_of::<THEA_KEYFRAME_2015>(), THEA_KEYFRAME_2015::Struct.1);
+        assert_eq!(size_of::<THEO_GROUPANIM>(), THEO_GROUPANIM::Struct.1);
+        assert_eq!(size_of::<THEA_HEADER>(), 292);
+        assert_eq!(size_of::<THEA_KEYFRAME>(), 32);
+        assert_eq!(size_of::<THEA_KEYFRAME_2015>(), 288);
+        assert_eq!(size_of::<THEO_GROUPANIM>(), 52);
+        assert_eq!(size_of::<THEA_KEYMOVE>(), 12);
+        assert_eq!(size_of::<THEA_SAMPLE>(), 260);
+        assert_eq!(size_of::<ArxQuat>(), 16);
     }
 
     /// A hand-built FTL: 3 vertices (origin 0 at the centre), one group holding
@@ -846,11 +1096,84 @@ mod tests {
         assert!(obj.VertexLocal.as_ref().unwrap()[1].x.is_nan());
     }
 
+    fn teaHeader(version: u32, nbFrames: i32, nbGroups: i32, nbKeyFrames: i32) -> Vec<u8> {
+        let mut b = Vec::new();
+        let mut id = b"THEA".to_vec(); id.resize(20, 0); b.extend_from_slice(&id);
+        b.extend_from_slice(&version.to_le_bytes());
+        let mut name = b"walk".to_vec(); name.resize(256, 0); b.extend_from_slice(&name);
+        for z in [nbFrames, nbGroups, nbKeyFrames] { b.extend_from_slice(&z.to_le_bytes()); }
+        b
+    }
+
+    /// Hand-built 2014: frame 1 is filled by the swapped-weight blend of frames 0 and 2.
     #[test]
-    fn teaHasItsInfoNode() {
-        let tea = Binary_Tea::new(&mut Cursor::new(Vec::<u8>::new()));
+    fn teaDecodesAHandBuilt2014() {
+        let mut b = teaHeader(2014, 3, 1, 3);
+        let i32s = |b: &mut Vec<u8>, v: &[i32]| for z in v { b.extend_from_slice(&z.to_le_bytes()); };
+        let f32s = |b: &mut Vec<u8>, v: &[f32]| for z in v { b.extend_from_slice(&z.to_le_bytes()); };
+        let zeros = |b: &mut Vec<u8>, n: usize| b.resize(b.len() + n, 0);
+        let name = |b: &mut Vec<u8>, s: &str, n: usize| { let mut z = s.as_bytes().to_vec(); z.resize(n, 0); b.extend_from_slice(&z); };
+        // frame 0: move+orient, discarded time 999, group translate 0
+        i32s(&mut b, &[0, 0, 0, 1, 1, 1, 0, 999]);
+        f32s(&mut b, &[0.0, 0.0, 0.0]); zeros(&mut b, 8); f32s(&mut b, &[1.0, 0.0, 0.0, 0.0]);
+        i32s(&mut b, &[1]); zeros(&mut b, 8); f32s(&mut b, &[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
+        i32s(&mut b, &[-1, 0]);
+        // frame 1: no move/orient, morph skipped, sample "step", group translate x = 1
+        i32s(&mut b, &[1, 0, 0, 0, 0, 0, 1, 0]);
+        zeros(&mut b, 16);
+        i32s(&mut b, &[0]); zeros(&mut b, 8); f32s(&mut b, &[0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
+        i32s(&mut b, &[0]); name(&mut b, "step", 256); i32s(&mut b, &[4]);
+        b.extend_from_slice(&[0x11, 0x22, 0x33, 0x44]);
+        i32s(&mut b, &[7]);
+        // frame 2: move 3,0,0 and quat wxyz 0,1,0,0
+        i32s(&mut b, &[2, 0, 0, 1, 1, 1, 0, 0]);
+        f32s(&mut b, &[3.0, 0.0, 0.0]); zeros(&mut b, 8); f32s(&mut b, &[0.0, 1.0, 0.0, 0.0]);
+        i32s(&mut b, &[0]); zeros(&mut b, 8); f32s(&mut b, &[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
+        i32s(&mut b, &[-1, 0]);
+
+        let tea = Binary_Tea::new(&mut Cursor::new(b)).unwrap();
+        assert_eq!(tea.Version, 2014);
+        assert_eq!(tea.Name, "walk");
+        let div = 0.0416666666666666666667f32;
+        let fr = &tea.Anim.Frames;
+        assert_eq!(fr[0].Time.to_bits(), 0f32.to_bits());
+        assert_eq!(fr[1].Time.to_bits(), (1000f32 * div).to_bits());
+        assert_eq!(fr[2].Time.to_bits(), (2000f32 * div).to_bits());
+        let anim = 3f32 * 1000f32 * div;
+        assert_eq!(tea.Anim.AnimTime.to_bits(), anim.to_bits());
+        assert_ne!(tea.Anim.AnimTime, 1.0);
+        let t1 = 1000f32 * div;
+        let t2 = 2000f32 * div;
+        let tot = 1f32 / (t1 + t2);
+        let r1 = t1 * tot;
+        let r2 = t2 * tot;
+        assert_eq!(fr[1].Translate.x.to_bits(), (3f32 * r1).to_bits());
+        let q = fr[1].Quat;
+        assert_eq!(q.x.to_bits(), r1.to_bits());
+        assert_eq!(q.w.to_bits(), r2.to_bits());
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 0.0);
+        let len2 = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+        assert_ne!(len2.to_bits(), 1.0f32.to_bits());
+        assert!(fr.iter().all(|f| f.FTranslate == 1 && f.FRotate == 1));
+        assert_eq!(fr[1].Sample, -1);
+        assert_eq!(fr[1].SampleName.as_deref(), Some("step"));
+        assert!(fr[0].SampleName.is_none());
+        assert!(fr[2].SampleName.is_none());
+        assert_eq!(tea.Anim.VoidGroups[0], 0);
         let nodes = tea.getInfoNodes(None, None, &Tag::None);
-        assert_eq!(nodes[0].name.as_deref(), Some("BinaryTEA"));
-        assert_eq!(nodes[0].items[0].name.as_deref(), Some("Type: Center"));
+        let teaNode = nodes.iter().find(|n| n.name.as_deref() == Some("TEA")).unwrap();
+        assert!(teaNode.items[0].name.as_deref().unwrap().contains("GameX.Arkane.Formats.Danae.E_ANIM"));
+
+        let err = Binary_Tea::new(&mut Cursor::new(teaHeader(2013, 0, 0, 0))).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::InvalidData);
+        assert!(err.to_string().contains("Invalid TEA Version"));
+
+        let empty = Binary_Tea::new(&mut Cursor::new(teaHeader(2015, 0, 0, 0))).unwrap();
+        assert_eq!(empty.Version, 2015);
+        assert_eq!(empty.Anim.AnimTime, 1.0);
+        assert!(empty.Anim.Frames.is_empty());
+        assert!(empty.Anim.Groups.is_empty());
+        assert!(empty.Anim.VoidGroups.is_empty());
     }
 }

@@ -1395,6 +1395,7 @@ dependencies = [
  "gamex-uncore",
  "gamex-valve",
  "glam",
+ "openx-gfx",
  "openx-poly",
  "openx-vfx",
 ]
@@ -1523,6 +1524,7 @@ dependencies = [
  "gamex",
  "gamex-resource",
  "gamex-uncore",
+ "openx-vfx",
 ]
 
 [[package]]
@@ -1634,6 +1636,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-uncore",
+ "openx-vfx",
 ]
 
 [[package]]
@@ -1680,8 +1683,12 @@ dependencies = [
 name = "gamex-id"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "gamex",
  "gamex-uncore",
+ "openx-gfx",
+ "openx-poly",
+ "openx-vfx",
 ]
 
 [[package]]
@@ -1801,11 +1808,17 @@ dependencies = [
 name = "gamex-valve"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "gamex",
  "gamex-id",
  "gamex-uncore",
  "gamex-unity",
+ "glam",
+ "md-5",
+ "openx",
  "openx-gfx-egin",
+ "openx-poly",
+ "openx-vfx",
 ]
 
 [[package]]
@@ -3035,6 +3048,7 @@ dependencies = [
 name = "openx-engine-unreal"
 version = "0.1.0"
 dependencies = [
+ "cc",
  "openx",
  "openx-gfx",
 ]

@@ -13,15 +13,8 @@ class UOGameClient(GameClient):
     def __init__(self, state: ClientState): super().__init__(state)
     def loadContent(self) -> None:
         super().loadContent()
+        # C# UOGameClient.LoadContent loads Assets from UOGame.Found.Root, then
+        # host.setScene(LoginScene) in GameX.Origin.UO. This is not that bootstrap.
         Fonts.load(self.game, self.device)
-        # SolidColorTextureCache.Initialize(GraphicsDevice);
-        # Audio = new AudioManager();
-#if false
-        #SetScene(new MainScene(this));
-#else
-        #UO.Load(this);
-        #Audio.Initialize();
-        # SetScene(new LoginScene(UO.World));
-#endif
 
     def unloadContent(self) -> None: pass

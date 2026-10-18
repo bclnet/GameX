@@ -1,6 +1,7 @@
 // PORT-SOURCE: Engines/OpenX.Engine.Unreal/Engine_Unreal.cs
 // PORT-SHA: 0b05e5232d116d80
 // PORT-STATUS: partial
+// PARTIAL PORT: `unreal_shim` links native/unreal_shim.cpp. On this build `linked()` is false (stub, not an Unreal host).
 //
 // Ported: `UnrealEngine`'s registration and `UnrealShellEngine`: id, name and caps.
 // Not ported: the rest of the file, the Unreal backend. So `GfxFactory`

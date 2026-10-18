@@ -24,6 +24,18 @@ use crate::system::unsafe_x::{IStruct, MarshalPArray, MarshalS, MarshalSArray};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// `Encoding.Unicode.GetString`: UTF-16LE, U+FFFD for a leftover byte or an unpaired surrogate.
+fn utf16le_lossy(bytes: &[u8]) -> String {
+    let mut units = Vec::with_capacity(bytes.len() / 2 + 1);
+    let mut i = 0;
+    while i + 1 < bytes.len() {
+        units.push(u16::from_le_bytes([bytes[i], bytes[i + 1]]));
+        i += 2;
+    }
+    if i < bytes.len() { units.push(0xFFFD); }
+    String::from_utf16_lossy(&units)
+}
+
 // /// Mirrors C# `SeekOrigin`, used by the `Peek` family.
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // pub enum Origin {
@@ -177,6 +189,8 @@ pub trait BinaryReaderExt: Read + Seek {
     fn readL32UString(&mut self, maxLength: usize, big: bool) -> Result<Option<String>> { let length = self.readUInt32X(big)? as usize; if maxLength > 0 && length > maxLength { return Err(Error::new(ErrorKind::InvalidData, "string length exceeds maximum length")) } if length == 0 { return Ok(None) } let b = self.readBytes(length)?; Ok(Some(String::from_utf8_lossy(&b).trim_end_matches('\0').to_string())) }
     /// C# `ReadFAString(int length)`: fixed-length ASCII, which .NET decodes with `?` for bytes over 0x7F.
     fn readFAString(&mut self, length: usize) -> Result<Option<String>> { if length == 0 { return Ok(None) } let b = self.readBytes(length)?; Ok(Some(b.iter().map(|&c| if c < 0x80 { c as char } else { '?' }).collect::<String>().trim_end_matches('\0').to_string())) }
+    /// C# `ReadVWString`: `Encoding.Unicode` (UTF-16LE) of `ReadToValue`. The stop is one byte, so an ASCII character's `00` ends the string. A leftover byte is U+FFFD.
+    fn readVWString(&mut self, length: usize, stopValue: u8, ms: Option<Vec<u8>>) -> Result<String> { Ok(utf16le_lossy(&self.readToValue(stopValue, length, ms)?)) }
 
     //#endregion
 
@@ -628,6 +642,15 @@ mod tests {
         let mut c = Cursor::new(b"ab\0cd".to_vec());
         assert_eq!(c.readToValue(0, usize::MAX, None).unwrap(), b"ab");
         assert_eq!(c.tell().unwrap(), 3, "sentinel must be consumed");
+    }
+
+    #[test]
+    fn readVWStringIsUtf16AndStopsOnTheFirstZeroByte() {
+        let mut wide = Cursor::new(vec![0x01, 0x01, 0x00]);
+        assert_eq!(wide.readVWString(usize::MAX, 0, None).unwrap(), "\u{0101}");
+        // ASCII "vtf\0" stops inside the first UTF-16 unit. C# does this too.
+        let mut ascii = Cursor::new(b"vtf\0".to_vec());
+        assert_eq!(ascii.readVWString(usize::MAX, 0, None).unwrap(), "\u{7476}\u{FFFD}");
     }
 
     #[test]

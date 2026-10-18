@@ -65,9 +65,18 @@ public interface IClientHost : IDisposable {
 }
 
 /// <summary>
+/// Host that can install the client's first scene. MgClientHost implements this.
+/// Not every engine host does.
+/// </summary>
+public interface ISceneHost {
+    void SetScene(SceneBase scene);
+}
+
+/// <summary>
 /// ClientBase
 /// </summary>
 public abstract class ClientBase() : IDisposable {
+    public IClientHost Host { get; set; }
     public virtual void Dispose() { }
     public virtual async Task LoadContent() { }
     public virtual async Task UnloadContent() { }

@@ -12,7 +12,7 @@ namespace OpenX;
 
 #region Client
 
-public class ExClientHost : Game, IClientHost {
+public class ExClientHost : Game, IClientHost, ISceneHost {
     public ClientBase Client;
     public SceneBase Scene;
     public IPluginHost PluginHost;
@@ -30,6 +30,7 @@ public class ExClientHost : Game, IClientHost {
 
     protected override async Task LoadContent() {
         await base.LoadContent();
+        Client.Host = this;
         await Client.LoadContent();
     }
 

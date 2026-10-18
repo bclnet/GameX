@@ -352,7 +352,8 @@ pub struct BinaryArchive {
     pub useWriter: bool,
     pub useFileId: bool,
     // state
-    pub fileMask: Option<fn(&str) -> String>,
+    /// C# assigns this from `Read` through the shared archive (`Binary_Vpk`).
+    pub fileMask: Mutex<Option<fn(&str) -> String>>,
     pub params: Mutex<HashMap<String, String>>,
     pub magic: AtomicU32,
     pub version: AtomicU32,
@@ -417,7 +418,7 @@ impl BinaryArchive {
             useReader: AtomicBool::new(true),
             useWriter: true,
             useFileId: false,
-            fileMask: None,
+            fileMask: Mutex::new(None),
             params: Mutex::new(HashMap::new()),
             magic: AtomicU32::new(0),
             version: AtomicU32::new(0),

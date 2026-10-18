@@ -8,6 +8,14 @@ license.workspace = true
 [lints]
 workspace = true
 
+[features]
+# Off by default. Defines GAMEX_WITH_UNREAL for native/unreal_shim.cpp.
+# Needs an Unreal Engine install this repo does not have, so it is not a CI default.
+unreal = []
+
 [dependencies]
 openx = { path = "../../core/openx" }
 openx-gfx = { path = "../../gfx/gfx" }
+
+[build-dependencies]
+cc = "1"

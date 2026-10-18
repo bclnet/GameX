@@ -12,3 +12,4 @@ workspace = true
 gamex = { path = "../../core/gamex" }
 gamex-resource = { path = "../../core/resource" }
 gamex-uncore = { path = "../../families/uncore" }
+openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }

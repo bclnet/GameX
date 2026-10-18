@@ -4,6 +4,18 @@ Evaluation of this checkout on 2026-10-15. The Rust Explorer's engine view is wi
 
 `cargo check --workspace` was run for `OpenX/rust` and `rust/` after `SourcePath::Obj`. Build and test counts below are TODO.md's, dated the same day. Game-file tests were not re-run.
 
+Update 2026-10-17, not a new evaluation of the tree. Arkane's four other engines now dispatch. idTech reads `Binary_Pak` and `Binary_Wad`. Source reads `Binary_Vpk`: the tree is UTF-16 stopped on the first 0 byte, version 2 skips MD5 when the engine version contains `x`, and a signature that must be checked fails closed (`RSA.VerifyData`, no RSA crate). CryEngine's `Binary_Cry3` clears `useReader` and fails in `ZipArchiveX`. Unreal's `Binary_Pck` assigns no files and fails in `UPackage`. The asset factories are wired; the unported readers fail when opened. Crytek, Epic, Valve, and ID are not registered. `PORT_MAP.tsv` is 101 `done` / 304 `todo`; the four `Formats/Binary.cs` rows are `todo`. Python was not changed: ID's `assetFactory` still always returns Uncore, and Valve's VPK decodes `readVWString` as UTF-32, always runs `verifyHashes`, and does not check the CRC. `cargo check --workspace` in `rust/` and in `OpenX/rust`, and `cargo check -p openx --features full`, exited 0. The family tests passed (`gamex-arkane` 6, `gamex-id` 5, `gamex-valve` 7, `gamex-crytek` 1, `gamex-epic` 1). `openx-poly` is 36 tests, 35 pass; the known `numeric_strings` failure is unchanged. The Explorer was not opened. `forcePath` was not changed.
+
+Same day, continued: idTech `.lmp` / `.tex` is `Binary_Lmp` (process-wide palette and colormap; RGB+0 stored as `BGRA32`), `.spr` is `IDSP` (`NextFrame` always returns true), and `.mdl` is C#'s empty reader. `.bsp` still fails. `gamex-id` tests are 8. `cargo check --workspace` in `rust/` exited 0. Python still has no `Binary_Lmp`, and its `Binary_Spr` uses `<< 4`. The Explorer was not opened.
+
+Same day, continued: Danae `.tea` decodes `TheaToEerie` in C#, Python, and Rust. Version below 2014 throws. Payloads are read only when the flag is 1. `anim_time` is `(float)nb_frames * 1000 * DIV24` (minimum 1). `gamex-arkane` tests are 6. `cargo check --workspace` in `rust/` exited 0. `Binary.cs` PORT-SHA is `9f89528785e1195b`. `EerieTypes.cs` PORT-SHA is `19857972a796a253`. The Arkane bullet stays open. The Explorer was not opened.
+
+Same day, continued: the Danae FTL object builder is in. `FtlObjectBuilder` builds the shared mesh (three vertices per face, first-seen texture, skip `HIDE`/`NODRAW`, reversed winding for `FaceType == 2` or `DOUBLESIDED`, axes stay Y-up). Unity and Mirage register `Binary_Ftl`. `gamex-arkane` tests are 7. `FtlObjectBuilder.cs` PORT-SHA is `1971770a048b3a14`. The Rust Unity file stays partial (no UnityEngine). There is no Rust Mirage crate. Python was `py_compile`d and not run. The FTS map loader is not started. The Arkane bullet stays open. The Explorer was not opened. `cargo check --workspace` was not re-run.
+
+Same day, continued: the Rust Unreal engine links a C++ stub. `unreal_shim_linked` returns 0 and the version string is `unreal-shim-stub`. Cargo feature `unreal` is off and refuses to compile without UE headers. C++/CLI was skipped: UnrealBuildTool does not support `/clr`, and `UnrealEngine.Framework.dll` is a guest API with no `DllImport`. `openx-engine-unreal` tests are 2. The C# Unreal skeletons were left as they are.
+
+Same day, continued: Source `.mdl` is `Binary_Mdl40`. The factory casts to `BinaryArchive`, then reads the 408-byte header (name, six vectors, flags). An empty name throws. The bone, sequence and texture loads stay commented out. `gamex-valve` tests are 8, `gamex-arkane` 6, `gamex-id` 8. `cargo check --workspace` in `rust/` exited 0. Python's twin names the info group `Model`, stores the string `self`, and uses U+FFFD for a byte above 127. The Explorer was not opened.
+
 ## What is real
 
 One path works end to end. Arx Fatalis, through GOG: locate the install, open its seven `.pak`s, decode text, scripts, audio, and images, and draw a texture in the Rust Explorer. The Explorer's startup in `rust/apps/app-explorer/src/app_xaml.rs` registers two families, `gamex_uncore` and `gamex_arkane`, and eight engines. OpenGL is the one that draws. The others are names in the list.
@@ -14,7 +26,7 @@ Specs in `python/gamex/specs/*.json` are the family and game list. C# embeds tho
 
 ## What only looks finished
 
-`rust/_/PORT_MAP.tsv` has 101 `done` rows and 300 `todo` rows. There is no `partial` row. `families/uncore/src/formats/binary.rs` is `done`. `compression.rs` still marks itself `partial`.
+`rust/_/PORT_MAP.tsv` had 101 `done` rows and 300 `todo` rows on 2026-10-15. After 2026-10-17 it is 101 `done` and 304 `todo`. There is no `partial` row. `families/uncore/src/formats/binary.rs` is `done`. `compression.rs` still marks itself `partial`.
 
 Of the 101 `done` rows, 29 are empty placeholders whose header says `NOT PORTED`: Collada, most compression codecs, `DesSer`, `Manager`, `ImportManager`, `ManifestManager`, `Assembly`, `BlizzardProtoDatabase`, `UnknownTransform`, several Casc helpers, and Uncore's two `_LIB` crypto and compression wrappers. `Blast.cs` is a real port. The other compression files are decisions, not codecs.
 
@@ -64,7 +76,7 @@ Do not fix these unless the owner asks, and then in all three languages:
 
 ## How to start a session
 
-Read TODO.md and take the top open item. The queue is section 3: Arkane's other games, then the other families. Uncore's `Binary_Dds`, `Binary_Plist`, `Binary_Zip`, and `Binary_Engine` are in. A real `.start` still fails the `IQueryFunc` cast until Bethesda's `Binary_Esm`. `disc_mds` still has `LoadMdsToDisc` open; that waits on `Disc` and does not block the core model. IW, Cig Explorer, Crytek, WB, Origin, Blizzard, and Epic are the large stub piles. Python's families are the easier pattern for a Rust port, because the camelCase shape is already there.
+Read TODO.md and take the top open item. The queue is section 3: the rest of Arkane's other games (`ZipArchiveX`, `UPackage`, the asset readers, RSA), then the other families. The four-engine dispatch is in. Uncore's `Binary_Dds`, `Binary_Plist`, `Binary_Zip`, and `Binary_Engine` are in. A real `.start` still fails the `IQueryFunc` cast until Bethesda's `Binary_Esm`. `disc_mds` still has `LoadMdsToDisc` open; that waits on `Disc` and does not block the core model. IW, Cig Explorer, Crytek, WB, Origin, Blizzard, and Epic are the large stub piles. Python's families are the easier pattern for a Rust port, because the camelCase shape is already there.
 
 When a Rust file is the work, follow `.claude/skills/port-to-rust/SKILL.md`. Keep the `PORT-SOURCE` / `PORT-SHA` / `PORT-STATUS` header. A `done` header is a claim. Open the file.
 

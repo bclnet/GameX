@@ -1,6 +1,9 @@
 using GameX.Origin.Formats.UO;
 using GameX.Xbox;
+using OpenX.Client;
 using System;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace GameX.Origin.Clients.UO;
@@ -91,7 +94,7 @@ public class Assets(UOGame game) {
 
 public class UOGameClient : GameClient {
     //AudioManager Audio;
-    readonly Assets Assets;
+    public Assets Assets { get; }
 
     public UOGameClient(ClientState state) : base(state) {
         TypeX.ScanTypes([typeof(XboxArchive)]);
@@ -100,16 +103,28 @@ public class UOGameClient : GameClient {
 
     public override async Task LoadContent() {
         await base.LoadContent();
-        //await Fonts<Texture2D>.Load(Game, Device);
-        //SolidColorTextureCache.Load(Device);
-        //Audio = new AudioManager();
-#if false
-        //SetScene(new MainScene(this));
-#else
+        // Fonts, SolidColorTextureCache, and AudioManager need the MonoGame device.
+        // They are not in this assembly. Plugins stay on the host, after this returns.
+        var game = Archive.Game as UOGame;
+        if (string.IsNullOrEmpty(game?.Found?.Root)) throw new InvalidOperationException("UO install path is not set.");
         await Assets.Load(Archive, this);
-        //Audio.Initialize();
-        // SetScene(new LoginScene(UO.World));
-#endif
+        if (Host is not ISceneHost host) throw new InvalidOperationException("UO client host cannot install a scene.");
+        host.SetScene(CreateLoginScene(this));
+    }
+
+    // Origin cannot reference GameX.Origin.UO: that project already references this one, and it is netstandard2.1.
+    static SceneBase CreateLoginScene(UOGameClient client) {
+        Assembly asm = null;
+        foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+            if (loaded.GetName().Name == "GameX.Origin.UO") { asm = loaded; break; }
+        if (asm == null) {
+            var file = Path.Combine(AppContext.BaseDirectory, "GameX.Origin.UO.dll");
+            if (!File.Exists(file)) throw new FileNotFoundException("GameX.Origin.UO.dll was not next to the client.", file);
+            asm = Assembly.LoadFrom(file);
+        }
+        var login = asm.GetType("GameX.Origin.UO.UOLogin") ?? throw new InvalidOperationException("GameX.Origin.UO.UOLogin is missing.");
+        var create = login.GetMethod("Create") ?? throw new InvalidOperationException("UOLogin.Create is missing.");
+        return (SceneBase)create.Invoke(null, [client]);
     }
 
     public override Task UnloadContent() => Task.CompletedTask;

@@ -1,4 +1,5 @@
-﻿using GameX.Gamebryo.Formats;
+﻿using GameX.Arkane.Formats.Danae;
+using GameX.Gamebryo.Formats;
 using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.Unity;
@@ -10,6 +11,7 @@ namespace GameX.Engines.Unity;
 public static class UnityRenderer {
     static UnityRenderer() {
         UnityX.BuildersByType[typeof(Binary_Nif)] = UnityNifObjectBuilder.BuildObject;
+        UnityX.BuildersByType[typeof(Binary_Ftl)] = UnityFtlObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (gfx == null) return null;

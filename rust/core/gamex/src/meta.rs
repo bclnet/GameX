@@ -365,7 +365,8 @@ impl dyn MetaManager {
 
             // file
             let fileName = fileName(path);
-            let fileNameForIcon = archive.fileMask.map(|s| s(&fileName)).unwrap_or_else(|| fileName.clone());
+            let mask = *archive.fileMask.lock().unwrap();
+            let fileNameForIcon = mask.map(|s| s(&fileName)).unwrap_or_else(|| fileName.clone());
             let extentionForIcon = extension(&fileNameForIcon);
             let extentionForIcon = extentionForIcon.strip_prefix('.').unwrap_or(&extentionForIcon);
             folder(&mut root, &currentFolder).push(MetaItem::new(Tag::File(file.clone()), &fileName, manager.getIcon(extentionForIcon), Tag::None, Some(archiveDyn.clone()), None));

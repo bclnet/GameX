@@ -19,7 +19,7 @@ namespace OpenX;
 
 #region Client
 
-public unsafe class MgClientHost : Game, IClientHost {
+public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
     readonly Engine Engine = EngineX.Activate(MgEngine.This);
 
     const bool RunMouseInASeparateThread = false;
@@ -88,6 +88,7 @@ public unsafe class MgClientHost : Game, IClientHost {
 
     protected override void LoadContent() {
         base.LoadContent();
+        Client.Host = this;
         Client.LoadContent().Wait();
         using var ms = typeof(MgClientHost).Assembly.GetManifestResourceStream("OpenX.Engine.Mg.Client_Mg.png");
         _background = Texture2D.FromStream(GraphicsDevice, ms);

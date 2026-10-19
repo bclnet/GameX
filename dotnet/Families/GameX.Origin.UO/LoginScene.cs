@@ -23,7 +23,7 @@ public enum LoginSteps {
 /// <summary>
 /// ClassicUO's LoginScene. SceneBase so MgClientHost.SetScene can run it.
 /// Load builds the login gumps. It does not play music, resize to 640x480, or open a socket.
-/// Draw walks the gump tree. The host does not pass a batcher, so nothing is uploaded.
+/// Draw walks the gump tree and asks GumpArt.Sink to paint gump art. Text, music, and the socket are still absent.
 /// </summary>
 public sealed class LoginScene : SceneBase {
     readonly World _world;
@@ -79,8 +79,13 @@ public sealed class LoginScene : SceneBase {
     }
 
     public override bool Draw() {
-        RenderedObjectsCount = UIManager.Draw();
-        return base.Draw();
+        var sink = GumpArt.Sink;
+        sink?.Begin();
+        try {
+            RenderedObjectsCount = UIManager.Draw();
+            return base.Draw();
+        }
+        finally { sink?.End(); }
     }
 
     /// <summary>

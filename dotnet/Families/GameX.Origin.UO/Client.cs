@@ -46,7 +46,7 @@ public class UltimaOnline {
     /// </summary>
     public static readonly string[] Map = [
         "ClassicUO.Assets and ClassicUO.IO -> stay in GameX.Origin formats (already the resource parsers). Do not re-port them here.",
-        "ClassicUO.Client Game/ scenes and UI -> GameX.Origin.UO. LoginScene builds LoginBackground and LoginGump. Pixels, music, and the socket are not in yet.",
+        "ClassicUO.Client Game/ scenes and UI -> GameX.Origin.UO. LoginScene builds LoginBackground and LoginGump. Login gump art is handed to the host. Text, music, and the socket are not in yet.",
         "ClassicUO.Renderer -> GameX.Engine.Mg, later.",
         "ClassicUO.Utility -> only if a later slice needs a specific helper; not copied now.",
     ];

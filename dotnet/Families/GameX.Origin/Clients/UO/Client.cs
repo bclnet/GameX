@@ -2,6 +2,7 @@
 using GameX.Origin.Formats.UO;
 using GameX.Xbox;
 using OpenX.Client;
+using OpenX.Gfx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,6 +39,8 @@ public class Assets(UOGame game) {
     //StaticFilters StaticFilters;
     //BuffTable BuffTable;
     //ChairTable ChairTable;
+    readonly Dictionary<int, (byte[] pixels, int width, int height)> _gumpPixels = [];
+    readonly HashSet<int> _gumpPixelsMiss = [];
 
 
     public class UoAnimations {
@@ -115,6 +118,65 @@ public class Assets(UOGame game) {
         height = file.Compressed & 0xFFFF;
         return width > 0 && height > 0;
     }
+
+    /// <summary>
+    /// Decoded gump, 16-bit little-endian BGRA1555, bit 15 set when the pixel is opaque.
+    /// Cached after the first read. Does not upload a texture.
+    /// </summary>
+    public bool TryGumpPixels(int graphic, out byte[] pixels, out int width, out int height) {
+        pixels = null;
+        width = height = 0;
+        if (_gumpPixels.TryGetValue(graphic, out var hit)) {
+            pixels = hit.pixels;
+            width = hit.width;
+            height = hit.height;
+            return pixels != null && width > 0 && height > 0;
+        }
+        if (_gumpPixelsMiss.Contains(graphic)) return false;
+        if (Gumps is not BinaryArchive bin || bin.Files == null || graphic < 0) {
+            _gumpPixelsMiss.Add(graphic);
+            return false;
+        }
+        var file = FindGump(bin, graphic);
+        if (file == null && GumpsDef != null && GumpsDef.ItemHasGumpTranslation(graphic, out var translated, out _) && translated != graphic)
+            file = FindGump(bin, translated);
+        if (file == null) {
+            _gumpPixelsMiss.Add(graphic);
+            return false;
+        }
+        var gump = bin.GetAsset<Binary_Gump>(file, throwOnError: false).GetAwaiter().GetResult();
+        if (gump == null) {
+            _gumpPixelsMiss.Add(graphic);
+            return false;
+        }
+        var packed = gump.Create("", o => (TextureAsBytes)o);
+        pixels = packed.Bytes;
+        width = gump.Width;
+        height = gump.Height;
+        if (pixels == null || width <= 0 || height <= 0 || pixels.Length < width * height * 2) {
+            pixels = null;
+            width = height = 0;
+            _gumpPixelsMiss.Add(graphic);
+            return false;
+        }
+        _gumpPixels[graphic] = (pixels, width, height);
+        return true;
+    }
+
+    static FileSource FindGump(BinaryArchive bin, int graphic) {
+        IList<FileSource> files = bin.Files;
+        FileSource file = null;
+        if (graphic < files.Count) {
+            var at = files[graphic];
+            if (at != null && at.Id == graphic) file = at;
+        }
+        if (file == null)
+            for (var i = 0; i < files.Count; i++) {
+                var at = files[i];
+                if (at != null && at.Id == graphic) { file = at; break; }
+            }
+        return file == null || file.Offset < 0 ? null : file;
+    }
 }
 
 public class UOGameClient : GameClient {
@@ -135,6 +197,7 @@ public class UOGameClient : GameClient {
         await Assets.Load(Archive, this);
         if (Host is not ISceneHost host) throw new InvalidOperationException("UO client host cannot install a scene.");
         host.SetScene(CreateLoginScene(this));
+        AttachGumpArt(Host);
     }
 
     // Origin cannot reference GameX.Origin.UO: that project already references this one, and it is netstandard2.1.
@@ -150,6 +213,20 @@ public class UOGameClient : GameClient {
         var login = asm.GetType("GameX.Origin.UO.UOLogin") ?? throw new InvalidOperationException("GameX.Origin.UO.UOLogin is missing.");
         var create = login.GetMethod("Create") ?? throw new InvalidOperationException("UOLogin.Create is missing.");
         return (SceneBase)create.Invoke(null, [client]);
+    }
+
+    // Origin cannot reference GameX.Engine.Mg (net10.0). The painter lives there because this project has no Texture2D.
+    static void AttachGumpArt(IClientHost host) {
+        Assembly asm = null;
+        foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+            if (loaded.GetName().Name == "GameX.Engine.Mg") { asm = loaded; break; }
+        if (asm == null) {
+            var file = Path.Combine(AppContext.BaseDirectory, "GameX.Engine.Mg.dll");
+            if (!File.Exists(file)) return;
+            asm = Assembly.LoadFrom(file);
+        }
+        var type = asm.GetType("GameX.Engines.Mg.UoGumpArt");
+        type?.GetMethod("Attach")?.Invoke(null, [host]);
     }
 
     public override Task UnloadContent() => Task.CompletedTask;

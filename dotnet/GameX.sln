@@ -172,9 +172,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Engine.O3de", "Engine
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Engine.Unreal", "Engines\GameX.Engine.Unreal\GameX.Engine.Unreal.csproj", "{2823DD8A-2DF7-949A-93B8-7A0637B286D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Vk", "..\OpenX\dotnet\Engines\OpenX.Engine.Vk\OpenX.Engine.Vk.csproj", "{C1A74E08-6F32-4D9B-8E15-3B6A9D0C2F77}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Vulkan", "..\OpenX\dotnet\Engines\OpenX.Engine.Vulkan\OpenX.Engine.Vulkan.csproj", "{C1A74E08-6F32-4D9B-8E15-3B6A9D0C2F77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Engine.Vk", "Engines\GameX.Engine.Vk\GameX.Engine.Vk.csproj", "{5D9E6B24-A813-4F70-B2C6-1E8A4D7F3091}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Engine.Vulkan", "Engines\GameX.Engine.Vulkan\GameX.Engine.Vulkan.csproj", "{5D9E6B24-A813-4F70-B2C6-1E8A4D7F3091}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Raylib", "..\OpenX\dotnet\Engines\OpenX.Engine.Raylib\OpenX.Engine.Raylib.csproj", "{A11A0001-4C10-4A11-8B01-111111111101}"
 EndProject

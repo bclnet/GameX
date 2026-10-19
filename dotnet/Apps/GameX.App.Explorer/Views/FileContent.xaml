@@ -61,7 +61,7 @@
                     Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:VK" DataType="{x:Type model:MetaContent}">
-                <controls:VkControl Source2="{Binding}" Value="{Binding Value}" Type="{Binding Type}"
+                <controls:AppVulkanControl Source2="{Binding}" Value="{Binding Value}" Type="{Binding Type}"
                     Source="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Source}"
                     Path="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Path}"
                     Margin="3,3,3,3" />

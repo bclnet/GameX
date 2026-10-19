@@ -63,7 +63,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Unity", "Engin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Unreal", "Engines\OpenX.Engine.Unreal\OpenX.Engine.Unreal.csproj", "{C9DB3760-D0CB-D426-EE40-0305218E08BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Vk", "Engines\OpenX.Engine.Vk\OpenX.Engine.Vk.csproj", "{8F3C2A71-4D5E-4B19-9C60-7A2E1D8B4F55}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Vulkan", "Engines\OpenX.Engine.Vulkan\OpenX.Engine.Vulkan.csproj", "{8F3C2A71-4D5E-4B19-9C60-7A2E1D8B4F55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenX.Engine.Raylib", "Engines\OpenX.Engine.Raylib\OpenX.Engine.Raylib.csproj", "{B22B0001-4C10-4A11-8B01-222222222201}"
 EndProject

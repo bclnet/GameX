@@ -1175,7 +1175,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "openx-engine-vk"
+name = "openx-engine-vulkan"
 version = "0.1.0"
 dependencies = [
  "ash",

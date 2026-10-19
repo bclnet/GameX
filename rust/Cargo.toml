@@ -60,7 +60,7 @@ members = [
     "engines/engine-stride",
     "engines/engine-unity",
     "engines/engine-unreal",
-    "engines/engine-vk",
+    "engines/engine-vulkan",
     "engines/engine-raylib",
     "engines/engine-bgfx",
     "engines/engine-bevy",

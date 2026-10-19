@@ -36,6 +36,7 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
     //static SDL_EventFilter _filter;
     delegate* unmanaged[Cdecl]<nint, SDL_Event*, SDLBool> _filter;
     bool _ignoreNextTextInput;
+    readonly uint[] _mouseDownMs = new uint[8];
     readonly float[] _intervalFixedUpdate = new float[2];
     double _totalElapsed, _currentFpsTime;
     uint _totalFrames;
@@ -271,103 +272,61 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
             //case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE: Mouse.MouseInWindow = false; break;
             case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED: Plugin.OnFocusGained(); break;
             case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST: Plugin.OnFocusLost(); break;
-                //case SDL_EventType.SDL_EVENT_KEY_DOWN:
-                //    Keyboard.OnKeyDown(sdlEvent->key);
-                //    if (Plugin.ProcessHotkeys((int)sdlEvent->key.key, (int)sdlEvent->key.mod, true)) {
-                //        s->_ignoreNextTextInput = false;
-                //        UIManager.KeyboardFocusControl?.InvokeKeyDown(
-                //            (SDL_Keycode)sdlEvent->key.key,
-                //            sdlEvent->key.mod
-                //        );
-                //        s->Scene.OnKeyDown(sdlEvent->key);
-                //    }
-                //    else _ignoreNextTextInput = true;
-                //    break;
-                //case SDL_EventType.SDL_EVENT_KEY_UP:
-                //    Keyboard.OnKeyUp(sdlEvent->key);
-                //    UIManager.KeyboardFocusControl?.InvokeKeyUp((SDL_Keycode)sdlEvent->key.key, sdlEvent->key.mod);
-                //    Scene.OnKeyUp(sdlEvent->key);
-                //    Plugin.ProcessHotkeys(0, 0, false);
-                //    if ((SDL_Keycode)sdlEvent->key.key == SDL_Keycode.SDLK_PRINTSCREEN) TakeScreenshot();
-                //    break;
-                //case SDL_EventType.SDL_EVENT_TEXT_INPUT:
-                //    if (_ignoreNextTextInput) break;
-                //    byte* ptr = sdlEvent->text.text;
-                //    while (*ptr != 0) ptr++;
-                //    var s = System.Text.Encoding.UTF8.GetString(sdlEvent->text.text, (int)(ptr - sdlEvent->text.text));
-                //    if (!string.IsNullOrEmpty(s)) {
-                //        UIManager.KeyboardFocusControl?.InvokeTextInput(s);
-                //        Scene.OnTextInput(s);
-                //    }
-                //    break;
-                //case SDL_EventType.SDL_EVENT_MOUSE_MOTION:
-                //    //if (UO.GameCursor != null && !UO.GameCursor.AllowDrawSDLCursor) {
-                //    //    UO.GameCursor.AllowDrawSDLCursor = true;
-                //    //    UO.GameCursor.Graphic = 0xFFFF;
-                //    //}
-                //    Mouse.Update();
-                //    //if (Mouse.IsDragging) if (!Scene.OnMouseDragging()) UIManager.OnMouseDragging();
-                //    break;
-                //case SDL_EventType.SDL_EVENT_MOUSE_WHEEL:
-                //    Mouse.Update();
-                //    var isScrolledUp = sdlEvent->wheel.y > 0;
-                //    Plugin.ProcessMouse(0, (int)sdlEvent->wheel.y);
-                //    if (!Scene.OnMouseWheel(isScrolledUp)) UIManager.OnMouseWheel(isScrolledUp);
-                //    break;
-                //case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN: {
-                //        SDL_MouseButtonEvent mouse = sdlEvent->button;
-                //        // The values in MouseButtonType are chosen to exactly match the SDL values
-                //        MouseButtonType buttonType = (MouseButtonType)mouse.button;
-                //        var lastClickTime = 0U;
-                //        switch (buttonType) {
-                //            case MouseButtonType.Left: lastClickTime = Mouse.LastLeftButtonClickTime; break;
-                //            case MouseButtonType.Middle: lastClickTime = Mouse.LastMidButtonClickTime; break;
-                //            case MouseButtonType.Right: lastClickTime = Mouse.LastRightButtonClickTime; break;
-                //            case MouseButtonType.XButton1:
-                //            case MouseButtonType.XButton2: break;
-                //            default: Log.Warn($"No mouse button handled: {mouse.button}"); break;
-                //        }
-                //        Mouse.ButtonPress(buttonType);
-                //        Mouse.Update();
-                //        uint ticks = Time.Ticks;
-                //        if (lastClickTime + Mouse.MOUSE_DELAY_DOUBLE_CLICK >= ticks) {
-                //            lastClickTime = 0;
-                //            bool res = Scene.OnMouseDoubleClick(buttonType) || UIManager.OnMouseDoubleClick(buttonType);
-                //            if (!res) {
-                //                if (!Scene.OnMouseDown(buttonType)) UIManager.OnMouseButtonDown(buttonType);
-                //            }
-                //            else lastClickTime = 0xFFFF_FFFF;
-                //        }
-                //        else {
-                //            if (buttonType != MouseButtonType.Left && buttonType != MouseButtonType.Right) Plugin.ProcessMouse(sdlEvent->button.button, 0);
-                //            if (!Scene.OnMouseDown(buttonType)) UIManager.OnMouseButtonDown(buttonType);
-                //            lastClickTime = Mouse.CancelDoubleClick ? 0 : ticks;
-                //        }
-                //        switch (buttonType) {
-                //            case MouseButtonType.Left: Mouse.LastLeftButtonClickTime = lastClickTime; break;
-                //            case MouseButtonType.Middle: Mouse.LastMidButtonClickTime = lastClickTime; break;
-                //            case MouseButtonType.Right: Mouse.LastRightButtonClickTime = lastClickTime; break;
-                //        }
-                //        break;
-                //    }
-                //case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP: {
-                //        SDL_MouseButtonEvent mouse = sdlEvent->button;
-                //        // The values in MouseButtonType are chosen to exactly match the SDL values
-                //        MouseButtonType buttonType = (MouseButtonType)mouse.button;
-                //        var lastClickTime = 0U;
-                //        switch (buttonType) {
-                //            case MouseButtonType.Left: lastClickTime = Mouse.LastLeftButtonClickTime; break;
-                //            case MouseButtonType.Middle: lastClickTime = Mouse.LastMidButtonClickTime; break;
-                //            case MouseButtonType.Right: lastClickTime = Mouse.LastRightButtonClickTime; break;
-                //            default: Log.Warn($"No mouse button handled: {mouse.button}"); break;
-                //        }
-                //        if (lastClickTime != 0xFFFF_FFFF) {
-                //            //if (!Scene.OnMouseUp(buttonType) || UIManager.LastControlMouseDown(buttonType) != null) UIManager.OnMouseButtonUp(buttonType);
-                //        }
-                //        Mouse.ButtonRelease(buttonType);
-                //        Mouse.Update();
-                //        break;
-                //    }
+            case SDL_EventType.SDL_EVENT_KEY_DOWN: {
+                var key = sdlEvent->key;
+                var scene = s->Scene;
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) s->_ignoreNextTextInput = scene.OnKeyDown((int)key.key, (int)key.mod);
+                else s->_ignoreNextTextInput = false;
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_KEY_UP: {
+                var key = sdlEvent->key;
+                var scene = s->Scene;
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnKeyUp((int)key.key, (int)key.mod);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_TEXT_INPUT: {
+                if (s->_ignoreNextTextInput) { s->_ignoreNextTextInput = false; break; }
+                byte* ptr = sdlEvent->text.text;
+                while (*ptr != 0) ptr++;
+                var text = System.Text.Encoding.UTF8.GetString(sdlEvent->text.text, (int)(ptr - sdlEvent->text.text));
+                if (!string.IsNullOrEmpty(text)) {
+                    var scene = s->Scene;
+                    if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnTextInput(text);
+                }
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_MOUSE_MOTION: {
+                var motion = sdlEvent->motion;
+                var scene = s->Scene;
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseMove((int)motion.x, (int)motion.y);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_MOUSE_WHEEL: {
+                var wheel = sdlEvent->wheel;
+                var scene = s->Scene;
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseWheel(wheel.y > 0);
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN: {
+                var button = sdlEvent->button;
+                int b = button.button, x = (int)button.x, y = (int)button.y;
+                var scene = s->Scene;
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) {
+                    uint now = (uint)Environment.TickCount;
+                    bool dbl = b < s->_mouseDownMs.Length && s->_mouseDownMs[b] != 0 && now - s->_mouseDownMs[b] <= 400;
+                    if (b < s->_mouseDownMs.Length) s->_mouseDownMs[b] = now == 0 ? 1 : now;
+                    if (dbl) scene.OnMouseDoubleClick(b, x, y);
+                    else scene.OnMouseDown(b, x, y);
+                }
+                break;
+            }
+            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP: {
+                var button = sdlEvent->button;
+                var scene = s->Scene;
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseUp(button.button, (int)button.x, (int)button.y);
+                break;
+            }
         }
         return default;
     }

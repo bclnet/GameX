@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Mg\OpenX.Engine.Mg.csproj" />
     <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Sdl\OpenX.Engine.Sdl.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Origin.UO\GameX.Origin.UO.csproj" />
   </ItemGroup>
 
 </Project>

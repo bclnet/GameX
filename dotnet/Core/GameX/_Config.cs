@@ -1,4 +1,4 @@
-﻿#define Arkane
+﻿//#define Arkane
 //#define Beamdog
 //#define Bethesda
 //#define Bioware
@@ -9,7 +9,7 @@
 //#define Capcom
 //#define Cig
 //#define Cryptic
-// #define Crytek
+//#define Crytek
 //#define Cyanide
 //#define EA
 //#define Epic
@@ -22,7 +22,7 @@
 //#define Monolith
 //#define Mythic
 //#define Nintendo
-//#define Origin
+#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft

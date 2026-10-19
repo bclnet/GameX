@@ -13,3 +13,4 @@ Decisions that shape how GameX is built, and why. Add a new numbered file for ea
 | [0006](0006-review-rust-ui-2027.md) | Recheck the Rust UI choice by October 2027 | Accepted
 | [0007](0007-cell-shaping-stays-in-the-family.md) | Cell shaping stays in the family | Superseded in part by 0008
 | [0008](0008-create-land-stays-in-the-family.md) | CreateLand stays in the family | Accepted
+| [0009](0009-review-silk-vs-opentk.md) | Recheck Silk.NET.Vulkan against OpenTK by October 2027 | Accepted

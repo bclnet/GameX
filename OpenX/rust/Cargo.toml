@@ -20,7 +20,7 @@ members = [
     "engines/tests",
     "engines/unity",
     "engines/unreal",
-    "engines/vk",
+    "engines/vulkan",
     "engines/raylib",
     "engines/bgfx",
     "engines/bevy",

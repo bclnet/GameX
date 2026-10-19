@@ -28,13 +28,19 @@ public abstract class GumpPicBase : Control {
     public bool IsPartialHue { get; set; }
 }
 
-/// <summary>ClassicUO GumpPic. Draw does not upload the graphic.</summary>
+/// <summary>ClassicUO GumpPic. Draw hands the graphic to GumpArt.Sink.</summary>
 public class GumpPic : GumpPicBase {
     public GumpPic(int x, int y, ushort graphic, ushort hue) {
         X = x;
         Y = y;
         Graphic = graphic;
         Hue = hue;
+    }
+
+    public override bool Draw(int x, int y) {
+        if (IsDisposed || !IsVisible) return false;
+        GumpArtDraw.Pic(Graphic, x, y, Width, Height, false);
+        return base.Draw(x, y);
     }
 }
 
@@ -70,4 +76,10 @@ public class GumpPicTiled : Control {
     }
 
     public ushort Hue { get; set; }
+
+    public override bool Draw(int x, int y) {
+        if (IsDisposed || !IsVisible) return false;
+        GumpArtDraw.Pic(Graphic, x, y, Width, Height, true);
+        return base.Draw(x, y);
+    }
 }

@@ -1,4 +1,4 @@
-using GameX.Platforms.Godot;
+using GameX.Engines.Godot;
 
 public partial class ViewInfoX : ViewInfo {
 	public override void _Ready() { base._Ready(); }

@@ -6,7 +6,7 @@ using GameX.Engines.Sdl;
 using GameX.Engines.Stride;
 using GameX.Engines.Unity;
 using GameX.Engines.Unreal;
-using GameX.Engines.Vk;
+using GameX.Engines.Vulkan;
 using OpenX;
 using OpenX.Gfx;
 using OpenX.Wpf.Control;
@@ -17,8 +17,8 @@ public class AppOpenGLControl() : OpenGLControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => OpenGLRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
 }
 
-public class AppVkControl() : OpenGLControl(ShellState.Create) {
-    protected override Renderer CreateRenderer() => VkRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
+public class AppVulkanControl() : VulkanControl(ShellState.Create) {
+    protected override Renderer CreateRenderer() => VulkanRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
 }
 
 public class AppGodotControl() : GodotControl(ShellState.Create) {

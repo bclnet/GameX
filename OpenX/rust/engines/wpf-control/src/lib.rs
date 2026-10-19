@@ -12,5 +12,6 @@ pub mod open_gl_control;
 pub mod sdl_control;
 pub mod unity_control;
 pub mod unreal_control;
+pub mod vulkan_control;
 pub mod open_tk;
 pub mod ui;

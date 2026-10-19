@@ -32,7 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Wpf.Control\OpenX.Wpf.Control.csproj" />
     <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Wpf.Stride\OpenX.Wpf.Stride.csproj" />
-    <ProjectReference Include="..\..\Engines\GameX.Engine.Vk\GameX.Engine.Vk.csproj" />
+    <ProjectReference Include="..\..\Engines\GameX.Engine.Vulkan\GameX.Engine.Vulkan.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
     <ProjectReference Include="..\..\Core\GameX.All\GameX.All.csproj" />
     <ProjectReference Include="..\..\Engines\GameX.Engine.Godot\GameX.Engine.Godot.csproj" />

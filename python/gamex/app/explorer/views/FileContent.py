@@ -8,7 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from openx.core import ISource
 from gamex.core.meta import MetaItem, MetaContent, MetaInfo
 from .AppHexWidget import AppHexWidget
-from .AppGfxWidget import AppEginXWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget
+from .AppGfxWidget import AppEginXWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget, AppVulkanWidget
 
 # AppTextWidget
 class AppTextWidget(QWidget):
@@ -60,6 +60,7 @@ class FileContent(QTabWidget):
         self.gfxWidget = \
             AppEginXWidget if id == 'EX' else \
             AppOpenGLWidget if id == 'GL' else \
+            AppVulkanWidget if id == 'VK' else \
             AppPanda3dWidget if id == 'PD' else \
             AppPyEngine3dWidget if id == 'P3' else \
             AppPygameWidget if id == 'PG' else \

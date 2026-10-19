@@ -1,11 +1,13 @@
 from openx.core import EngineX
 from openx.engines.eginx.gfx.qt_widget import EginXWidget
 from openx.engines.opengl.gfx.qt_widget import OpenGLWidget
+from openx.engines.vulkan.gfx.qt_widget import VulkanWidget
 from openx.engines.panda3d.gfx.qt_widget import Panda3dWidget
 from openx.engines.pyengine3d.gfx.qt_widget import PyEngine3dWidget
 from openx.engines.pygame.gfx.qt_widget import PygameWidget
 from gamex.engines.eginx import EginXRenderer
 from gamex.engines.opengl import OpenGLRenderer
+from gamex.engines.vulkan import VulkanRenderer
 from gamex.engines.panda3d import Panda3dRenderer
 from gamex.engines.pyengine3d import PyEngine3dRenderer
 from gamex.engines.pygame import PygameRenderer
@@ -22,6 +24,11 @@ class AppEginXWidget(EginXWidget):
 class AppOpenGLWidget(OpenGLWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
     def createRenderer(self) -> Renderer: return OpenGLRenderer.createRenderer(self, EngineX.gfx, self.source, self.value, self.type)
+
+# AppVulkanWidget
+class AppVulkanWidget(VulkanWidget):
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return VulkanRenderer.createRenderer(self, EngineX.gfx, self.source, self.value, self.type)
 
 # AppPanda3dWidget
 class AppPanda3dWidget(Panda3dWidget):

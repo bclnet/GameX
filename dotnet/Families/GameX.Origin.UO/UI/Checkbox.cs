@@ -46,4 +46,10 @@ public class Checkbox : Control {
     bool _isChecked;
 
     public event EventHandler ValueChanged;
+
+    public override bool Draw(int x, int y) {
+        if (IsDisposed || !IsVisible) return false;
+        GumpArtDraw.Pic(IsChecked ? _active : _inactive, x, y, 0, 0, false);
+        return base.Draw(x, y);
+    }
 }

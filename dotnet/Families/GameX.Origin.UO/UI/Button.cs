@@ -45,4 +45,10 @@ public class Button : Control {
 
     public ushort ButtonGraphicPressed => _pressed;
     public ushort ButtonGraphicOver => _over;
+
+    public override bool Draw(int x, int y) {
+        if (IsDisposed || !IsVisible) return false;
+        GumpArtDraw.Pic(_normal, x, y, Width, Height, false);
+        return base.Draw(x, y);
+    }
 }

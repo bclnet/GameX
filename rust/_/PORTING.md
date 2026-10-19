@@ -1105,7 +1105,7 @@ The FTL object builder is `families/arkane/src/engines/ftl_object_builder.rs`. D
 
 ## Vulkan provider
 
-Engine id `VK`, name `Vulkan`. C# is `OpenX.Engine.Vk` plus `GameX.Engine.Vk`. Rust is `openx-engine-vk` and `gamex-engine-vk`. Python is `openx/engines/vk` and `gamex/engines/vk`. `createInstance` calls `vkCreateInstance` and `vkDestroyInstance` (Silk.NET.Vulkan 2.23.0, `ash` 0.38, and `vulkan` or `pyvulkan` only from that call). There is no window and no swapchain. `Gfx/Vk.cs` is `done` (`PORT-SHA` `45ef7114129dde50`). OpenX has no `PORT_MAP` row. `Vk_Render.cs` is `todo` (`7714268cd6038cf7`). Host, sprite, and model methods still throw. The Explorer does not list `VK`. `cargo test -p openx-engine-vk` is 2. `cargo check -p gamex-engine-vk` exited 0. Both C# projects built with 0 errors. Python was `py_compile`d and not imported.
+Engine id `VK`, name `Vulkan`. C# is `OpenX.Engine.Vulkan` plus `GameX.Engine.Vulkan`. Rust is `openx-engine-vulkan` and `gamex-engine-vulkan`. Python is `openx/engines/vulkan` and `gamex/engines/vulkan`. `createInstance` calls `vkCreateInstance` and `vkDestroyInstance` (Silk.NET.Vulkan 2.23.0, `ash` 0.38, and `vulkan` or `pyvulkan` only from that call). There is no window and no swapchain. `Gfx/Vulkan.cs` is `done` (`PORT-SHA` `46a94a10a6d0d683`). OpenX has no `PORT_MAP` row. `Vulkan_Render.cs` is `todo` (`7714268cd6038cf7`). Host, sprite, and model methods still throw. C# `App.xaml.cs` lists `VulkanEngine.This`. The Rust Explorer does not. `cargo test -p openx-engine-vulkan` is 2. `cargo check -p gamex-engine-vulkan` exited 0. Both C# projects built with 0 errors. Python was `py_compile`d and not imported.
 
 ## Engine registration stubs
 

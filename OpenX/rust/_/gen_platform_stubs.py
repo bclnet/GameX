@@ -131,8 +131,8 @@ CRATES = {
                "graphics API behind it — `Eng.cs` is a class skeleton and the `Gfx/` files are "
                "cast-and-forward shims.",
         binding="`wgpu`, once `openx-gfx-egin`'s renderer half has a target"),
-    "openx-engine-vk": SKELETON.format(
-        proj="OpenX.Engine.Vk",
+    "openx-engine-vulkan": SKELETON.format(
+        proj="OpenX.Engine.Vulkan",
         detail="**3 live lines** — a namespace declaration and an empty class. The "
                "`OpenTK.NetStandard` package reference is never used.",
         binding="`ash` (thin Vulkan bindings) or `vulkano` (safe wrapper)"),

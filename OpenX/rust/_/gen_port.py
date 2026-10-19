@@ -42,7 +42,7 @@ CRATES = {
     "OpenX.Engine.Tests":   ("engines/tests",        "openx-engine-tests"),
     "OpenX.Engine.Unity":   ("engines/unity",        "openx-engine-unity"),
     "OpenX.Engine.Unreal":  ("engines/unreal",       "openx-engine-unreal"),
-    "OpenX.Engine.Vk":      ("engines/vk",           "openx-engine-vk"),
+    "OpenX.Engine.Vulkan":      ("engines/vulkan",           "openx-engine-vulkan"),
     "OpenX.Wpf.Control":      ("engines/wpf-control",  "openx-wpf-control"),
     "OpenX.Wpf.Stride":       ("engines/wpf-stride",   "openx-wpf-stride"),
 }

@@ -101,14 +101,15 @@ public abstract class SceneBase : IDisposable {
     public virtual void Load() => IsLoaded = true;
     public virtual void Unload() => IsLoaded = false;
     // input
-    //public virtual bool OnMouseUp(MouseButtonType button) => false;
-    //public virtual bool OnMouseDown(MouseButtonType button) => false;
-    //public virtual bool OnMouseDoubleClick(MouseButtonType button) => false;
+    public virtual void OnMouseMove(int x, int y) { }
+    public virtual bool OnMouseDown(int button, int x, int y) => false;
+    public virtual bool OnMouseUp(int button, int x, int y) => false;
+    public virtual bool OnMouseDoubleClick(int button, int x, int y) => false;
     public virtual bool OnMouseWheel(bool up) => false;
     public virtual bool OnMouseDragging() => false;
     public virtual void OnTextInput(string text) { }
-    //public virtual void OnKeyDown(SDL_KeyboardEvent e) { }
-    //public virtual void OnKeyUp(SDL_KeyboardEvent e) { }
+    public virtual bool OnKeyDown(int key, int mod) => false;
+    public virtual bool OnKeyUp(int key, int mod) => false;
 }
 
 #endregion

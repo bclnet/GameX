@@ -1,7 +1,9 @@
 ﻿using GameX.Origin.Clients.UO;
 using GameX.Origin.Formats.UO;
 using OpenX.Client;
+using System;
 using System.IO;
+using System.Reflection;
 
 namespace GameX.Origin.UO;
 
@@ -23,6 +25,23 @@ public static class UOLogin {
             VersionText = versionText,
             Version = ClientVersionHelper.ValidateClientVersion(versionText) ?? default,
         };
+        TryAttachMusic();
         return new LoginScene(new World());
+    }
+
+    // Origin.UO cannot reference GameX.Engine.Mg (net10.0). Music lives there because this project has no MediaPlayer.
+    static void TryAttachMusic() {
+        try {
+            Assembly asm = null;
+            foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+                if (loaded.GetName().Name == "GameX.Engine.Mg") { asm = loaded; break; }
+            if (asm == null) {
+                var file = Path.Combine(AppContext.BaseDirectory, "GameX.Engine.Mg.dll");
+                if (!File.Exists(file)) return;
+                asm = Assembly.LoadFrom(file);
+            }
+            asm.GetType("GameX.Engines.Mg.UoMusic")?.GetMethod("Attach")?.Invoke(null, null);
+        }
+        catch { }
     }
 }

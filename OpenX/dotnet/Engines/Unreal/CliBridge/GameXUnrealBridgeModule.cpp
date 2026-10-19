@@ -1,9 +1,8 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-// Defined in unreal_load.cpp. Add that file to the module when this source
-// is copied into a UE project. Do not #include "unreal_load.cpp"; compiling
-// it twice would duplicate the definition.
+// Defined in unreal_load.cpp. The sample project includes that file once,
+// from engines/Unreal/Shell3D. Do not #include "unreal_load.cpp" here as well.
 int GameX_Unreal_LoadBridge(const wchar_t* dllPath, char* buf, int cap);
 
 class FGameXUnrealBridgeModule : public IModuleInterface {

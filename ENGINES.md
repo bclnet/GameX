@@ -50,7 +50,7 @@ Unreal is the process that starts. `OpenX/dotnet/Engines/Unreal/5.2/UnrealEngine
 | -- | -- | -- |
 | UnrealSharp | A UE 5.6–5.8 plugin generates the C# API from reflected C++. .NET 10.0.5 or newer. | Sketch only, in `OpenX/dotnet/Engines/Unreal/Sharp/`. The plugin is cloned into a UE project's `Plugins` folder, not this repo. |
 | UnrealCLR | A native UE plugin hosts the CLR, binds `UnrealEngine.Runtime.dll`, and that runtime fills function pointers in `UnrealEngine.Framework.dll`. | The Framework DLL is in `Unreal/5.2` (pure IL, .NET 7, 169 types, no `DllImport`). Loading it and calling `Engine.IsEditor` crashes because those pointers are still null. A standalone host is not possible. See `Unreal/ClrHost/FINDINGS.md`. |
-| C++/CLI DLL | MSBuild builds a mixed DLL outside UnrealBuildTool. A small Unreal C++ file loads it with `LoadLibrary`. The DLL exports a C ABI and does not include Unreal headers. Windows only. | Built and loaded. `OpenX/dotnet/Engines/Unreal/CliBridge/`. The native loader prints `GameX C++/CLI`. No Unreal Engine is installed (the registry entries for 4.27 and 5.1–5.3 point at folders that are gone), so `GameXUnrealBridgeModule.cpp` is not compiled by UnrealBuildTool. |
+| C++/CLI DLL | MSBuild builds a mixed DLL outside UnrealBuildTool. A small Unreal C++ file loads it with `LoadLibrary`. The DLL exports a C ABI and does not include Unreal headers. Windows only. | Built and loaded. Sample project `engines/Unreal/Shell3D`, EngineAssociation `5.8`. `build-bridge.cmd` stages the mixed DLL and `ijwhost.dll`. UnrealBuildTool compiled `Shell3DEditor`. A null-RHI game launch logged `GameX C++/CLI`. `LoadLibraryEx` searches the DLL folder so `ijwhost` is found. |
 
 ## What each Explorer lists
 

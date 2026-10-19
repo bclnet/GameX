@@ -1,0 +1,22 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "GameX",
+	"Description": "GameX 3D shell. Unreal is the process. Plugins/GameXUnrealBridge loads the C++/CLI DLL.",
+	"Modules": [
+		{
+			"Name": "Shell3D",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GameXUnrealBridge",
+			"Enabled": true
+		}
+	],
+	"TargetPlatforms": [
+		"Windows"
+	]
+}

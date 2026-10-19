@@ -1,4 +1,4 @@
-using GameX.Origin.Structs.UO;
+﻿using GameX.Origin.Structs.UO;
 using OpenX.Gfx;
 using System;
 using System.Collections.Generic;
@@ -162,12 +162,15 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
     public class AsciiFont {
         public byte[][] Characters = new byte[224][];
         public int Height;
+        public byte[] Widths = new byte[224];
+        public byte[] Heights = new byte[224];
 
         public AsciiFont(BinaryReader r) {
             r.ReadByte();
             for (var i = 0; i < 224; ++i) {
                 byte width = r.ReadByte(), height = r.ReadByte();
                 r.ReadByte();
+                Widths[i] = width; Heights[i] = height;
                 if (width <= 0 || height <= 0) continue;
                 if (height > Height && i < 96) Height = height;
 
@@ -198,6 +201,20 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
     // file: fonts.mul
     public Binary_AsciiFont(BinaryReader r) {
         for (var i = 0; i < Fonts.Length; i++) Fonts[i] = new AsciiFont(r);
+    }
+
+    /// <summary>
+    /// fontIndex is 0..9. The glyph index is ch - 32 (0..223).
+    /// pixels1555 is little-endian BGRA1555, bit 15 opaque, or null when the glyph has no pixels.
+    /// Returns false when fontIndex or ch is out of range.
+    /// Returns true for an in-range slot, including an empty glyph whose width may be 0.
+    /// </summary>
+    public bool TryGlyph(int fontIndex, int ch, out int width, out int height, out byte[] pixels1555) {
+        var g = ch - 32;
+        if (fontIndex < 0 || fontIndex >= Fonts.Length || g < 0 || g >= 224) { width = 0; height = 0; pixels1555 = null; return false; }
+        var font = Fonts[fontIndex];
+        width = font.Widths[g]; height = font.Heights[g]; pixels1555 = font.Characters[g];
+        return true;
     }
 
     public override string ToString() => this.Serialize();
@@ -876,6 +893,12 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
         for (; id < Records.Length; id++) Records[id] = new Record(id);
     }
 
+    /// <summary>32 file colors for hueIndex 0..2999. False when the index is outside that array.</summary>
+    public bool TryRamp(int hueIndex, out ushort[] colors) {
+        if (hueIndex < 0 || hueIndex >= Records.Length) { colors = null; return false; }
+        colors = Records[hueIndex].Colors; return true;
+    }
+
     public override string ToString() => this.Serialize();
 
     // IHaveMetaInfo
@@ -1530,6 +1553,10 @@ public class Binary_StringTable : IHaveMetaInfo {
     public Binary_StringTable(BinaryReader r, FileSource f) {
         r.Skip(6);
         while (!r.AtEnd()) {
+            var remaining = r.BaseStream.Length - r.BaseStream.Position;
+            if (remaining < 7) break;
+            var length = r.Peek(x => x.ReadUInt16(), 5);
+            if (remaining < 7 + length) break;
             var id = r.ReadInt32();
             var flag = (RecordFlag)r.ReadByte();
             var text = r.ReadL16UString();

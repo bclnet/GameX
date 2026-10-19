@@ -93,10 +93,13 @@ class Binary_AsciiFont(IHaveMetaInfo):
         characters: list[list[int]] = [None]*224
         height: int = 0
         def __init__(self, r: BinaryReader):
+            self.widths = [0]*224
+            self.heights = [0]*224
             r.readByte()
             for i in range(224):
                 width = r.readByte(); height = r.readByte()
                 r.readByte()
+                self.widths[i] = width; self.heights[i] = height
                 if width <= 0 or height <= 0: continue
                 if height > self.height and i < 96: self.height = height
 
@@ -112,6 +115,12 @@ class Binary_AsciiFont(IHaveMetaInfo):
 
     def __init__(self, r: BinaryReader):
         for i in range(len(self.fonts)): self.fonts[i] = self.AsciiFont(r)
+
+    def tryGlyph(self, fontIndex: int, ch: int):
+        g = ch - 32
+        if fontIndex < 0 or fontIndex >= len(self.fonts) or g < 0 or g >= 224: return None
+        font = self.fonts[fontIndex]
+        return (font.widths[g], font.heights[g], font.characters[g])
 
     def __repr__(self): return DesSer.serialize(self)
 
@@ -545,6 +554,9 @@ class Binary_Hues(IHaveMetaInfo):
             for j in range(8): self.records[id] = Binary_Hues.Record(id, records[j]); id += 1
         for i in range(id, len(self.records)): self.records[id] = Binary_Hues.Record(id); id += 1
 
+    def tryRamp(self, hueIndex: int):
+        return self.records[hueIndex].colors if 0 <= hueIndex < len(self.records) else None
+
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
@@ -976,6 +988,10 @@ class Binary_StringTable(IHaveMetaInfo):
     def __init__(self, r: BinaryReader, f: FileSource):
         r.skip(6)
         while not r.atEnd():
+            remaining = r.length - r.tell()
+            if remaining < 7: break
+            length = r.peek(lambda x: x.readUInt16(), 5)
+            if remaining < 7 + length: break
             id = r.readInt32()
             flag = Binary_StringTable.RecordFlag(r.readByte())
             text = r.readL16UString()

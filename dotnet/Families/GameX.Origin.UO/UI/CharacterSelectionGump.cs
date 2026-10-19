@@ -38,7 +38,7 @@ public class CharacterSelectionGump : Gump {
             var y = yOffset + pos * 40;
             Add(new ResizePic(0x0BB8) { X = 224, Y = y, Width = 280, Height = 30 });
             var hue = (ushort)(i == selected ? 0x0021 : 0x034F);
-            var textW = name.Length * 6;
+            var textW = GumpArt.Sink?.MeasureText(name, 5) ?? name.Length * 6;
             var nameX = textW < 280 ? 224 + (280 - textW) / 2 : 224;
             Add(new Label(name, false, hue, 5) { X = nameX, Y = y });
             pos++;

@@ -5,7 +5,7 @@ using System;
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO Checkbox. The box size is the inactive gump. Text width is not measured from a font.
+/// ClassicUO Checkbox. The box size is the inactive gump.
 /// </summary>
 public class Checkbox : Control {
     readonly ushort _inactive, _active;
@@ -21,7 +21,7 @@ public class Checkbox : Control {
             Dispose();
             return;
         }
-        Width = w + Text.Length * 6;
+        Width = w + (GumpArt.Sink?.MeasureText(Text, Font) ?? Text.Length * 6);
         Height = h > 16 ? h : 16;
         CanMove = false;
         AcceptMouseInput = true;

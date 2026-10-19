@@ -3,7 +3,7 @@
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO Label without a font texture. Width is text length times 6, not the real glyph width.
+/// ClassicUO Label without a font texture. Width is MeasureText when a sink is attached.
 /// </summary>
 public class Label : Control {
     string _text;
@@ -24,8 +24,14 @@ public class Label : Control {
         get => _text;
         set {
             _text = value ?? "";
-            Width = _text.Length * 6;
+            Width = GumpArt.Sink?.MeasureText(_text, Font) ?? _text.Length * 6;
             Height = 16;
         }
+    }
+
+    public override bool Draw(int x, int y) {
+        if (IsDisposed || !IsVisible) return false;
+        GumpArt.Sink?.DrawText(x, y, Text, Hue, Font);
+        return base.Draw(x, y);
     }
 }

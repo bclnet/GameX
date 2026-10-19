@@ -63,4 +63,14 @@ public class UltimaOnline {
         Assets = assets;
         await assets.Load(archive, ctx);
     }
+
+    public bool TryAsciiGlyph(int fontIndex, int ch, out int width, out int height, out byte[] pixels1555) {
+        if (Assets == null) { width = height = 0; pixels1555 = null; return false; }
+        return Assets.TryAsciiGlyph(fontIndex, ch, out width, out height, out pixels1555);
+    }
+
+    public bool TryHueRamp(int hueIndex, out ushort[] colors) {
+        if (Assets == null) { colors = null; return false; }
+        return Assets.TryHueRamp(hueIndex, out colors);
+    }
 }

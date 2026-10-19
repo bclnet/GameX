@@ -16,6 +16,8 @@ public sealed class UoGumpArt : IGumpArt {
     readonly GraphicsDevice _device;
     readonly SpriteBatch _batch;
     readonly Dictionary<ushort, Texture2D> _cache = [];
+    readonly Dictionary<(ushort graphic, ushort hue), Texture2D> _tinted = [];
+    readonly Dictionary<(byte font, char ch, ushort hue), Texture2D> _ascii = [];
     Texture2D _glyphs;
 
     public UoGumpArt(GraphicsDevice device) {
@@ -33,45 +35,70 @@ public sealed class UoGumpArt : IGumpArt {
     public void End() => _batch.End();
 
     /// <summary>
-    /// hue 0 is Color.White. Any other hue multiplies RGB by its low 5 bits (0..31 over 31), same as DrawText.
-    /// This is not a hues.mul lookup and not a partial-hue shader. IsPartialHue is unused.
-    /// The tint is the SpriteBatch color; the cache key stays the graphic.
+    /// hue 0 uses the graphic cache. A nonzero hue with a hues.mul ramp is keyed by graphic and hue.
+    /// When the ramp is missing, RGB is scaled by hue & 31.
     /// </summary>
     public void Draw(ushort graphic, int x, int y, int destWidth, int destHeight, byte[] pixels1555, int srcWidth, int srcHeight, bool tile, ushort hue = 0) {
         if (destWidth <= 0 || destHeight <= 0) return;
-        if (!_cache.TryGetValue(graphic, out var tex)) {
-            tex = Upload(pixels1555, srcWidth, srcHeight);
-            if (tex == null) return;
-            _cache[graphic] = tex;
-        }
+        Texture2D tex;
         var color = Color.White;
-        if (hue != 0) {
-            var scale = (hue & 31) * 255 / 31;
-            color = new Color(scale, scale, scale, 255);
+        if (hue != 0 && _tinted.TryGetValue((graphic, hue), out tex)) { }
+        else if (hue != 0 && TryUploadTinted(graphic, hue, pixels1555, srcWidth, srcHeight, out tex)) { }
+        else {
+            if (!_cache.TryGetValue(graphic, out tex)) {
+                tex = Upload(pixels1555, srcWidth, srcHeight);
+                if (tex == null) return;
+                _cache[graphic] = tex;
+            }
+            color = HueColor(hue);
         }
         if (tile) DrawTiled(tex, x, y, destWidth, destHeight, color);
         else _batch.Draw(tex, new Rectangle(x, y, destWidth, destHeight), color);
     }
 
     /// <summary>
-    /// ASCII 32..126 as a 5x7 bitmap. Advance is 6 so it matches Label width (length * 6).
-    /// hue 0 is white. Any other hue multiplies RGB by its low 5 bits (0..31 over 31). Alpha stays 255.
+    /// fonts.mul glyphs when loaded, else ASCII 32..126 as a 5x7 bitmap advancing 6.
+    /// A missing glyph uses the bitmap. hue 0 is the glyph pixels; a ramp remaps like Draw.
     /// </summary>
-    public void DrawText(int x, int y, string text, ushort hue) {
+    public void DrawText(int x, int y, string text, ushort hue, byte font = 1) {
         if (string.IsNullOrEmpty(text)) return;
-        EnsureGlyphs();
-        var color = Color.White;
-        if (hue != 0) {
-            var scale = (hue & 31) * 255 / 31;
-            color = new Color(scale, scale, scale, 255);
+        var uo = UltimaOnline.Current;
+        if (uo == null) {
+            DrawBitmapText(x, y, text, HueColor(hue));
+            return;
         }
+        var useRamp = hue != 0 && uo.TryHueRamp(hue & 0x3FFF, out var ramp);
+        var color = useRamp ? Color.White : HueColor(hue);
         var dx = x;
         foreach (var ch in text) {
-            var index = ch - 32;
-            if ((uint)index < 95 && ch != ' ')
-                _batch.Draw(_glyphs, new Rectangle(dx, y, 5, 7), new Rectangle(index * 5, 0, 5, 7), color);
-            dx += 6;
+            if (!uo.TryAsciiGlyph(font, ch, out var gw, out var gh, out var px)) {
+                DrawBitmapChar(dx, y, ch, HueColor(hue));
+                dx += 6;
+                continue;
+            }
+            if (px != null && gw > 0 && gh > 0) {
+                var keyHue = useRamp ? hue : (ushort)0;
+                if (!_ascii.TryGetValue((font, ch, keyHue), out var tex)) {
+                    var src = useRamp ? RemapHue(px, gw, gh, ramp, (hue & 0x8000) != 0) : px;
+                    tex = Upload(src, gw, gh);
+                    if (tex != null) _ascii[(font, ch, keyHue)] = tex;
+                }
+                if (tex != null) _batch.Draw(tex, new Rectangle(dx, y, gw, gh), color);
+            }
+            dx += gw;
         }
+    }
+
+    public int MeasureText(string text, byte font = 1) {
+        if (string.IsNullOrEmpty(text)) return 0;
+        var uo = UltimaOnline.Current;
+        if (uo == null) return text.Length * 6;
+        var w = 0;
+        foreach (var ch in text) {
+            if (uo.TryAsciiGlyph(font, ch, out var gw, out _, out _)) w += gw;
+            else w += 6;
+        }
+        return w;
     }
 
     Texture2D Upload(byte[] pixels1555, int srcWidth, int srcHeight) {
@@ -90,6 +117,58 @@ public sealed class UoGumpArt : IGumpArt {
         var tex = new Texture2D(_device, srcWidth, srcHeight, false, SurfaceFormat.Color);
         tex.SetData(colors);
         return tex;
+    }
+
+    bool TryUploadTinted(ushort graphic, ushort hue, byte[] pixels1555, int srcWidth, int srcHeight, out Texture2D tex) {
+        tex = null;
+        var uo = UltimaOnline.Current;
+        if (uo == null || pixels1555 == null || srcWidth <= 0 || srcHeight <= 0 || !uo.TryHueRamp(hue & 0x3FFF, out var ramp)) return false;
+        tex = Upload(RemapHue(pixels1555, srcWidth, srcHeight, ramp, (hue & 0x8000) != 0), srcWidth, srcHeight);
+        if (tex == null) return false;
+        _tinted[(graphic, hue)] = tex;
+        return true;
+    }
+
+    static byte[] RemapHue(byte[] pixels1555, int width, int height, ushort[] ramp, bool partial) {
+        var count = width * height;
+        var dest = new byte[count * 2];
+        for (var i = 0; i < count; i++) {
+            var c = (ushort)(pixels1555[i * 2] | (pixels1555[i * 2 + 1] << 8));
+            if (c != 0) {
+                var r = (c >> 10) & 31;
+                var g = (c >> 5) & 31;
+                var b = c & 31;
+                if (!partial || r == g && g == b) {
+                    c = ramp[Math.Max(r, Math.Max(g, b))];
+                    if (c != 0) c |= 0x8000;
+                }
+            }
+            dest[i * 2] = (byte)c;
+            dest[i * 2 + 1] = (byte)(c >> 8);
+        }
+        return dest;
+    }
+
+    static Color HueColor(ushort hue) {
+        if (hue == 0) return Color.White;
+        var scale = (hue & 31) * 255 / 31;
+        return new Color(scale, scale, scale, 255);
+    }
+
+    void DrawBitmapText(int x, int y, string text, Color color) {
+        EnsureGlyphs();
+        var dx = x;
+        foreach (var ch in text) {
+            DrawBitmapChar(dx, y, ch, color);
+            dx += 6;
+        }
+    }
+
+    void DrawBitmapChar(int x, int y, char ch, Color color) {
+        EnsureGlyphs();
+        var index = ch - 32;
+        if ((uint)index < 95 && ch != ' ')
+            _batch.Draw(_glyphs, new Rectangle(x, y, 5, 7), new Rectangle(index * 5, 0, 5, 7), color);
     }
 
     void DrawTiled(Texture2D tex, int x, int y, int destWidth, int destHeight, Color color) {

@@ -20,7 +20,7 @@ public class Assets(UOGame game) {
     Binary_StringTable Clilocs;
     Archive Gumps;
     Binary_GumpDef GumpsDef;
-    //Fonts Fonts;
+    Binary_AsciiFont Fonts;
     Binary_Hues Hues;
     Binary_RadarColor HuesRadar;
     //TileData TileData;
@@ -102,7 +102,7 @@ public class Assets(UOGame game) {
         Gumps = OpenPack(game, Uop ? "gumpartLegacyMUL.uop" : "gumpidx.mul")
             ?? throw new FileNotFoundException("UO gump archive was not opened.", Uop ? "gumpartLegacyMUL.uop" : "gumpidx.mul");
         GumpsDef = await TryAsset<Binary_GumpDef>(game, "gump.def");
-        //Fonts = await game.GetAsset<Binary_AsciiFont>("fonts.mul");
+        Fonts = await TryAsset<Binary_AsciiFont>(game, "fonts.mul");
         //Fonts = await game.GetAsset<Binary_UnicodeFont>("fonts.mul");
         Hues = await TryAsset<Binary_Hues>(game, "hues.mul");
         HuesRadar = await TryAsset<Binary_RadarColor>(game, "radarcol.mul");
@@ -123,6 +123,16 @@ public class Assets(UOGame game) {
         //BuffTable.Load();
         //ChairTable.Load();
         ////UltimaLive.Enable();
+    }
+
+    public bool TryAsciiGlyph(int fontIndex, int ch, out int width, out int height, out byte[] pixels1555) {
+        if (Fonts == null) { width = height = 0; pixels1555 = null; return false; }
+        return Fonts.TryGlyph(fontIndex, ch, out width, out height, out pixels1555);
+    }
+
+    public bool TryHueRamp(int hueIndex, out ushort[] colors) {
+        if (Hues == null) { colors = null; return false; }
+        return Hues.TryRamp(hueIndex, out colors);
     }
 
     /// <summary>

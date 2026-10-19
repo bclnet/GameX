@@ -16,6 +16,7 @@ public partial class App : Application {
         O3deShellEngine.This,
         OgreEngine.This,
         OpenGLEngine.This,
+        VkEngine.This,
         SdlEngine.This,
         StrideEngine.This,
         UnityShellEngine.This,

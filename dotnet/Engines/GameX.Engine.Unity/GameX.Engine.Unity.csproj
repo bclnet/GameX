@@ -27,16 +27,16 @@
 
   <ItemGroup>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\7000.0.0a10\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\7000.0.0a10\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\7000.0.0a10\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\7000.0.0a10\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
 

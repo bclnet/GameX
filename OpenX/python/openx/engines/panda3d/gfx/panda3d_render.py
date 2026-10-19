@@ -90,7 +90,7 @@ class EngineRenderer(Renderer):
 
     def start(self) -> None:
         # log.info(f'db: {self.db}')
-        self.engine = Panda3dOpenEngine(lambda queue: CellManager(self.db.query, queue, Panda3dCellBuilder(self.db.archive, self.db.query, self.gfx)), False)
+        self.engine = Panda3dOpenEngine(lambda queue: CellManager(self.db.query, queue, self.db.query.createCellBuilder(self.db.archive, self.gfx)), False)
         asyncio.run(self.engine.spawnPlayer(self.db))
 
     def update(self, deltaTime: float) -> None:

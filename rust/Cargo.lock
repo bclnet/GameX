@@ -1519,6 +1519,9 @@ dependencies = [
  "gamex",
  "gamex-gamebryo",
  "gamex-uncore",
+ "glam",
+ "openx",
+ "openx-poly",
 ]
 
 [[package]]

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using XShader = UnityEngine.Shader;
 #pragma warning disable CS9113
 
 namespace OpenX.Gfx.Unity;
@@ -62,7 +63,7 @@ public class EngineRenderer(IOpenGfx[] gfx, ISource source, object obj) : Render
     public override void Start() {
         //Log.Info($"PlayerPrefab: {PlayerPrefab}");
         var db = (ICellDatabase)obj;
-        Engine = new UnityOpenEngine(queue => new CellManager(db.Query, queue, new UnityCellBuilder(db.Archive, db.Query, gfx)), false);
+        Engine = new UnityOpenEngine(queue => new CellManager(db.Query, queue, db.Query.CreateCellBuilder<GameObject, Material, Texture2D, XShader>(db.Archive, gfx)), false);
         Engine.SpawnPlayer(db).Wait();
     }
 

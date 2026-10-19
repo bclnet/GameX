@@ -21,8 +21,10 @@ namespace OpenX;
 #region Client
 
 public class UnityClientHost : MonoBehaviour, IClientHost {
-    [field: SerializeField] public string Family { get; set; }
-    [field: SerializeField] public Uri Game { get; set; }
+    //[field: SerializeField]
+    public string Family { get; set; }
+    //[field: SerializeField]
+    public Uri Game { get; set; }
 
     public void Dispose() {
         throw new NotImplementedException();

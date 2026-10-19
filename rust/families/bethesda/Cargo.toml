@@ -13,3 +13,6 @@ bitflags = { workspace = true }
 gamex = { path = "../../core/gamex" }
 gamex-gamebryo = { path = "../../families/gamebryo" }
 gamex-uncore = { path = "../../families/uncore" }
+glam = { workspace = true }
+openx = { path = "../../../OpenX/rust/core/openx" }
+openx-poly = { path = "../../../OpenX/rust/core/poly" }

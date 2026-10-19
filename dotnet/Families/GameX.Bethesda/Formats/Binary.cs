@@ -1,4 +1,5 @@
-﻿using GameX.Bethesda.Formats.Records;
+﻿using GameX.Bethesda;
+using GameX.Bethesda.Formats.Records;
 using GameX.Uncore.Formats;
 using OpenX;
 using OpenX.Gfx;
@@ -591,6 +592,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
         public ILand FindLand(Int3 cell) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
         public ICell FindCell(Int3 cell) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
         public ICell FindCellByName(string name) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
+        public CellBuilder CreateCellBuilder<O, M, T, S>(ISource source, IOpenGfx[] gfx) => new BethesdaCellBuilder<O, M, T, S>(source, this, gfx);
     }
 
     public class ElseCellQuery(Binary_Esm _) : IQuery {
@@ -617,6 +619,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
             return null;
         }
         public ICell FindCellByName(string name) => throw new NotImplementedException();
+        public CellBuilder CreateCellBuilder<O, M, T, S>(ISource source, IOpenGfx[] gfx) => new BethesdaCellBuilder<O, M, T, S>(source, this, gfx);
     }
 
     #endregion

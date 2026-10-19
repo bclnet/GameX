@@ -1,12 +1,11 @@
 from __future__ import annotations
 import os, math
-from numpy import ndarray, array, zeros
+from numpy import ndarray, array
 from openx.core.core import ISource
 from openx.core.poly.pool import CoroutineQueue
 from openx.core.poly.poly import Int3, Float3, Float4
-from openx.core.poly.system import getExtrema, changeRange
 import openx.core.poly.log as log
-from openx.gfx.gfx import GfX, GfxTerrainLayer, GfxAttach
+from openx.gfx.gfx import GfX, GfxAttach
 from openx.sys.drawing import Color
 
 # types
@@ -92,6 +91,7 @@ class CellManager:
         def findCellByName(self, name: str) -> ICell: pass
         def findLand(self, cell: Int3) -> ILand: pass
         def findLtex(self, index: int) -> ILtex: pass
+        def createCellBuilder(self, source, gfx): return CellBuilder(source, self, gfx)
 
     def __init__(self, query: IQuery, queue: CoroutineQueue, builder: CellBuilderX):
         self.query: IQuery = query
@@ -164,7 +164,6 @@ class CellBuilderX:
 # CellBuilder
 class CellBuilder(CellBuilderX):
     defaultLandTexturePath: str = 'textures/_land_default.dds'
-    terrainLayers: dict[Texture, GfxTerrainLayer[Texture]] = {}
 
     def __init__(self, source: ISource, query: IQuery, gfx: list[IOpenGfx]):
         self.source = source
@@ -223,73 +222,8 @@ class CellBuilder(CellBuilderX):
             paths.append(ltex.path)
         return paths
 
-    LAND_SIDELENGTH_IN_SAMPLES: int = 65
-    VHGTIncrementToUnits: int = 8
-    LAND_TEXTUREINDICES: int = 256
-    VTEX_ROWS: int = 16
-    VTEX_COLUMNS: int = VTEX_ROWS
-
-    async def createLand(self, land: ILand, parent: object):
-        heights = land.heights
-        if not heights: return
-
-        # Read in the heights in Morrowind units.
-        newHeights = zeros((CellBuilder.LAND_SIDELENGTH_IN_SAMPLES, CellBuilder.LAND_SIDELENGTH_IN_SAMPLES), dtype=float) 
-        rowOffset = land.heightOffset
-        for y in range(CellBuilder.LAND_SIDELENGTH_IN_SAMPLES):
-            rowOffset += heights[y * CellBuilder.LAND_SIDELENGTH_IN_SAMPLES]
-            newHeights[y, 0] = rowOffset * CellBuilder.VHGTIncrementToUnits
-            colOffset = rowOffset
-            for x in range(1, CellBuilder.LAND_SIDELENGTH_IN_SAMPLES):
-                colOffset += heights[(y * CellBuilder.LAND_SIDELENGTH_IN_SAMPLES) + x]
-                newHeights[y, x] = colOffset * CellBuilder.VHGTIncrementToUnits
-
-        # Change the heights to percentages.
-        minHeight, maxHeight = getExtrema(newHeights)
-        for y in range(CellBuilder.LAND_SIDELENGTH_IN_SAMPLES):
-            for x in range(CellBuilder.LAND_SIDELENGTH_IN_SAMPLES):
-                newHeights[y, x] = changeRange(newHeights[y, x], minHeight, maxHeight, 0, 1)
-
-        # Texture the terrain.
-        textureManager = self.gfxModel.textureManager
-        indexs = land.vtex or [0]*CellBuilder.LAND_TEXTUREINDICES; layers = []; layerIndexs = {}
-        for i in range(len(indexs)):
-            index = indexs[i] - 1
-            if index in layerIndexs: continue
-            # Load terrain texture.
-            path = self.query.findLtex(index).path if index >= 0 else CellBuilder.defaultLandTexturePath
-            tex, _ = await self.gfxModel.createTexture(self.source, path)
-            layer = CellBuilder.terrainLayers.get(tex)
-            if not layer:
-                layer = GfxTerrainLayer[Texture](
-                    texture=tex,
-                    smoothness=.3,
-                    metallic=.2,
-                    specular=Color.black,
-                    tileSize=array([6, 6]))
-                layer.maskMapTexture = textureManager.createSolidTexture(1, 1, [layer.metallic, .0, .0, layer.smoothness])
-                layer.normalMapTexture = textureManager.createNormalMapTexture(tex)
-                CellBuilder.terrainLayers[tex] = layer
-            layerIndex = len(layers); layers.append(layer); layerIndexs[index] = layerIndex
-        newlayers = layers
-
-        # Create the alpha map.
-        alphaMap = zeros((CellBuilder.VTEX_ROWS, CellBuilder.VTEX_COLUMNS, len(newlayers)))
-        for y in range(CellBuilder.VTEX_ROWS):
-            yMajor = y // 4; yMinor = y - (yMajor * 4)
-            for x in range(CellBuilder.VTEX_COLUMNS):
-                xMajor = x // 4; xMinor = x - (xMajor * 4)
-                texIndex = indexs[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1
-                alphaMap[y, x, layerIndexs[texIndex] if texIndex >= 0 else 0] = 1
-    
-        # Create the terrain.
-        heightRange = (maxHeight - minHeight) / self.meterInUnits
-        position = array([land.gridId.y * self.cellLengthInMeters, land.gridId.y * self.cellLengthInMeters, minHeight / self.meterInUnits])
-        sampleDistance = self.cellLengthInMeters / (CellBuilder.LAND_SIDELENGTH_IN_SAMPLES - 1)
-        data = self.gfxTerrain.createTerrainData(-1, newHeights, heightRange, sampleDistance, newlayers, alphaMap)
-        self.gfxTerrain.createTerrain('terrain', position, data, parent)
-        # _terrainError: 5
-        # _treeDistance: 80
+    # Family builders override this. The base draws no terrain.
+    async def createLand(self, land: ILand, parent: object): return
 
     async def createReflectionProbe(self, cell: ICell, parent: Object) -> None:
         if cell.isInterior: return

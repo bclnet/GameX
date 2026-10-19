@@ -98,6 +98,7 @@ public class CellManager(IQuery query, AsyncCoroutineQueue queue, CellBuilder bu
         ICell FindCellByName(string name);
         ILand FindLand(Int3 cell);
         ILtex FindLtex(int index);
+        CellBuilder CreateCellBuilder<O, M, T, S>(ISource source, IOpenGfx[] gfx) => new CellBuilder<O, M, T, S>(source, this, gfx);
     }
 
     public readonly IQuery Query = query;
@@ -178,7 +179,6 @@ public abstract class CellBuilder {
 }
 
 public class CellBuilder<Object, Material, Texture, Shader>(ISource source, IQuery query, IOpenGfx[] gfx) : CellBuilder {
-    const string DefaultLandTexturePath = "textures/_land_default.dds";
     protected ISource Source = source;
     protected IQuery Query = query;
     protected IOpenGfxApi<Object, Material> GfxApi = (IOpenGfxApi<Object, Material>)gfx[GfX.XApi];
@@ -187,7 +187,6 @@ public class CellBuilder<Object, Material, Texture, Shader>(ISource source, IQue
     protected IOpenGfxTerrain<Object, Material, Texture> GfxTerrain = (IOpenGfxTerrain<Object, Material, Texture>)gfx[GfX.XTerrain];
     protected float MeterInUnits = query.MeterInUnits;
     protected float CellLengthInMeters = query.CellLengthInMeters;
-    static readonly Dictionary<Texture, GfxTerrainLayer<Texture>> TerrainLayers = [];
 
     public override (object, object) CreateContainers(string name) {
         var obj = GfxApi.CreateObject(name, "Cell");
@@ -231,80 +230,9 @@ public class CellBuilder<Object, Material, Texture, Shader>(ISource source, IQue
     }
 
     /// <summary>
-    /// Creates terrain representing a LAND record.
+    /// Family builders override this. The base draws no terrain.
     /// </summary>
-    async Task CreateLand(ILand land, Object parent) {
-        const int LAND_SIDELENGTH_IN_SAMPLES = 65;
-        const int VHGTIncrementToUnits = 8;
-        const int LAND_TEXTUREINDICES = 256;
-        const int VTEX_ROWS = 16;
-        const int VTEX_COLUMNS = VTEX_ROWS;
-
-        var heights = land.Heights;
-        if (heights == null) return;
-
-        // Read in the heights in Morrowind units.
-        var newHeights = new float[LAND_SIDELENGTH_IN_SAMPLES, LAND_SIDELENGTH_IN_SAMPLES];
-        var rowOffset = land.HeightOffset;
-        for (var y = 0; y < LAND_SIDELENGTH_IN_SAMPLES; y++) {
-            rowOffset += heights[y * LAND_SIDELENGTH_IN_SAMPLES];
-            newHeights[y, 0] = rowOffset * VHGTIncrementToUnits;
-            var colOffset = rowOffset;
-            for (var x = 1; x < LAND_SIDELENGTH_IN_SAMPLES; x++) {
-                colOffset += heights[(y * LAND_SIDELENGTH_IN_SAMPLES) + x];
-                newHeights[y, x] = colOffset * VHGTIncrementToUnits;
-            }
-        }
-
-        // Change the heights to percentages.
-        newHeights.GetExtrema(out var minHeight, out var maxHeight);
-        for (var y = 0; y < LAND_SIDELENGTH_IN_SAMPLES; y++)
-            for (var x = 0; x < LAND_SIDELENGTH_IN_SAMPLES; x++)
-                newHeights[y, x] = System.Polyfill.ChangeRange(newHeights[y, x], minHeight, maxHeight, 0f, 1f);
-
-        // Texture the terrain.
-        var textureManager = GfxModel.TextureManager;
-        var indexs = land.Vtex ?? new uint[LAND_TEXTUREINDICES]; var layers = new List<GfxTerrainLayer<Texture>>(); var layerIndexs = new Dictionary<int, int>();
-        for (var i = 0; i < indexs.Length; i++) {
-            var index = (int)(indexs[i] - 1);
-            if (layerIndexs.ContainsKey(index)) continue;
-            // Load terrain texture.
-            var path = index >= 0 ? Query.FindLtex(index).Path : DefaultLandTexturePath;
-            var (tex, _) = await GfxModel.CreateTexture(Source, path);
-            if (!TerrainLayers.TryGetValue(tex, out var layer)) {
-                layer = new GfxTerrainLayer<Texture> {
-                    Texture = tex,
-                    Smoothness = .3f,
-                    Metallic = .2f,
-                    Specular = Color.Black,
-                    TileSize = new Vector2(6, 6)
-                };
-                layer.MaskMapTexture = textureManager.CreateSolid(1, 1, [layer.Metallic, 0f, 0f, layer.Smoothness]);
-                layer.NormalMapTexture = textureManager.CreateNormalMap(tex);
-                TerrainLayers[tex] = layer;
-            }
-            var layerIndex = layers.Count; layers.Add(layer); layerIndexs.Add(index, layerIndex);
-        }
-        var newLayers = layers.ToArray();
-
-        // Create the alpha map.
-        var alphaMap = new float[VTEX_ROWS, VTEX_COLUMNS, newLayers.Length];
-        for (var y = 0; y < VTEX_ROWS; y++) {
-            int yMajor = y / 4, yMinor = y - (yMajor * 4);
-            for (var x = 0; x < VTEX_COLUMNS; x++) {
-                int xMajor = x / 4, xMinor = x - (xMajor * 4);
-                var texIndex = (int)indexs[(yMajor * 64) + (xMajor * 16) + (yMinor * 4) + xMinor] - 1;
-                alphaMap[y, x, texIndex >= 0 ? layerIndexs[texIndex] : 0] = 1;
-            }
-        }
-
-        // Create the terrain.
-        var heightRange = (maxHeight - minHeight) / MeterInUnits;
-        var position = new Vector3(land.GridId.X * CellLengthInMeters, land.GridId.Y * CellLengthInMeters, minHeight / MeterInUnits);
-        var sampleDistance = CellLengthInMeters / (LAND_SIDELENGTH_IN_SAMPLES - 1);
-        var terrainData = GfxTerrain.CreateData(0, newHeights, heightRange, sampleDistance, newLayers, alphaMap);
-        GfxTerrain.Create("terrain", position, terrainData, parent);
-    }
+    protected virtual Task CreateLand(ILand land, Object parent) => Task.CompletedTask;
 
     async Task CreateReflectionProbe(ICell cell, Object parent) {
         if (cell.IsInterior) return;

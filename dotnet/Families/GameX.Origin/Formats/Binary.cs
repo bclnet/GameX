@@ -275,7 +275,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
     const int UOP_MAGIC = 0x50594D;
 
     Task ReadUop(BinaryArchive source, BinaryReader r) {
-        (Func<string, int, string> uopFunc, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.BinPath switch {
+        (Func<string, int, string> uopFunc, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = Path.GetFileName(source.BinPath) switch {
             "artLegacyMUL.uop" => ((s, i) => $"build/artlegacymul/{i:D8}.tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => ((s, i) => $"build/gumpartlegacymul/{i:D8}.tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
             "soundLegacyMUL.uop" => ((s, i) => $"build/soundlegacymul/{i:D8}.dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
@@ -284,7 +284,8 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
             "MultiCollection.uop" => ((s, i) => $"build/multicollection/{i:D8}.bin", 0, 0, false, i => $"file{i:x5}.mcol"),
             "string_dictionary.uop" => ((s, i) => $"build/stringdictionary/string_dictionary.bin", 0, 0, false, i => $"file{i:x5}.sdict"),
             "tileart.uop" => ((s, i) => $"build/tileart/{i:D8}.bin", 0, 0, false, i => $"file{i:x5}.tart"),
-            var x when x.StartsWith("map") => ((s, i) => $"build/{s}/{{i:D8}}.dat", 0x0, 0, false, i => $"file{i:x5}.anim"),
+            // length < 0: count comes from the header. Hash is build/{stem}/{index:D8}.dat.
+            var x when x.StartsWith("map") => ((s, i) => $"build/{s}/{i:D8}.dat", -1, 0, false, i => $"file{i:x5}.dat"),
             var x when x.StartsWith("AnimationFrame") => ((s, i) => $"build/animationlegacyframe/{i:D6}/{i:D2}.bin", 0x0, 0, false, i => $"file{i:x5}.anim"),
             _ => ((s, i) => "", 0, 0, false, i => $"file{i:x5}.dat"),
         };
@@ -294,6 +295,8 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
         // read header
         var header = r.ReadS<UopHeader>();
         if (header.Magic != UOP_MAGIC) throw new FormatException("BAD MAGIC");
+        var map = length < 0;
+        if (map) length = header.Count < 0 ? 0 : header.Count;
 
         // record count
         Count = idxLength > 0 ? idxLength : 0;
@@ -319,6 +322,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
                     Offset = (int)(record.Offset + record.HeaderLength),
                     FileSize = record.FileSize
                 };
+                if (map) { file.Flags = record.Flag; file.Tag = record.DecompressedLength; }
                 // load extra
                 if (!extra) continue;
                 r.Peek(z => {
@@ -377,6 +381,105 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
             return ((ulong)edi << 32) | eax;
         }
         return ((ulong)esi << 32) | eax;
+    }
+
+    /// <summary>Map UOP slices as one flat mul. <see cref="FileSource.Tag"/> (int) is the logical span; <see cref="FileSource.Flags"/> == 1 is zlib.</summary>
+    public static Stream OpenMap(BinaryArchive source) {
+        var parts = source.Files.OrderBy(x => x.Id).ToArray();
+        return new MapMulStream(source, parts);
+    }
+
+    sealed class MapMulStream : Stream {
+        readonly BinaryArchive source;
+        readonly FileSource[] parts;
+        readonly int[] spans;
+        readonly long[] starts;
+        readonly byte[][] cache;
+        readonly long length;
+        long position;
+
+        public MapMulStream(BinaryArchive source, FileSource[] parts) {
+            this.source = source;
+            this.parts = parts;
+            spans = new int[parts.Length];
+            starts = new long[parts.Length];
+            cache = new byte[parts.Length][];
+            long sum = 0;
+            for (var i = 0; i < parts.Length; i++) {
+                var file = parts[i];
+                var span = file.Tag is int n ? n : (int)file.FileSize;
+                spans[i] = span;
+                starts[i] = sum;
+                sum += span;
+            }
+            length = sum;
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => true;
+        public override bool CanWrite => false;
+        public override long Length => length;
+        public override long Position { get => position; set => position = value; }
+        public override void Flush() { }
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) {
+            position = origin switch {
+                SeekOrigin.Begin => offset,
+                SeekOrigin.Current => position + offset,
+                SeekOrigin.End => length + offset,
+                _ => throw new ArgumentOutOfRangeException(nameof(origin)),
+            };
+            return position;
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) {
+            if (count <= 0 || position >= length) return 0;
+            var want = (int)Math.Min(count, length - position);
+            var got = 0;
+            while (got < want) {
+                var index = PartAt(position);
+                if (index < 0) break;
+                var data = Part(index);
+                var local = (int)(position - starts[index]);
+                var n = want - got;
+                var room = spans[index] - local;
+                if (n > room) n = room;
+                var have = data.Length - local;
+                if (n > have) n = have;
+                if (n <= 0) break;
+                Buffer.BlockCopy(data, local, buffer, offset + got, n);
+                position += n;
+                got += n;
+            }
+            return got;
+        }
+
+        int PartAt(long pos) {
+            var lo = 0;
+            var hi = parts.Length - 1;
+            while (lo <= hi) {
+                var mid = lo + ((hi - lo) >> 1);
+                var start = starts[mid];
+                if (pos < start) hi = mid - 1;
+                else if (pos >= start + spans[mid]) lo = mid + 1;
+                else return mid;
+            }
+            return -1;
+        }
+
+        byte[] Part(int index) {
+            var got = cache[index];
+            if (got != null) return got;
+            var file = parts[index];
+            var span = spans[index];
+            got = source.ReaderT(r => {
+                r.Seek(file.Offset);
+                return file.Flags == 1 ? r.DecompressZlib((int)file.FileSize, span) : r.ReadBytes(span);
+            });
+            return cache[index] = got;
+        }
     }
 
     #endregion

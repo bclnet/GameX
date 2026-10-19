@@ -77,7 +77,7 @@ class EngineRenderer(Renderer):
         arc = self.db.archive
         self.gfx = arc.gfx
         query = self.db.query
-        self.engine = GodotOpenEngine(lambda queue: CellManager(query, queue, GodotCellBuilder(query, self.gfx)), False)
+        self.engine = GodotOpenEngine(lambda queue: CellManager(query, queue, query.createCellBuilder(arc, self.gfx)), False)
         self.engine.spawnPlayer(self.db)
 
     def update(self, deltaTime: float) -> None:

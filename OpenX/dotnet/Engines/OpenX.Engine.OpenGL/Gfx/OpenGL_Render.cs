@@ -980,7 +980,7 @@ public class EngineRenderer(IOpenGfx[] gfx, ISource source, object obj) : EginRe
     public override void Dispose() { base.Dispose(); Engine?.Dispose(); }
 
     public override void Start() {
-        Engine = new OpenGLOpenEngine(queue => new CellManager(Db.Query, queue, new OpenGLCellBuilder(Db.Archive, Db.Query, Gfx)), false);
+        Engine = new OpenGLOpenEngine(queue => new CellManager(Db.Query, queue, Db.Query.CreateCellBuilder<object, GLRenderMaterial, int, GfxShader>(Db.Archive, Gfx)), false);
         Engine.SpawnPlayer(Db).Wait();
     }
 

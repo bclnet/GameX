@@ -1,4 +1,4 @@
-import os, numpy as np
+import os, zlib, numpy as np
 from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
@@ -157,11 +157,14 @@ class Binary_UO(ArcBinaryT):
     UOP_MAGIC = 0x50594D
 
     def readUop(self, source: BinaryArchive, r: BinaryReader):
+        name = Path(source.binPath).name
         def parse_():
-            match source.binPath:
+            match name:
                 case 'artLegacyMUL.uop': return ('.tga', 0x14000, 0x13FDC, False, lambda i: f'land/file{i:05x}.land' if i < 0x4000 else f'art/file{i:05x}.art')
                 case 'gumpartLegacyMUL.uop': return (".tga", 0xFFFF, 0, True, lambda i: f'file{i:05x}.tex')
                 case 'soundLegacyMUL.uop': return (".dat", 0xFFF, 0, False, lambda i: f'file{i:05x}.wav')
+                # length < 0: count comes from the header. Hash is build/{stem}/{index:08}.dat.
+                case x if x.startswith('map'): return ('.dat', -1, 0, False, lambda i: f'file{i:05x}.dat')
                 case _: return (None, 0, 0, False, lambda i: f'file{i:05x}.dat')
         extension, length, idxLength, extra, pathFunc = parse_()
         uopPattern = Path(source.binPath).stem.lower()
@@ -169,6 +172,8 @@ class Binary_UO(ArcBinaryT):
         # read header
         header = r.readS(self.UopHeader)
         if header.magic != self.UOP_MAGIC: raise Exception('BAD MAGIC')
+        isMap = length < 0
+        if isMap: length = header.count if header.count >= 0 else 0
 
         # record count
         self.count = idxLength if idxLength > 0 else 0
@@ -194,6 +199,9 @@ class Binary_UO(ArcBinaryT):
                     path = pathFunc(idx),
                     offset = record.offset + record.headerLength,
                     fileSize = record.fileSize)
+                if isMap:
+                    file.flags = record.flag
+                    file.tag = record.decompressedLength
                 # load extra
                 if not extra: continue
                 def peek_(z):
@@ -288,6 +296,77 @@ class Binary_UO(ArcBinaryT):
             eax = ((esi ^ edi) - ((edi >> 8) ^ (edi << 24))) & 0xffffffff
             return (edi << 32) & 0xffffffffffffffff | eax
         return (esi << 32) & 0xffffffffffffffff | eax
+
+    # Flat mul over map slices. tag (int) is the logical span; flags == 1 is zlib.
+    def openMap(self, source):
+        return Binary_UO._MapMul(source)
+
+    class _MapMul:
+        def __init__(self, source):
+            self.source = source
+            self.parts = sorted(source.files, key=lambda f: f.id)
+            self.spans = []
+            self.starts = []
+            total = 0
+            for file in self.parts:
+                span = file.tag if type(file.tag) is int else file.fileSize
+                self.spans.append(span)
+                self.starts.append(total)
+                total += span
+            self.length = total
+            self.pos = 0
+            self.cache = [None] * len(self.parts)
+
+        def tell(self): return self.pos
+
+        def seek(self, offset, whence=0):
+            if whence == 0: self.pos = offset
+            elif whence == 1: self.pos += offset
+            elif whence == 2: self.pos = self.length + offset
+            else: raise Exception('bad whence')
+            return self.pos
+
+        def read(self, size=-1):
+            if size is None or size < 0: size = 0 if self.pos >= self.length else self.length - self.pos
+            if size == 0 or self.pos >= self.length: return b''
+            if self.pos + size > self.length: size = self.length - self.pos
+            chunks = []
+            left = size
+            while left > 0:
+                index = self._at(self.pos)
+                if index < 0: break
+                data = self._part(index)
+                local = self.pos - self.starts[index]
+                n = min(left, self.spans[index] - local, len(data) - local)
+                if n <= 0: break
+                chunks.append(data[local:local + n])
+                self.pos += n
+                left -= n
+            return b''.join(chunks)
+
+        def _at(self, pos):
+            lo = 0
+            hi = len(self.parts) - 1
+            while lo <= hi:
+                mid = lo + ((hi - lo) >> 1)
+                start = self.starts[mid]
+                if pos < start: hi = mid - 1
+                elif pos >= start + self.spans[mid]: lo = mid + 1
+                else: return mid
+            return -1
+
+        def _part(self, index):
+            got = self.cache[index]
+            if got is not None: return got
+            file = self.parts[index]
+            span = self.spans[index]
+            def load(r):
+                r.seek(file.offset)
+                if file.flags == 1: return zlib.decompress(r.readBytes(int(file.fileSize)))
+                return r.readBytes(int(span))
+            got = self.source.readerT(load)
+            self.cache[index] = got
+            return got
 
     #endregion
 

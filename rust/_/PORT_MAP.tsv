@@ -66,7 +66,7 @@ done	7116	bdd7cd1643b0ef97	Families/GameX.Bethesda/Formats/Records.cs	families/b
 todo	5	61fc3ac344602671	Families/GameX.Bethesda/Games/Database.cs	families/bethesda/src/games/database.rs	gamex-bethesda
 todo	3	ce409ef7cb08b1cf	Families/GameX.Bethesda/Games/DatabaseCell.cs	families/bethesda/src/games/database_cell.rs	gamex-bethesda
 todo	15	f0aa4b88287f55b0	Families/GameX.Bethesda/Games/DatabaseManager.cs	families/bethesda/src/games/database_manager.rs	gamex-bethesda
-todo	2	adc6fc307f767a32	Families/GameX.Bethesda/Managers.cs	families/bethesda/src/managers.rs	gamex-bethesda
+todo	33	4257260d9c402ed4	Families/GameX.Bethesda/Managers.cs	families/bethesda/src/managers.rs	gamex-bethesda
 todo	0	8ad72e54ae7fd44e	Families/GameX.Bethesda.Platform/Formats/ConvertUtils.cs	families/bethesda-platform/src/formats/convert_utils.rs	gamex-bethesda-platform
 todo	0	b26fd97811be9250	Families/GameX.Bethesda.Platform/Formats/Unity/GameObjectUtils.cs	families/bethesda-platform/src/formats/unity/game_object_utils.rs	gamex-bethesda-platform
 todo	0	d82d2122676598a2	Families/GameX.Bethesda.Platform/Formats/Unity/NifObjectBuilder.cs	families/bethesda-platform/src/formats/unity/nif_object_builder.rs	gamex-bethesda-platform

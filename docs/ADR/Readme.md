@@ -11,3 +11,5 @@ Decisions that shape how GameX is built, and why. Add a new numbered file for ea
 | [0004](0004-rust-ui-slint.md) | Rust UI is Slint, view for view with C#'s XAML | Superseded by 0005
 | [0005](0005-rust-ui-egui.md) | Rust UI is egui, view for view with C#'s XAML | Accepted
 | [0006](0006-review-rust-ui-2027.md) | Recheck the Rust UI choice by October 2027 | Accepted
+| [0007](0007-cell-shaping-stays-in-the-family.md) | Cell shaping stays in the family | Superseded in part by 0008
+| [0008](0008-create-land-stays-in-the-family.md) | CreateLand stays in the family | Accepted

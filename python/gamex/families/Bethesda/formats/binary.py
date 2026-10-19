@@ -7,6 +7,7 @@ from openx.core import log, Int3, IWriteToStream, CellManager, IDatabase
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.records import ITes3Name, FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord
+from gamex.families.Bethesda.managers import BethesdaCellBuilder
 
 # types
 type Vector3 = ndarray
@@ -439,7 +440,8 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
         def findLand(self, cell: Int3) -> object: return self._.LANDsById.get(cell)
         def findCell(self, cell: Int3) -> object: return self._.CELLsById.get(cell)
         def findCellByName(self, name: str) -> object: return self._.CELLsByName.get(name)
-    
+        def createCellBuilder(self, source, gfx): return BethesdaCellBuilder(source, self, gfx)
+
     class ElseCellQuery(CellManager.IQuery):
         def __init__(self, _: 'Binary_Esm'):
             self._ = _
@@ -464,6 +466,7 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
                     if cell in cellBlock.CELLsById: return cellBlock.CELLsById[cell]
             return None
         def findCellByName(self, name: str) -> object: raise Exception()
+        def createCellBuilder(self, source, gfx): return BethesdaCellBuilder(source, self, gfx)
 
     #endregion - end::Binary_Esm.cellQuery[]
 

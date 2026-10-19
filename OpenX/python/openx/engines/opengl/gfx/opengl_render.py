@@ -596,7 +596,7 @@ class EngineRenderer(EginRenderer):
         if self.engine: self.engine.dispose()
 
     def start(self) -> None:
-        self.engine = OpenGLOpenEngine(lambda queue: CellManager(self.db.query, queue, OpenGLCellBuilder(self.db.archive, self.db.query, self.gfx)), False)
+        self.engine = OpenGLOpenEngine(lambda queue: CellManager(self.db.query, queue, self.db.query.createCellBuilder(self.db.archive, self.gfx)), False)
         asyncio.run(self.engine.spawnPlayer(self.db))
 
     def update(self, deltaTime: float) -> None:

@@ -52,9 +52,9 @@ public partial class FamilyManager {
 
 #if Arkane
     public static GlobalOption Option = new() {
-        Engine = "GL",
+        Engine = "VK",
         ForceOpen = true,
-        ForcePath = "sample:2",
+        ForcePath = "sample:1",
         Family = "Arkane",
         Game = "AF", // Arx Fatalis
         //Game = "DOM", // Dark Messiah of Might and Magic [source]

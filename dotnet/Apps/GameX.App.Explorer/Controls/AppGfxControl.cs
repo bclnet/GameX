@@ -6,6 +6,7 @@ using GameX.Engines.Sdl;
 using GameX.Engines.Stride;
 using GameX.Engines.Unity;
 using GameX.Engines.Unreal;
+using GameX.Engines.Vk;
 using OpenX;
 using OpenX.Gfx;
 using OpenX.Wpf.Control;
@@ -14,6 +15,10 @@ namespace GameX.App.Explorer.Controls;
 
 public class AppOpenGLControl() : OpenGLControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => OpenGLRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
+}
+
+public class AppVkControl() : OpenGLControl(ShellState.Create) {
+    protected override Renderer CreateRenderer() => VkRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
 }
 
 public class AppGodotControl() : GodotControl(ShellState.Create) {

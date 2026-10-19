@@ -1,0 +1,21 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "GameX Unreal Bridge",
+	"Description": "Loads GameX.Unreal.CliBridge.dll. MSBuild builds that mixed DLL. UnrealBuildTool compiles only this ISO C++ module.",
+	"Category": "GameX",
+	"CreatedBy": "GameX",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "GameXUnrealBridge",
+			"Type": "Runtime",
+			"LoadingPhase": "PostEngineInit",
+			"PlatformAllowList": [ "Win64" ],
+			"WhitelistPlatforms": [ "Win64" ]
+		}
+	]
+}

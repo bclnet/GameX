@@ -2,8 +2,7 @@
 // PORT-STATUS: partial
 //
 // Ported: source-change `Start` and `Tick` `Update`.
-// Not ported: WPF dependency properties and `CompositionTarget.Rendering`.
-// No surface: ADR 0009 leaves the C# loader until a window is written.
+// Not ported: WPF dependency properties, `CompositionTarget.Rendering`, and the C# present path (ADR 0010).
 // eframe is OpenGL, so this control does not paint. `Select` stays with
 // the caller; `id` starts at 0.
 

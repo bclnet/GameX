@@ -198,12 +198,17 @@ class Binary_UO(ArcBinaryT):
                     id = idx,
                     path = pathFunc(idx),
                     offset = record.offset + record.headerLength,
-                    fileSize = record.fileSize)
+                    fileSize = record.compressedLength if record.flag == 3 else record.fileSize)
+                # Flag 3 is zlib then BWT (client 7.0.104+). Width and height sit in that payload.
+                if record.flag == 3:
+                    file.flags = 3
+                    file.packedSize = record.compressedLength
+                    file.tag = record.decompressedLength
                 if isMap:
                     file.flags = record.flag
                     file.tag = record.decompressedLength
                 # load extra
-                if not extra: continue
+                if not extra or record.flag == 3: continue
                 def peek_(z):
                     r.seek(file.offset)
                     extra = r.readBytes(8)
@@ -440,7 +445,105 @@ class Binary_UO(ArcBinaryT):
         if file.offset < 0: return None
         fileSize = file.fileSize & 0x7FFFFFFF
         if (file.fileSize & (1 << 31)) != 0: return Binary_Verdata.instance.readData(file.offset, fileSize)
+        if file.flags == 3: return self.readZlibBwt(r, file)
         r.seek(file.offset)
         return BytesIO(r.readBytes(fileSize))
+
+    # UOP flag 3. Inflate, then the BWT. The first eight bytes are width and height.
+    def readZlibBwt(self, r: BinaryReader, file: FileSource):
+        compLen = file.packedSize or 0
+        if compLen <= 0: return None
+        r.seek(file.offset)
+        inflated = zlib.decompress(r.readBytes(compLen))
+        raw = self.zlibBwtDecode(inflated)
+        if raw is None or len(raw) < 8: return None
+        w = int.from_bytes(raw[0:4], 'little', signed = True)
+        h = int.from_bytes(raw[4:8], 'little', signed = True)
+        if w <= 0 or h <= 0 or w > 4096 or h > 4096: return None
+        pixels = raw[8:]
+        file.compressed = (w << 16) | (h & 0xFFFF)
+        file.fileSize = len(pixels)
+        return BytesIO(pixels)
+
+    @staticmethod
+    def zlibBwtDecode(buffer: bytes):
+        if buffer is None or len(buffer) < 6: return None
+        table = [0] * (256 * 256)
+        first = buffer[4]
+        lo = first
+        hi = 0
+        for i in range(len(table)):
+            table[i] = lo | (hi << 8)
+            lo = (lo + 1) & 0xFF
+            if lo == 0: hi = (hi + 1) & 0xFF
+        table.sort()
+        lst = bytearray(len(buffer) - 4)
+        pos = 5
+        n = 0
+        while pos < len(buffer):
+            current = first
+            value = table[current]
+            if current > 0:
+                while True:
+                    table[current] = table[current - 1]
+                    current -= 1
+                    if current <= 0: break
+            table[0] = value
+            lst[n] = value & 0xFF
+            n += 1
+            first = buffer[pos]
+            pos += 1
+        return Binary_UO.bwtExpand(lst)
+
+    @staticmethod
+    def bwtExpand(input):
+        if input is None or len(input) < 1024: return None
+        partial = [int.from_bytes(input[i * 4:i * 4 + 4], 'little', signed = True) for i in range(256)]
+        partial += [0] * (256 * 2)
+        total = sum(partial[i] for i in range(256))
+        if total <= 0: return None
+        tmp = partial[:256]
+        nonZero = sum(1 for i in range(256) if partial[i] != 0)
+        frequency = [0] * 256
+        for i in range(256):
+            value = 0
+            index = 0
+            for j in range(256):
+                if tmp[j] > value:
+                    index = j
+                    value = tmp[j]
+            if value == 0: break
+            frequency[i] = index
+            tmp[index] = 0
+        symbol = list(range(256))
+        m = 0
+        for i in range(nonZero):
+            freq = frequency[i]
+            at = m + 1024
+            if at >= len(input): return None
+            symbol[input[at]] = freq
+            partial[freq + 256] = m + 1
+            m += partial[freq]
+            partial[freq + 512] = m
+        val = symbol[0]
+        output = bytearray(total)
+        for count in range(total):
+            firstVal = partial[val + 256]
+            output[count] = val & 0xFF
+            if firstVal >= partial[val + 512]:
+                nonZero -= 1
+                if nonZero > 0:
+                    for i in range(nonZero): symbol[i] = symbol[i + 1]
+                    val = symbol[0]
+            else:
+                at = firstVal + 1024
+                if at >= len(input): return None
+                idx = input[at]
+                partial[val + 256] = firstVal + 1
+                if idx != 0:
+                    for i in range(idx): symbol[i] = symbol[i + 1]
+                    symbol[idx] = val
+                    val = symbol[0]
+        return bytes(output)
 
 #endregion

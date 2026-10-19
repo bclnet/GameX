@@ -23,7 +23,7 @@ public enum LoginSteps {
 /// <summary>
 /// ClassicUO's LoginScene. SceneBase so MgClientHost.SetScene can run it.
 /// Load builds the login gumps. It does not play music, resize to 640x480, or open a socket.
-/// Draw walks the gump tree and asks GumpArt.Sink to paint gump art. Text, music, and the socket are still absent.
+/// Draw walks the gump tree and asks GumpArt.Sink to paint gump art.
 /// </summary>
 public sealed class LoginScene : SceneBase {
     readonly World _world;
@@ -88,6 +88,31 @@ public sealed class LoginScene : SceneBase {
         finally { sink?.End(); }
     }
 
+    public override void OnMouseMove(int x, int y) {
+        UIManager.OnMouseMove(x, y);
+        base.OnMouseMove(x, y);
+    }
+
+    public override bool OnMouseDown(int button, int x, int y)
+        => UIManager.OnMouseDown(button, x, y) || base.OnMouseDown(button, x, y);
+
+    public override bool OnMouseUp(int button, int x, int y)
+        => UIManager.OnMouseUp(button, x, y) || base.OnMouseUp(button, x, y);
+
+    public override bool OnMouseDoubleClick(int button, int x, int y)
+        => UIManager.OnMouseDoubleClick(button, x, y) || base.OnMouseDoubleClick(button, x, y);
+
+    public override bool OnKeyDown(int key, int mod)
+        => UIManager.OnKeyDown(key, mod) || base.OnKeyDown(key, mod);
+
+    public override bool OnKeyUp(int key, int mod)
+        => UIManager.OnKeyUp(key, mod) || base.OnKeyUp(key, mod);
+
+    public override void OnTextInput(string text) {
+        UIManager.OnTextInput(text);
+        base.OnTextInput(text);
+    }
+
     /// <summary>
     /// Stores the account from LoginGump. Does not open a socket.
     /// </summary>
@@ -97,8 +122,18 @@ public sealed class LoginScene : SceneBase {
         _autoLogin = autoLogin;
     }
 
-    // Character, server, and loading gumps are not in this project yet.
-    Gump GumpForStep() => CurrentLoginStep == LoginSteps.Main ? new LoginGump(_world, this) : null;
+    /// <summary>
+    /// Appends a character name. Ignores null or whitespace. Does not send a packet.
+    /// </summary>
+    internal void AddCharacter(string name) {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        Characters = [..(Characters ?? []), name];
+    }
+
+    // Main is LoginGump.
+    Gump GumpForStep() => CurrentLoginStep == LoginSteps.Main
+        ? new LoginGump(_world, this)
+        : LoginStepGumps.Create(CurrentLoginStep, _world, this);
 }
 
 /// <summary>

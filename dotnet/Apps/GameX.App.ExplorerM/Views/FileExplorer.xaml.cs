@@ -10,6 +10,16 @@ public partial class FileExplorer : ContentView {
         InitializeComponent();
         Current = this;
         BindingContext = this;
+        Loaded += (_, _) => PullArchive();
+    }
+
+    // BindingContext is this view, so walk up to the tab that owns the archive.
+    void PullArchive() {
+        for (Element node = Parent; node != null; node = node.Parent)
+            if (node.BindingContext is MainPageTab tab && tab.Archive != null) {
+                if (!ReferenceEquals(Archive, tab.Archive)) Archive = tab.Archive;
+                return;
+            }
     }
 
     public static readonly BindableProperty ArchiveProperty = BindableProperty.Create(nameof(Archive), typeof(Archive), typeof(FileExplorer),
@@ -19,21 +29,9 @@ public partial class FileExplorer : ContentView {
             fileExplorer.Nodes = fileExplorer.ArcNodes = archive.GetMetaItems(Resource);
             fileExplorer.Ready(archive);
         });
-    //public Archive Archive
-    //{
-    //    get => (Archive)GetValue(ArchiveProperty);
-    //    set => SetValue(ArchiveProperty, value);
-    //}
-
-    Archive _archive;
     public Archive Archive {
-        get => _archive;
-        set {
-            _archive = value; OnPropertyChanged();
-            Filters = _archive.GetMetaFilters(Resource);
-            Nodes = ArcNodes = _archive.GetMetaItems(Resource);
-            Ready(_archive);
-        }
+        get => (Archive)GetValue(ArchiveProperty);
+        set => SetValue(ArchiveProperty, value);
     }
 
     List<MetaItem.Filter> _filters;

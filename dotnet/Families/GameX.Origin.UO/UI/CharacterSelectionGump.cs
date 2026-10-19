@@ -6,10 +6,13 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO CharacterSelectionGump. Shows scene.Characters, or no rows when that array is null.
-/// Next does not select a character and does not open a socket.
+/// Next enters Britannia when a named character exists. New opens the creation shell. No socket.
 /// </summary>
 public class CharacterSelectionGump : Gump {
+    readonly LoginScene _scene;
+
     public CharacterSelectionGump(World world, LoginScene scene) : base(world, 0, 0) {
+        _scene = scene;
         CanCloseWithRightClick = false;
         AcceptKeyboardInput = false;
 
@@ -41,10 +44,9 @@ public class CharacterSelectionGump : Gump {
             pos++;
         }
 
-        if (scene.Characters != null)
-            Add(new Button((int)Buttons.New, 0x159D, 0x159F, 0x159E) {
-                X = 224, Y = 350 + yBonus, ButtonAction = ButtonAction.Activate,
-            });
+        Add(new Button((int)Buttons.New, 0x159D, 0x159F, 0x159E) {
+            X = 224, Y = 350 + yBonus, ButtonAction = ButtonAction.Activate,
+        });
         Add(new Button((int)Buttons.Delete, 0x159A, 0x159C, 0x159B) {
             X = 442, Y = 350 + yBonus, ButtonAction = ButtonAction.Activate,
         });
@@ -58,11 +60,20 @@ public class CharacterSelectionGump : Gump {
 
     public override void OnButtonClick(int buttonID) {
         switch ((Buttons)buttonID) {
-            case Buttons.Next:
             case Buttons.New:
-            case Buttons.Delete:
+                _scene.CurrentLoginStep = LoginSteps.CharacterCreation;
+                break;
             case Buttons.Prev:
-                // Stores nothing. No socket.
+                _scene.CurrentLoginStep = LoginSteps.ServerSelection;
+                break;
+            case Buttons.Next:
+                var characters = _scene.Characters;
+                if (characters == null) return;
+                for (var i = 0; i < characters.Length; i++) {
+                    if (string.IsNullOrEmpty(characters[i])) continue;
+                    _scene.CurrentLoginStep = LoginSteps.EnteringBritania;
+                    return;
+                }
                 break;
         }
     }

@@ -28,7 +28,27 @@ public partial class MainPage : ContentPage {
     }
 
     // https://dev.to/davidortinau/making-a-tabbar-or-segmentedcontrol-in-net-maui-54ha
-    void MainTab_Changed(object sender, CheckedChangedEventArgs e) => MainTabContent.BindingContext = ((RadioButton)sender).BindingContext;
+    void MainTab_Changed(object sender, CheckedChangedEventArgs e) {
+        if (e.Value && ((RadioButton)sender).BindingContext is MainPageTab tab) ShowTab(tab);
+    }
+
+    void ShowTab(MainPageTab tab) {
+        if (tab == null) return;
+        MainTabContent.BindingContext = tab;
+        var key = tab.Archive == null ? "TTextBlock" : tab.AppList != null ? "TAppList" : "TFileExplorer";
+        if (Root.Resources[key] is ControlTemplate template && MainTabContent.ControlTemplate != template)
+            MainTabContent.ControlTemplate = template;
+        ApplyArchive(tab);
+        Dispatcher.Dispatch(() => ApplyArchive(tab));
+    }
+
+    // FileExplorer sets its own BindingContext, so the template binding can miss the tab archive.
+    void ApplyArchive(MainPageTab tab) {
+        if (tab?.Archive == null) return;
+        foreach (var child in MainTabContent.GetVisualTreeDescendants())
+            if (child is FileExplorer explorer && !ReferenceEquals(explorer.Archive, tab.Archive))
+                explorer.Archive = tab.Archive;
+    }
 
     public MainPage Open(Family family, IEnumerable<Uri> uris, string path = null) {
         foreach (var archive in Archives) archive?.Dispose();
@@ -45,7 +65,7 @@ public partial class MainPage : ContentPage {
         return this;
     }
 
-    public void SetPlatform(Engine platform) {
+    public void SetEngine(Engine platform) {
         EngineX.Activate(platform);
         FileContent.SetEngine(platform);
     }
@@ -62,16 +82,21 @@ public partial class MainPage : ContentPage {
     //    set => SetValue(PlatformProperty, value);
     //}
 
-    IList<Engine> _platforms;
+    IList<Engine> _engines;
     public IList<Engine> Engines {
-        get => _platforms;
-        set { _platforms = value; OnPropertyChanged(); }
+        get => _engines;
+        set { _engines = value; OnPropertyChanged(); }
     }
 
     public static readonly BindableProperty MainTabsProperty = BindableProperty.Create(nameof(MainTabs), typeof(IList<MainPageTab>), typeof(MainPage),
         propertyChanged: (d, e, n) => {
-            var mainTab = ((MainPage)d).MainTab;
-            if (mainTab.Children.FirstOrDefault() is RadioButton firstTab) firstTab.IsChecked = true;
+            var page = (MainPage)d;
+            if (n is not IList<MainPageTab> tabs || tabs.Count == 0) return;
+            page.ShowTab(tabs[0]);
+            page.Dispatcher.Dispatch(() => {
+                if (page.MainTab.Children.FirstOrDefault() is RadioButton firstTab && !firstTab.IsChecked)
+                    firstTab.IsChecked = true;
+            });
         });
     public IList<MainPageTab> MainTabs {
         get => (IList<MainPageTab>)GetValue(MainTabsProperty);
@@ -108,7 +133,7 @@ public partial class MainPage : ContentPage {
 
     void Engine_SelectionChanged(object sender, EventArgs e) {
         var selected = (Engine)Engine.SelectedItem;
-        SetPlatform(selected);
+        SetEngine(selected);
     }
 
     internal void App_Click(object sender, EventArgs e) {

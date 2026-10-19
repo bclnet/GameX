@@ -24,7 +24,7 @@ class BasicXEffect : Effect {
         CurrentTechnique = Techniques["HueTechnique"];
         Pass = CurrentTechnique.Passes[0];
     }
-    static byte[] GetShader() { using var ms = typeof(BasicXEffect).Assembly.GetManifestResourceStream("OpenX.Engine.Mg.Name.shaders.IsometricWorld.fxc"); var b = new byte[ms.Length]; ms.ReadExactly(b); return b; }
+    static byte[] GetShader() { using var ms = typeof(BasicXEffect).Assembly.GetManifestResourceStream("OpenX.Engine.Mg.NameMe.shaders.IsometricWorld.fxc"); var b = new byte[ms.Length]; ms.ReadExactly(b); return b; }
 }
 
 public class XbrEffect : Effect {
@@ -34,7 +34,7 @@ public class XbrEffect : Effect {
         MatrixTransform = Parameters["MatrixTransform"];
         TextureSize = Parameters["textureSize"];
     }
-    static byte[] GetShader() { using var ms = typeof(BasicXEffect).Assembly.GetManifestResourceStream("OpenX.Engine.Mg.Name.shaders.xBR.fxc"); var b = new byte[ms.Length]; ms.ReadExactly(b); return b; }
+    static byte[] GetShader() { using var ms = typeof(BasicXEffect).Assembly.GetManifestResourceStream("OpenX.Engine.Mg.NameMe.shaders.xBR.fxc"); var b = new byte[ms.Length]; ms.ReadExactly(b); return b; }
 }
 
 #endregion

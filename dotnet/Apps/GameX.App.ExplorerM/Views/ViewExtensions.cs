@@ -4,7 +4,8 @@ using TreeView.Maui.Core;
 namespace GameX.App.Explorer.Views;
 
 public class MetaItemToViewModel : IValueConverter {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ToTreeNodes((IEnumerable<MetaItem>)value);
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is IEnumerable<MetaItem> source ? ToTreeNodes(source).ToList() : null;
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
     static IEnumerable<IHasChildrenTreeViewNode> ToTreeNodes(IEnumerable<MetaItem> source) {
         if (source == null) yield break;
@@ -17,7 +18,8 @@ public class MetaItemToViewModel : IValueConverter {
 }
 
 public class MetaInfoToViewModel : IValueConverter {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => ToTreeNodes((IEnumerable<MetaInfo>)value);
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is IEnumerable<MetaInfo> source ? ToTreeNodes(source).ToList() : null;
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
     static IEnumerable<IHasChildrenTreeViewNode> ToTreeNodes(IEnumerable<MetaInfo> source) {
         if (source == null) yield break;

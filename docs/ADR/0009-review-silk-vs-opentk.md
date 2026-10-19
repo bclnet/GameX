@@ -1,7 +1,7 @@
 ADR 0009: Recheck Silk.NET.Vulkan against OpenTK
 ===
 
-* **Status:** Accepted
+* **Status:** Superseded in part by [ADR 0010](0010-wpf-vulkan-surface-stays-on-silk.md). The windowless instance stays on Silk until 2027-10-19. The WPF surface is no longer deferred.
 * **Date:** 2026-10-19
 * **Review by:** 2027-10-19
 

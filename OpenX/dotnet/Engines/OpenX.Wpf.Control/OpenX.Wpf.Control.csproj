@@ -22,6 +22,7 @@
 		<ProjectReference Include="..\OpenX.Engine.OpenGL\OpenX.Engine.OpenGL.csproj" />
 		<ProjectReference Include="..\OpenX.Engine.Sdl\OpenX.Engine.Sdl.csproj" />
 		<ProjectReference Include="..\OpenX.Engine.Unity\OpenX.Engine.Unity.csproj" />
+		<ProjectReference Include="..\OpenX.Engine.Vulkan\OpenX.Engine.Vulkan.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -6,10 +6,13 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO ServerSelectionGump. LoginScene has no server list, so the names can be empty.
-/// The next arrow stores nothing and does not open a socket. No ping.
+/// Next and Earth go to character selection. Prev goes to Main. No ping, no socket.
 /// </summary>
 public class ServerSelectionGump : Gump {
-    public ServerSelectionGump(World world) : base(world, 0, 0) {
+    readonly LoginScene _scene;
+
+    public ServerSelectionGump(World world, LoginScene scene) : base(world, 0, 0) {
+        _scene = scene;
         CanCloseWithRightClick = false;
         AcceptKeyboardInput = false;
 
@@ -63,9 +66,12 @@ public class ServerSelectionGump : Gump {
 
     public override void OnButtonClick(int buttonID) {
         switch ((Buttons)buttonID) {
+            case Buttons.Prev:
+                _scene.CurrentLoginStep = LoginSteps.Main;
+                break;
             case Buttons.Next:
             case Buttons.Earth:
-                // Stores nothing. No socket.
+                _scene.CurrentLoginStep = LoginSteps.CharacterSelection;
                 break;
         }
     }

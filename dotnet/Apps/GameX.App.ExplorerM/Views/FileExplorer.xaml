@@ -3,44 +3,47 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:t="clr-namespace:TreeView.Maui.Controls;assembly=TreeView.Maui"
              xmlns:tx="clr-namespace:TreeView.Maui.Core;assembly=TreeView.Maui"
-             xmlns:model="clr-namespace:GameX;assembly=GameX"
              xmlns:views="clr-namespace:GameX.App.Explorer.Views"
              x:Class="GameX.App.Explorer.Views.FileExplorer">
     <ContentView.Resources>
         <views:MetaItemToViewModel x:Key="metaItemToViewModel" />
         <views:MetaInfoToViewModel x:Key="metaInfoToViewModel" />
     </ContentView.Resources>
-    <Grid RowDefinitions="25,.8*,.2*">
+    <Grid RowDefinitions="Auto,.7*,.3*">
         <HorizontalStackLayout Grid.Row="0" BackgroundColor="DarkGrey">
-            <Label Text="File Filter" />
+            <Label Text="File Filter" TextColor="White" />
             <Picker x:Name="Filter" ItemsSource="{Binding Filters, x:DataType=views:FileExplorer}" SelectedIndexChanged="OnFilterSelected" />
         </HorizontalStackLayout>
         <ScrollView Grid.Row="1" BackgroundColor="LightGray">
-            <t:TreeView x:Name="Node" ItemsSource="{Binding Path=Nodes, x:DataType=views:FileExplorer, Converter={StaticResource metaItemToViewModel}}">
-                <t:TreeView.ItemTemplate>
-                    <DataTemplate>
-                        <HorizontalStackLayout>
-                            <!--<Image Source="{Binding Icon, x:DataType=views:FileExplorer}" />-->
-                            <Label Text="{Binding Name, x:DataType=tx:TreeViewNode}">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnNodeSelected" CommandParameter="{Binding Value, x:DataType=tx:TreeViewNode}" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                        </HorizontalStackLayout>
-                    </DataTemplate>
-                </t:TreeView.ItemTemplate>
-            </t:TreeView>
+            <VerticalStackLayout>
+                <t:TreeView x:Name="Node" VerticalOptions="Start" ItemsSource="{Binding Path=Nodes, x:DataType=views:FileExplorer, Converter={StaticResource metaItemToViewModel}}">
+                    <t:TreeView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout>
+                                <!--<Image Source="{Binding Icon, x:DataType=views:FileExplorer}" />-->
+                                <Label Text="{Binding Name, x:DataType=tx:TreeViewNode}" TextColor="Black" VerticalOptions="Center">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnNodeSelected" CommandParameter="{Binding Value, x:DataType=tx:TreeViewNode}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </t:TreeView.ItemTemplate>
+                </t:TreeView>
+            </VerticalStackLayout>
         </ScrollView>
-        <ScrollView>
-            <t:TreeView x:Name="Info" Grid.Row="2" BackgroundColor="DarkGrey" ItemsSource="{Binding Path=Infos, x:DataType=views:FileExplorer, Converter={StaticResource metaInfoToViewModel}}">
-                <t:TreeView.ItemTemplate>
-                    <DataTemplate>
-                        <HorizontalStackLayout>
-                            <Label Text="{Binding Name, x:DataType=model:MetaInfo}" />
-                        </HorizontalStackLayout>
-                    </DataTemplate>
-                </t:TreeView.ItemTemplate>
-            </t:TreeView>
+        <ScrollView Grid.Row="2" BackgroundColor="DarkGrey">
+            <VerticalStackLayout>
+                <t:TreeView x:Name="Info" VerticalOptions="Start" ItemsSource="{Binding Path=Infos, x:DataType=views:FileExplorer, Converter={StaticResource metaInfoToViewModel}}">
+                    <t:TreeView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout>
+                                <Label Text="{Binding Name, x:DataType=tx:TreeViewNode}" TextColor="White" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </t:TreeView.ItemTemplate>
+                </t:TreeView>
+            </VerticalStackLayout>
         </ScrollView>
     </Grid>
 </ContentView>

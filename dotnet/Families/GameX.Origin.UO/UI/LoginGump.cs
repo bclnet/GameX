@@ -8,7 +8,7 @@ namespace GameX.Origin.UO;
 /// <summary>
 /// ClassicUO LoginGump for the main login step.
 /// No settings file, no StbTextBox, no HTML links, no music slider.
-/// Next arrow stores the account on the scene and does not open a socket.
+/// Next arrow reads Login.cfg and calls UOLoginNet.Begin; encryption is still not applied.
 /// </summary>
 public class LoginGump : Gump {
     readonly LoginScene _scene;
@@ -133,6 +133,9 @@ public class LoginGump : Gump {
     void Submit() {
         if (_account == null || _account.IsDisposed) return;
         _scene.RememberLogin(_account.Text, _password?.Text, _auto != null && !_auto.IsDisposed && _auto.IsChecked);
+        if (!UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) return;
+        _scene.CurrentLoginStep = LoginSteps.Connecting;
+        UOLoginNet.Begin(host, port, _account.Text, _password?.Text);
     }
 
     static void FocusHue(TextBox box) {

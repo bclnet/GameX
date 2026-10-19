@@ -32,15 +32,25 @@ public sealed class UoGumpArt : IGumpArt {
 
     public void End() => _batch.End();
 
-    public void Draw(ushort graphic, int x, int y, int destWidth, int destHeight, byte[] pixels1555, int srcWidth, int srcHeight, bool tile) {
+    /// <summary>
+    /// hue 0 is Color.White. Any other hue multiplies RGB by its low 5 bits (0..31 over 31), same as DrawText.
+    /// This is not a hues.mul lookup and not a partial-hue shader. IsPartialHue is unused.
+    /// The tint is the SpriteBatch color; the cache key stays the graphic.
+    /// </summary>
+    public void Draw(ushort graphic, int x, int y, int destWidth, int destHeight, byte[] pixels1555, int srcWidth, int srcHeight, bool tile, ushort hue = 0) {
         if (destWidth <= 0 || destHeight <= 0) return;
         if (!_cache.TryGetValue(graphic, out var tex)) {
             tex = Upload(pixels1555, srcWidth, srcHeight);
             if (tex == null) return;
             _cache[graphic] = tex;
         }
-        if (tile) DrawTiled(tex, x, y, destWidth, destHeight);
-        else _batch.Draw(tex, new Rectangle(x, y, destWidth, destHeight), Color.White);
+        var color = Color.White;
+        if (hue != 0) {
+            var scale = (hue & 31) * 255 / 31;
+            color = new Color(scale, scale, scale, 255);
+        }
+        if (tile) DrawTiled(tex, x, y, destWidth, destHeight, color);
+        else _batch.Draw(tex, new Rectangle(x, y, destWidth, destHeight), color);
     }
 
     /// <summary>
@@ -82,7 +92,7 @@ public sealed class UoGumpArt : IGumpArt {
         return tex;
     }
 
-    void DrawTiled(Texture2D tex, int x, int y, int destWidth, int destHeight) {
+    void DrawTiled(Texture2D tex, int x, int y, int destWidth, int destHeight, Color color) {
         var srcW = tex.Width;
         var srcH = tex.Height;
         if (srcW <= 0 || srcH <= 0) return;
@@ -92,7 +102,7 @@ public sealed class UoGumpArt : IGumpArt {
             var th = Math.Min(srcH, destBottom - py);
             for (var px = x; px < destRight; px += srcW) {
                 var tw = Math.Min(srcW, destRight - px);
-                _batch.Draw(tex, new Rectangle(px, py, tw, th), new Rectangle(0, 0, tw, th), Color.White);
+                _batch.Draw(tex, new Rectangle(px, py, tw, th), new Rectangle(0, 0, tw, th), color);
             }
         }
     }

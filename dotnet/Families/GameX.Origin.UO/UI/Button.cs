@@ -7,7 +7,7 @@ public enum ButtonAction { Default = 0, SwitchPage = 0, Activate = 1 }
 
 /// <summary>
 /// ClassicUO Button. The normal graphic's index size is the control size.
-/// No caption texture. Mouse hits are not delivered by the host.
+/// No caption texture. A left click calls OnButtonClick(ButtonID).
 /// </summary>
 public class Button : Control {
     ushort _normal, _pressed, _over;

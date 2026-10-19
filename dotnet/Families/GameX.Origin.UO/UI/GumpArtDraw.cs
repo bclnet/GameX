@@ -6,7 +6,7 @@ namespace GameX.Origin.UO;
 /// Hands decoded gump pixels to the host painter. This project does not upload Texture2D.
 /// </summary>
 internal static class GumpArtDraw {
-    public static void Pic(ushort graphic, int x, int y, int destW, int destH, bool tile) {
+    public static void Pic(ushort graphic, int x, int y, int destW, int destH, bool tile, ushort hue = 0) {
         var sink = GumpArt.Sink;
         var assets = UltimaOnline.Current?.Assets;
         if (sink == null || assets == null) return;
@@ -14,6 +14,6 @@ internal static class GumpArtDraw {
         if (!assets.TryGumpPixels(graphic, out var px, out var sw, out var sh)) return;
         if (destW <= 0) destW = sw;
         if (destH <= 0) destH = sh;
-        sink.Draw(graphic, x, y, destW, destH, px, sw, sh, tile);
+        sink.Draw(graphic, x, y, destW, destH, px, sw, sh, tile, hue);
     }
 }

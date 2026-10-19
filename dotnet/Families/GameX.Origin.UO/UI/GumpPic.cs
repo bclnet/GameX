@@ -39,7 +39,7 @@ public class GumpPic : GumpPicBase {
 
     public override bool Draw(int x, int y) {
         if (IsDisposed || !IsVisible) return false;
-        GumpArtDraw.Pic(Graphic, x, y, Width, Height, false);
+        GumpArtDraw.Pic(Graphic, x, y, Width, Height, false, Hue);
         return base.Draw(x, y);
     }
 }
@@ -79,7 +79,7 @@ public class GumpPicTiled : Control {
 
     public override bool Draw(int x, int y) {
         if (IsDisposed || !IsVisible) return false;
-        GumpArtDraw.Pic(Graphic, x, y, Width, Height, true);
+        GumpArtDraw.Pic(Graphic, x, y, Width, Height, true, Hue);
         return base.Draw(x, y);
     }
 }

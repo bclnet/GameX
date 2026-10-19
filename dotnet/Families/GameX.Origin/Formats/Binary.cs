@@ -320,11 +320,17 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
                     Id = idx,
                     Path = pathFunc(idx),
                     Offset = (int)(record.Offset + record.HeaderLength),
-                    FileSize = record.FileSize
+                    FileSize = record.Flag == 3 ? record.CompressedLength : record.FileSize
                 };
+                // Flag 3 is zlib then BWT (client 7.0.104+). Width and height sit in that payload, not in front of it.
+                if (record.Flag == 3) {
+                    file.Flags = 3;
+                    file.PackedSize = record.CompressedLength;
+                    file.Tag = record.DecompressedLength;
+                }
                 if (map) { file.Flags = record.Flag; file.Tag = record.DecompressedLength; }
                 // load extra
-                if (!extra) continue;
+                if (!extra || record.Flag == 3) continue;
                 r.Peek(z => {
                     r.Seek(file.Offset);
                     var extra = r.ReadBytes(8);
@@ -579,8 +585,117 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);
         if ((file.FileSize & (1 << 31)) != 0) return Task.FromResult<Stream>(Binary_Verdata.Current.ReadData(file.Offset, fileSize));
+        if (file.Flags == 3) return Task.FromResult(ReadZlibBwt(r, file));
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes(fileSize)));
+    }
+
+    /// <summary>
+    /// UOP flag 3. Inflate, then the BWT. The first eight bytes are width and height.
+    /// Map slices use flag 1 and do not come through here.
+    /// </summary>
+    static Stream ReadZlibBwt(BinaryReader r, FileSource file) {
+        var compLen = (int)file.PackedSize;
+        if (compLen <= 0) return null;
+        r.Seek(file.Offset);
+        var inflated = r.DecompressZlib(compLen, file.Tag is int n ? n : 0);
+        var raw = ZlibBwtDecode(inflated);
+        if (raw == null || raw.Length < 8) return null;
+        var w = BitConverter.ToInt32(raw, 0);
+        var h = BitConverter.ToInt32(raw, 4);
+        if (w <= 0 || h <= 0 || w > 4096 || h > 4096) return null;
+        var pixels = new byte[raw.Length - 8];
+        Buffer.BlockCopy(raw, 8, pixels, 0, pixels.Length);
+        file.Compressed = (w << 16) | (h & 0xFFFF);
+        file.FileSize = pixels.Length;
+        return new MemoryStream(pixels);
+    }
+
+    static byte[] ZlibBwtDecode(byte[] buffer) {
+        if (buffer == null || buffer.Length < 6) return null;
+        var table = new ushort[256 * 256];
+        var first = buffer[4];
+        var lo = first;
+        byte hi = 0;
+        for (var i = 0; i < table.Length; i++) {
+            table[i] = (ushort)(lo | (hi << 8));
+            lo++;
+            if (lo == 0) hi++;
+        }
+        Array.Sort(table);
+        var list = new byte[buffer.Length - 4];
+        var pos = 5;
+        var n = 0;
+        while (pos < buffer.Length) {
+            var current = first;
+            var value = table[current];
+            if (current > 0)
+                do { table[current] = table[current - 1]; }
+                while (--current > 0);
+            table[0] = value;
+            list[n++] = (byte)value;
+            first = buffer[pos++];
+        }
+        return BwtExpand(list);
+    }
+
+    static byte[] BwtExpand(byte[] input) {
+        if (input == null || input.Length < 1024) return null;
+        var partial = new int[256 * 3];
+        for (var i = 0; i < 256; i++) partial[i] = BitConverter.ToInt32(input, i * 4);
+        var sum = 0;
+        for (var i = 0; i < 256; i++) sum += partial[i];
+        if (sum <= 0) return null;
+        var frequency = new byte[256];
+        var tmp = new int[256];
+        Array.Copy(partial, tmp, 256);
+        var nonZero = 0;
+        for (var i = 0; i < 256; i++)
+            if (partial[i] != 0) nonZero++;
+        for (var i = 0; i < 256; i++) {
+            var value = 0;
+            var index = 0;
+            for (var j = 0; j < 256; j++)
+                if (tmp[j] > value) { index = j; value = tmp[j]; }
+            if (value == 0) break;
+            frequency[i] = (byte)index;
+            tmp[index] = 0;
+        }
+        var symbol = new byte[256];
+        for (var i = 0; i < 256; i++) symbol[i] = (byte)i;
+        for (int i = 0, m = 0; i < nonZero; i++) {
+            var freq = frequency[i];
+            var at = m + 1024;
+            if ((uint)at >= (uint)input.Length) return null;
+            symbol[input[at]] = freq;
+            partial[freq + 256] = m + 1;
+            m += partial[freq];
+            partial[freq + 512] = m;
+        }
+        var val = symbol[0];
+        var output = new byte[sum];
+        for (var count = 0; count < sum; count++) {
+            var firstVal = partial[val + 256];
+            output[count] = val;
+            if (firstVal >= partial[val + 512]) {
+                if (nonZero-- > 0) {
+                    for (var i = 0; i < nonZero; i++) symbol[i] = symbol[i + 1];
+                    val = symbol[0];
+                }
+            }
+            else {
+                var at = firstVal + 1024;
+                if ((uint)at >= (uint)input.Length) return null;
+                var idx = input[at];
+                partial[val + 256] = firstVal + 1;
+                if (idx != 0) {
+                    for (var i = 0; i < idx; i++) symbol[i] = symbol[i + 1];
+                    symbol[idx] = val;
+                    val = symbol[0];
+                }
+            }
+        }
+        return output;
     }
 }
 

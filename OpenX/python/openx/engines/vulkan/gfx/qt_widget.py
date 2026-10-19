@@ -9,7 +9,7 @@ class Renderer: pass
 
 #region VulkanWidget
 
-# VulkanWidget. Same bindings as OpenGLWidget. No surface is created here (ADR 0009).
+# VulkanWidget. Same bindings as OpenGLWidget. Tick only. The C# present path is not ported (ADR 0010).
 class VulkanWidget(QWidget):
     renderer: Renderer = None
     id: int = 0

@@ -47,36 +47,65 @@ public class Assets(UOGame game) {
         public Archive[] Anims = new Archive[10];
 
         public async Task<UoAnimations> Load(bool uop, Archive game, ClientVersion version) {
-            for (var i = 0; i < 10; i++) Anims[i] = await game.GetAsset<Archive>(uop ? $"AnimationFrame{i + 1}.uop" : $"anim{(i == 0 ? string.Empty : (i + 1).ToString())}.idx");
-            if (uop & version > ClientVersion.CV_60144) await game.GetAsset<Binary_Animdata>("AnimationSequence.uop");
+            for (var i = 0; i < 10; i++) {
+                var name = uop ? $"AnimationFrame{i + 1}.uop" : $"anim{(i == 0 ? "" : (i + 1).ToString())}.idx";
+                Anims[i] = Assets.OpenPack(game, name);
+            }
+            // A missing file comes back as the path string. GetAsset then throws InvalidCastException.
+            if (uop & version > ClientVersion.CV_60144)
+                await Assets.TryAsset<Binary_Animdata>(game, "AnimationSequence.uop");
             if (version >= ClientVersion.CV_500A)
-                await game.GetAsset<Binary_MobType>("mobtypes.txt");
-            await game.GetAsset<Binary_Animdef>("Anim1.def");
-            await game.GetAsset<Binary_Animdef>("Anim2.def");
+                await Assets.TryAsset<Binary_MobType>(game, "mobtypes.txt");
+            await Assets.TryAsset<Binary_Animdef>(game, "Anim1.def");
+            await Assets.TryAsset<Binary_Animdef>(game, "Anim2.def");
             if (version >= ClientVersion.CV_300) {
-                await game.GetAsset<Binary_Animdata>("Equipconv.def");
-                await game.GetAsset<Binary_Animdata>("Bodyconv.def");
-                await game.GetAsset<Binary_Animdata>("Body.def");
-                await game.GetAsset<Binary_Animdata>("Corpse.def");
+                await Assets.TryAsset<Binary_Animdata>(game, "Equipconv.def");
+                await Assets.TryAsset<Binary_Animdata>(game, "Bodyconv.def");
+                await Assets.TryAsset<Binary_Animdata>(game, "Body.def");
+                await Assets.TryAsset<Binary_Animdata>(game, "Corpse.def");
             }
             return this;
         }
+    }
+
+    /// <summary>
+    /// Missing archive entries are returned as the path string, and GetAsset casts that string to T.
+    /// A file can also be present and still unreadable. Login only needs gumps, so that one stays fatal.
+    /// </summary>
+    static async Task<T> TryAsset<T>(Archive game, string name, bool required = false) where T : class {
+        try { return await game.GetAsset<T>(name, throwOnError: false); }
+        catch (Exception) {
+            if (required) throw;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// A pack file is a child archive. GetAsset&lt;Archive&gt; opens it and then casts the path string.
+    /// GetSource already returns that opened archive when the name has no ':' entry.
+    /// </summary>
+    static Archive OpenPack(Archive game, string name) {
+        var (arc, file) = game.GetSource(name, throwOnError: false);
+        if (file?.Arc != null) return file.Arc.Open();
+        if (file == null && arc != null && !ReferenceEquals(arc, game)) return arc;
+        return null;
     }
 
     public async Task Load(Archive game, UOGameClient ctx) {
         var version = ((UOGame)game.Game).Version;
         var lang = "enu";
         Animations = await new UoAnimations().Load(Uop, game, version);
-        AnimData = await game.GetAsset<Binary_Animdata>("animdata.mul");
-        Arts = await game.GetAsset<Archive>(Uop ? "artLegacyMUL.uop" : "artidx.mul");
+        AnimData = await TryAsset<Binary_Animdata>(game, "animdata.mul");
+        Arts = OpenPack(game, Uop ? "artLegacyMUL.uop" : "artidx.mul");
         //Maps = new Maps(this);
-        Clilocs = await game.GetAsset<Binary_StringTable>($"cliloc.{lang}");
-        Gumps = await game.GetAsset<Archive>(Uop ? "gumpartLegacyMUL.uop" : "gumpidx.mul");
-        GumpsDef = await game.GetAsset<Binary_GumpDef>("gump.def");
+        Clilocs = await TryAsset<Binary_StringTable>(game, $"cliloc.{lang}");
+        Gumps = OpenPack(game, Uop ? "gumpartLegacyMUL.uop" : "gumpidx.mul")
+            ?? throw new FileNotFoundException("UO gump archive was not opened.", Uop ? "gumpartLegacyMUL.uop" : "gumpidx.mul");
+        GumpsDef = await TryAsset<Binary_GumpDef>(game, "gump.def");
         //Fonts = await game.GetAsset<Binary_AsciiFont>("fonts.mul");
         //Fonts = await game.GetAsset<Binary_UnicodeFont>("fonts.mul");
-        Hues = await game.GetAsset<Binary_Hues>("hues.mul");
-        HuesRadar = await game.GetAsset<Binary_RadarColor>("radarcol.mul");
+        Hues = await TryAsset<Binary_Hues>(game, "hues.mul");
+        HuesRadar = await TryAsset<Binary_RadarColor>(game, "radarcol.mul");
         //TileData = new TileDataoader(this);
         //Multis = new Multi(this);
         //Skills = new Skills(this);
@@ -97,9 +126,11 @@ public class Assets(UOGame game) {
     }
 
     /// <summary>
-    /// Width and height packed in the gump index extra (<see cref="FileSource.Compressed"/>). Does not decode pixels.
+    /// Width and height of a gump. Flag-3 entries keep that size in the payload, so this reads pixels once and caches them.
     /// </summary>
     public bool TryGumpSize(int graphic, out int width, out int height) {
+        // Flag-3 gumps store width and height inside the payload, so the index extra is empty until the first read.
+        if (TryGumpPixels(graphic, out _, out width, out height)) return true;
         width = height = 0;
         if (Gumps is not BinaryArchive bin || bin.Files == null || graphic < 0) return false;
         IList<FileSource> files = bin.Files;

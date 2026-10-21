@@ -38,6 +38,7 @@ public sealed class LoginScene : SceneBase {
     public bool Reconnect { get; set; }
     public LoginSteps CurrentLoginStep { get; set; } = LoginSteps.Main;
     public CityInfo[] Cities { get; set; }
+    public string[] Servers { get; private set; }
     public string[] Characters { get; private set; }
     public string PopupMessage { get; set; }
     public byte ServerIndex { get; private set; }
@@ -64,6 +65,25 @@ public sealed class LoginScene : SceneBase {
 
     public override void Update() {
         base.Update();
+        if (UOLoginNet.Take(out var servers, out var characters, out var message, out var phase)) {
+            switch (phase) {
+                case UOLoginPhase.ServersReady:
+                    Servers = servers;
+                    CurrentLoginStep = LoginSteps.ServerSelection;
+                    break;
+                case UOLoginPhase.CharactersReady:
+                    Characters = characters;
+                    CurrentLoginStep = LoginSteps.CharacterSelection;
+                    break;
+                case UOLoginPhase.Failed:
+                    PopupMessage = message;
+                    CurrentLoginStep = LoginSteps.PopUpMessage;
+                    break;
+                case UOLoginPhase.RelayInProgress:
+                    CurrentLoginStep = LoginSteps.LoginInToServer;
+                    break;
+            }
+        }
         if (_lastLoginStep != CurrentLoginStep) {
             _world.Items.Clear();
             _world.Mobiles.Clear();

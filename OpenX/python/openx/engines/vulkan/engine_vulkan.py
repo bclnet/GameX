@@ -1,6 +1,7 @@
 from __future__ import annotations
 from openx.core import ISource, Engine, EngineX
-from openx.gfx import IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel
+from openx.gfx import IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel, ITexture, TextureAsBytes, TextureBuilder, TextureFlags, TextureFormat, TextureManager, TexturePixel
+import struct
 from openx.engines.system import SystemSfx
 from openx.client import IClientHost
 from openx.engines.vulkan.gfx.vulkan import VulkanInstance
@@ -37,13 +38,103 @@ class VulkanGfxSprite3D(IOpenGfxSprite):
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[object, object]: return self.spriteManager.create(source, path, parent)
 
+# The pixels VulkanGfxModel.textureManager keeps. No device image yet.
+class VulkanTexture:
+    def __init__(self):
+        self.width = 0
+        self.height = 0
+        self.mipMaps = 1
+        self.format = None
+        self.bytes = None
+        self.spans = None
+        self.levelStart = 0
+        self.levelStop = 1
+        self.clampS = False
+        self.clampT = False
+        self.deleted = False
+
+# VulkanTextureBuilder. Accepts the same TextureAsBytes path as OpenGL and keeps the bytes.
+class VulkanTextureBuilder(TextureBuilder):
+    def __init__(self):
+        self._default = None
+
+    @property
+    def default(self) -> VulkanTexture:
+        if self._default is None: self._default = self.createSolid(4, 4, [
+            0.9, 0.2, 0.8, 1.0, 0.0, 0.9, 0.0, 1.0, 0.9, 0.2, 0.8, 1.0, 0.0, 0.9, 0.0, 1.0,
+            0.0, 0.9, 0.0, 1.0, 0.9, 0.2, 0.8, 1.0, 0.0, 0.9, 0.0, 1.0, 0.9, 0.2, 0.8, 1.0,
+            0.9, 0.2, 0.8, 1.0, 0.0, 0.9, 0.0, 1.0, 0.9, 0.2, 0.8, 1.0, 0.0, 0.9, 0.0, 1.0,
+            0.0, 0.9, 0.0, 1.0, 0.9, 0.2, 0.8, 1.0, 0.0, 0.9, 0.0, 1.0, 0.9, 0.2, 0.8, 1.0,
+        ])
+        return self._default
+
+    def createNormalMap(self, src: VulkanTexture, strength: float) -> VulkanTexture: return None
+
+    def createSolid(self, width: int, height: int, rgbas: list[float]) -> VulkanTexture:
+        tex = VulkanTexture()
+        tex.width = width
+        tex.height = height
+        tex.format = (TextureFormat.RGBA32, TexturePixel.Float)
+        tex.bytes = struct.pack('<' + 'f' * len(rgbas), *rgbas)
+        return tex
+
+    def create(self, reuse: VulkanTexture, src: ITexture, level: range = None) -> VulkanTexture:
+        def build(x: object) -> VulkanTexture:
+            match x:
+                case TextureAsBytes():
+                    if not x.bytes: return self.default
+                    fmt = x.format
+                    if not isinstance(fmt, tuple): raise Exception(f'Unknown format: {fmt}')
+                    formatx, _pixel = fmt
+                    if not _known(formatx): raise Exception(f'Unknown format: {formatx}')
+                    numMipMaps = max(1, src.mipMaps)
+                    start = level.start if level else 0
+                    if _badSpan(x.spans, start, numMipMaps): return self.default
+                    tex = reuse if reuse is not None else VulkanTexture()
+                    tex.width = src.width
+                    tex.height = src.height
+                    tex.mipMaps = numMipMaps
+                    tex.format = fmt
+                    tex.bytes = x.bytes
+                    tex.spans = x.spans
+                    tex.levelStart = start
+                    tex.levelStop = numMipMaps
+                    flags = src.texFlags
+                    tex.clampS = (flags & TextureFlags.SUGGEST_CLAMPS) != 0
+                    tex.clampT = (flags & TextureFlags.SUGGEST_CLAMPT) != 0
+                    tex.deleted = False
+                    return tex
+                case _: raise Exception(f'Unknown x: {x}')
+        return src.create('VK', build)
+
+    def delete(self, src: VulkanTexture) -> None:
+        if src is None: return
+        src.deleted = True
+        src.bytes = None
+
+def _known(formatx: TextureFormat) -> bool:
+    return formatx in (
+        TextureFormat.I8, TextureFormat.L8, TextureFormat.R8, TextureFormat.R16, TextureFormat.RG16,
+        TextureFormat.RGB24, TextureFormat.RGB565, TextureFormat.RGBA32, TextureFormat.ARGB32,
+        TextureFormat.BGRA32, TextureFormat.BGRA1555, TextureFormat.DXT1, TextureFormat.DXT1A,
+        TextureFormat.DXT3, TextureFormat.DXT5, TextureFormat.BC4, TextureFormat.BC5,
+        TextureFormat.BC6H, TextureFormat.BC7, TextureFormat.ETC2, TextureFormat.ETC2_EAC,
+    )
+
+def _badSpan(spans: list, start: int, stop: int) -> bool:
+    if not spans: return False
+    for l in range(start, stop):
+        span = spans[l]
+        if span is not None and span.start < 0: return True
+    return False
+
 # VulkanGfxModel
 class VulkanGfxModel(IOpenGfxModel):
     def __init__(self):
         self.materialManager = None
         self.objectManager = None
         self.shaderManager = None
-        self.textureManager = None
+        self.textureManager = TextureManager(VulkanTextureBuilder())
     def preload(self, source: ISource, path: object) -> None: raise NotImplementedError()
     def preloadTexture(self, source: ISource, path: object) -> None: self.textureManager.preload(source, path)
     def create(self, source: ISource, path: object, isStatic: bool, parent: object = None) -> tuple[object, object]: raise NotImplementedError()

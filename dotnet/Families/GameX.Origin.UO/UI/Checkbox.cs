@@ -50,6 +50,10 @@ public class Checkbox : Control {
     public override bool Draw(int x, int y) {
         if (IsDisposed || !IsVisible) return false;
         GumpArtDraw.Pic(IsChecked ? _active : _inactive, x, y, 0, 0, false);
+        if (!string.IsNullOrEmpty(Text)) {
+            var textW = GumpArt.Sink?.MeasureText(Text, Font) ?? Text.Length * 6;
+            GumpArt.Sink?.DrawText(x + Math.Max(0, Width - textW), y, Text, Hue, Font);
+        }
         return base.Draw(x, y);
     }
 }

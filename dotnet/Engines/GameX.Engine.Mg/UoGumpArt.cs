@@ -30,7 +30,10 @@ public sealed class UoGumpArt : IGumpArt {
         GumpArt.Sink = new UoGumpArt(mg.GraphicManager.GraphicsDevice);
     }
 
-    public void Begin() => _batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+    public void Begin() {
+        UoMusic.Attach();
+        _batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+    }
 
     public void End() => _batch.End();
 
@@ -67,7 +70,8 @@ public sealed class UoGumpArt : IGumpArt {
             DrawBitmapText(x, y, text, HueColor(hue));
             return;
         }
-        var useRamp = hue != 0 && uo.TryHueRamp(hue & 0x3FFF, out var ramp);
+        ushort[] ramp = null;
+        var useRamp = hue != 0 && uo.TryHueRamp(hue & 0x3FFF, out ramp);
         var color = useRamp ? Color.White : HueColor(hue);
         var dx = x;
         foreach (var ch in text) {
@@ -122,7 +126,7 @@ public sealed class UoGumpArt : IGumpArt {
     bool TryUploadTinted(ushort graphic, ushort hue, byte[] pixels1555, int srcWidth, int srcHeight, out Texture2D tex) {
         tex = null;
         var uo = UltimaOnline.Current;
-        if (uo == null || pixels1555 == null || srcWidth <= 0 || srcHeight <= 0 || !uo.TryHueRamp(hue & 0x3FFF, out var ramp)) return false;
+        if (uo == null || pixels1555 == null || srcWidth <= 0 || srcHeight <= 0 || pixels1555.Length < srcWidth * srcHeight * 2 || !uo.TryHueRamp(hue & 0x3FFF, out var ramp)) return false;
         tex = Upload(RemapHue(pixels1555, srcWidth, srcHeight, ramp, (hue & 0x8000) != 0), srcWidth, srcHeight);
         if (tex == null) return false;
         _tinted[(graphic, hue)] = tex;

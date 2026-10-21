@@ -24,7 +24,7 @@ Python `VulkanWidget` and Rust `vulkan_control.rs` still only start and update a
 1. **Keep Silk for the C# WPF surface.** `VulkanView` owns the instance, surface, device, and swapchain. The control only supplies the HWND.
 2. **Do not add a Silk package reference to `OpenX.Wpf.Control`.** Do not move `VulkanInstance` onto OpenTK.
 3. **`VulkanInstance.CreateInstance` stays windowless.** The view instance is the one with the surface extensions.
-4. **The first picture is the clear.** A game texture waits until `VulkanGfxModel` has managers. `TextureRenderer` still throws before `Start`.
+4. **The first picture is the clear.** `VulkanGfxModel` has its `TextureManager`. `TextureRenderer` loads through it. The view does not sample that texture yet.
 5. **Python and Rust stay tick-only** until those hosts can present. Do not paint Vulkan inside the Rust glow callback.
 6. **The OpenTK device-proc review date stays 2027-10-19.** That review does not remove this surface. Its outcome is still a new ADR.
 

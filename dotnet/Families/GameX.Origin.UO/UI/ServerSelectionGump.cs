@@ -5,14 +5,17 @@ using GameX.Origin.Formats.UO;
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO ServerSelectionGump. LoginScene has no server list, so the names can be empty.
-/// Next and Earth go to character selection. Prev goes to Main. No ping, no socket.
+/// ClassicUO ServerSelectionGump. Rows come from LoginScene.Servers.
+/// Next and Earth select a server when the login socket has a list; otherwise they jump to character selection.
+/// Prev goes to Main. No ping.
 /// </summary>
 public class ServerSelectionGump : Gump {
     readonly LoginScene _scene;
+    readonly string[] _servers;
 
     public ServerSelectionGump(World world, LoginScene scene) : base(world, 0, 0) {
         _scene = scene;
+        _servers = scene.Servers ?? [];
         CanCloseWithRightClick = false;
         AcceptKeyboardInput = false;
 
@@ -51,17 +54,15 @@ public class ServerSelectionGump : Gump {
         });
         Add(new ResizePic(0x0DAC) { X = 150, Y = 90, Width = 393 - 14, Height = 271 });
 
-        // No server list on the scene. Empty draws no name rows and no selected name.
-        string[] servers = [];
         var row = 0;
-        for (var i = 0; i < servers.Length; i++) {
-            var name = servers[i];
+        for (var i = 0; i < _servers.Length; i++) {
+            var name = _servers[i];
             if (string.IsNullOrEmpty(name)) continue;
             Add(new Label(name, false, 0x034F, 5) { X = 224, Y = 90 + row * 25 });
             row++;
         }
-        if (servers.Length != 0)
-            Add(new Label(servers[0], false, 0x0481, 9) { X = 243, Y = 420 });
+        if (_servers.Length != 0)
+            Add(new Label(_servers[0], false, 0x0481, 9) { X = 243, Y = 420 });
     }
 
     public override void OnButtonClick(int buttonID) {
@@ -71,7 +72,12 @@ public class ServerSelectionGump : Gump {
                 break;
             case Buttons.Next:
             case Buttons.Earth:
-                _scene.CurrentLoginStep = LoginSteps.CharacterSelection;
+                if (!UOLoginNet.Started || _servers.Length == 0)
+                    _scene.CurrentLoginStep = LoginSteps.CharacterSelection;
+                else {
+                    UOLoginNet.SelectServer(0);
+                    _scene.CurrentLoginStep = LoginSteps.LoginInToServer;
+                }
                 break;
         }
     }

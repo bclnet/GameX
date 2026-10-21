@@ -15,7 +15,7 @@ public partial class FileContent : ContentView {
     public void SetEngine(Engine engine) {
         var res = ((Grid)Content).Resources;
         var plat = engine?.Id ?? "UK";
-        res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res["THex"];
+        res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res[true ? "TText" : "THex"];
     }
 
     void ContentTab_Changed(object sender, CheckedChangedEventArgs e) => ContentTabContent.BindingContext = ((RadioButton)sender).BindingContext;

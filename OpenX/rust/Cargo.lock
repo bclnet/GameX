@@ -1180,6 +1180,8 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "openx",
+ "openx-gfx",
+ "openx-poly",
 ]
 
 [[package]]

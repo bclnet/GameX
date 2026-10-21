@@ -10,4 +10,6 @@ workspace = true
 
 [dependencies]
 openx = { path = "../../core/openx" }
+openx-gfx = { path = "../../gfx/gfx" }
+openx-poly = { path = "../../core/poly" }
 ash = "0.38"

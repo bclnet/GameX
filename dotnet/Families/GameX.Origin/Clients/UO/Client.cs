@@ -237,8 +237,9 @@ public class UOGameClient : GameClient {
         if (string.IsNullOrEmpty(game?.Found?.Root)) throw new InvalidOperationException("UO install path is not set.");
         await Assets.Load(Archive, this);
         if (Host is not ISceneHost host) throw new InvalidOperationException("UO client host cannot install a scene.");
-        host.SetScene(CreateLoginScene(this));
+        // Sink has to exist before LoginGump measures fonts.mul widths.
         AttachGumpArt(Host);
+        host.SetScene(CreateLoginScene(this));
     }
 
     // Origin cannot reference GameX.Origin.UO: that project already references this one, and it is netstandard2.1.

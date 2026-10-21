@@ -1,4 +1,4 @@
-﻿//#define Arkane
+﻿#define Arkane
 //#define Beamdog
 //#define Bethesda
 //#define Bioware
@@ -22,7 +22,7 @@
 //#define Monolith
 //#define Mythic
 //#define Nintendo
-#define Origin
+//#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft

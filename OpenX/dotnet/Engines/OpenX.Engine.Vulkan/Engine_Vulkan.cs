@@ -83,31 +83,132 @@ public class VulkanGfxSprite3D : IOpenGfxSprite<object, object> {
 }
 
 /// <summary>
+/// The pixels <see cref="VulkanGfxModel.TextureManager"/> keeps. No device image yet.
+/// </summary>
+public sealed class VulkanTexture {
+    public int Width;
+    public int Height;
+    public int MipMaps = 1;
+    public object Format;
+    public byte[] Bytes;
+    public Range[] Spans;
+    public int LevelStart;
+    public int LevelStop = 1;
+    public bool ClampS;
+    public bool ClampT;
+    public bool Deleted;
+}
+
+/// <summary>
+/// VulkanTextureBuilder. Accepts the same <see cref="TextureAsBytes"/> path as OpenGL and keeps the bytes.
+/// </summary>
+class VulkanTextureBuilder : TextureBuilder<VulkanTexture> {
+    VulkanTexture _defaultTexture;
+    public override VulkanTexture Default => _defaultTexture ??= CreateSolid(4, 4, [
+        0.9f, 0.2f, 0.8f, 1f,
+        0f, 0.9f, 0f, 1f,
+        0.9f, 0.2f, 0.8f, 1f,
+        0f, 0.9f, 0f, 1f,
+
+        0f, 0.9f, 0f, 1f,
+        0.9f, 0.2f, 0.8f, 1f,
+        0f, 0.9f, 0f, 1f,
+        0.9f, 0.2f, 0.8f, 1f,
+
+        0.9f, 0.2f, 0.8f, 1f,
+        0f, 0.9f, 0f, 1f,
+        0.9f, 0.2f, 0.8f, 1f,
+        0f, 0.9f, 0f, 1f,
+
+        0f, 0.9f, 0f, 1f,
+        0.9f, 0.2f, 0.8f, 1f,
+        0f, 0.9f, 0f, 1f,
+        0.9f, 0.2f, 0.8f, 1f,
+    ]);
+
+    public override VulkanTexture CreateNormalMap(VulkanTexture src, float strength) => null;
+
+    public override VulkanTexture CreateSolid(int width, int height, float[] rgbas) {
+        var bytes = new byte[rgbas.Length * sizeof(float)];
+        Buffer.BlockCopy(rgbas, 0, bytes, 0, bytes.Length);
+        return new VulkanTexture { Width = width, Height = height, Format = (TextureFormat.RGBA32, TexturePixel.Float), Bytes = bytes };
+    }
+
+    public override VulkanTexture Create(VulkanTexture reuse, ITexture src, Range? level2 = null) => src.Create("VK", x => {
+        switch (x) {
+            case TextureAsBytes t:
+                if (t.Bytes == null) return Default;
+                if (t.Format is not ValueTuple<TextureFormat, TexturePixel> z) throw new ArgumentOutOfRangeException(nameof(t.Format), $"{t.Format}");
+                if (!Known(z.Item1)) throw new ArgumentOutOfRangeException("TextureFormat", $"{z.Item1}");
+                var numMipMaps = Math.Max(1, src.MipMaps);
+                var start = level2?.Start.Value ?? 0;
+                if (BadSpan(t.Spans, start, numMipMaps)) return Default;
+                var tex = reuse ?? new VulkanTexture();
+                tex.Width = src.Width;
+                tex.Height = src.Height;
+                tex.MipMaps = numMipMaps;
+                tex.Format = t.Format;
+                tex.Bytes = t.Bytes;
+                tex.Spans = t.Spans;
+                tex.LevelStart = start;
+                tex.LevelStop = numMipMaps;
+                tex.ClampS = src.TexFlags.HasFlag(TextureFlags.SUGGEST_CLAMPS);
+                tex.ClampT = src.TexFlags.HasFlag(TextureFlags.SUGGEST_CLAMPT);
+                tex.Deleted = false;
+                return tex;
+            default: throw new ArgumentOutOfRangeException(nameof(x), $"{x}");
+        }
+    });
+
+    public override void Delete(VulkanTexture src) {
+        if (src == null) return;
+        src.Deleted = true;
+        src.Bytes = null;
+    }
+
+    static bool Known(TextureFormat format) => format switch {
+        TextureFormat.I8 or TextureFormat.L8 or TextureFormat.R8 or TextureFormat.R16 or TextureFormat.RG16
+            or TextureFormat.RGB24 or TextureFormat.RGB565 or TextureFormat.RGBA32 or TextureFormat.ARGB32
+            or TextureFormat.BGRA32 or TextureFormat.BGRA1555 or TextureFormat.DXT1 or TextureFormat.DXT1A
+            or TextureFormat.DXT3 or TextureFormat.DXT5 or TextureFormat.BC4 or TextureFormat.BC5
+            or TextureFormat.BC6H or TextureFormat.BC7 or TextureFormat.ETC2 or TextureFormat.ETC2_EAC => true,
+        _ => false,
+    };
+
+    static bool BadSpan(Range[] spans, int start, int stop) {
+        if (spans == null) return false;
+        for (var l = start; l < stop; l++)
+            if (spans[l].Start.Value < 0) return true;
+        return false;
+    }
+}
+
+/// <summary>
 /// VulkanGfxModel
 /// </summary>
-public class VulkanGfxModel : IOpenGfxModel<object, object, object, object> {
-    readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+public class VulkanGfxModel : IOpenGfxModel<object, object, VulkanTexture, object> {
+    readonly MaterialManager<object, VulkanTexture> _materialManager;
+    readonly ObjectModelManager<object, object, VulkanTexture> _objectManager;
     readonly ShaderManager<object> _shaderManager;
-    readonly TextureManager<object> _textureManager;
+    readonly TextureManager<VulkanTexture> _textureManager;
     /// <summary>
     /// VulkanGfxModel
     /// </summary>
     public VulkanGfxModel() {
-        //_textureManager = new TextureManager<object>(source, new VulkanTextureBuilder());
+        _textureManager = new TextureManager<VulkanTexture>(new VulkanTextureBuilder());
         //_materialManager = new MaterialManager<Material, int>(source, _textureManager, new GodotMaterialBuilder(_textureManager));
         //_objectManager = new ObjectManager<Model, Material, int>(source, _materialManager, new GodotObjectBuilder());
         //_shaderManager = new ShaderManager<int>(source, new GodotShaderBuilder());
     }
 
     /// <summary>MaterialManager</summary>
-    public MaterialManager<object, object> MaterialManager => _materialManager;
+    public MaterialManager<object, VulkanTexture> MaterialManager => _materialManager;
     /// <summary>ObjectManager</summary>
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public ObjectModelManager<object, object, VulkanTexture> ObjectManager => _objectManager;
     /// <summary>ShaderManager</summary>
     public ShaderManager<object> ShaderManager => _shaderManager;
     /// <summary>TextureManager</summary>
-    public TextureManager<object> TextureManager => _textureManager;
+    public TextureManager<VulkanTexture> TextureManager => _textureManager;
     /// <summary>Preload</summary>
     public void Preload(ISource source, object path) => throw new NotImplementedException();
     /// <summary>PreloadTexture</summary>
@@ -117,7 +218,7 @@ public class VulkanGfxModel : IOpenGfxModel<object, object, object, object> {
     /// <summary>CreateShader</summary>
     public Task<(object sha, object tag)> CreateShader(ISource source, object path, Dictionary<string, bool> args = null) => throw new NotImplementedException();
     /// <summary>CreateTexture</summary>
-    public Task<(object tex, object tag)> CreateTexture(ISource source, object path, System.Range? level = null) => _textureManager.Create(source, path, level);
+    public Task<(VulkanTexture tex, object tag)> CreateTexture(ISource source, object path, System.Range? level = null) => _textureManager.Create(source, path, level);
     /// <summary>Post</summary>
     public void Post(object src, Vector3 position, Vector3 eulerAngles, float? scale, object parent) => throw new NotImplementedException();
 }

@@ -2,8 +2,8 @@
 // PORT-STATUS: partial
 //
 // Ported: `TestTriRenderer` and `TextureRenderer` type names.
-// Not ported: the bodies. They call `VulkanGfxModel.TextureManager`, and
-// `VulkanGfxModel` is not ported, so constructing them would not match C#.
+// Not ported: the bodies. `VulkanGfxModel.TextureManager` now loads bytes.
+// These renderers still do not draw that texture.
 
 /// TestTriRenderer
 pub struct TestTriRenderer;

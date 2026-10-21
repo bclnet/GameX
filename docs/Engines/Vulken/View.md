@@ -15,7 +15,7 @@ The clear is `0.2, 0.3, 0.3, 1`. This machine's swapchain format was `B8G8R8A8Un
 
 Python `VulkanWidget` (`openx/engines/vulkan/gfx/qt_widget.py`) still only ticks, and the Python Explorer selects it for id `VK`. Rust `openx-wpf-control` `vulkan_control.rs` starts and updates a renderer and does not paint. That present path is not ported.
 
-`TestTriRenderer` and `TextureRenderer` extend `Renderer` (`Start`, `Stop`, `Update`). They do not draw. `VulkanGfxModel` leaves its managers null, so `TextureRenderer`'s constructor throws before `Start`. A game texture is not the first picture.
+`TestTriRenderer` and `TextureRenderer` extend `Renderer` (`Start`, `Stop`, `Update`). They do not draw. `VulkanGfxModel.TextureManager` is a `VulkanTextureBuilder`: it accepts `TextureAsBytes` and keeps the pixels. The view does not sample that texture yet.
 
 ## What OpenGL already does
 
@@ -50,7 +50,7 @@ ADR 0009 still reviews OpenTK's device-proc loading on 2027-10-19. ADR 0010 is t
 5. The swapchain uses FIFO. Each image has a view and a framebuffer.
 6. The command buffer begins the render pass and ends it. Submit, present, then `QueueWaitIdle`.
 
-`TestTriRenderer` and `TextureRenderer` still do not draw. `VulkanGfxModel` leaves its managers null, so `TextureRenderer`'s constructor throws before `Start`. A game texture is the next picture, after those managers exist. The clear does not wait on that.
+`TestTriRenderer` and `TextureRenderer` still do not draw. `TextureRenderer` loads through `VulkanGfxModel.TextureManager`. Putting those pixels on the swapchain is the next picture. The clear does not wait on that.
 
 ## Rust has to host more than OpenGL
 

@@ -21,6 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Unreal\OpenX.Engine.Unreal.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Gamebryo\GameX.Gamebryo.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Arkane\GameX.Arkane.csproj" />
   </ItemGroup>
 
 </Project>

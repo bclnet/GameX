@@ -31,6 +31,84 @@ class X_Lump2NO:
     num: int
     offset: int
 
+#region Binary_Lmp - tag::Binary_Lmp[]
+
+# Binary_Lmp
+class Binary_Lmp(ITexture, IHaveMetaInfo):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Lmp(r, f, s)
+
+    palette: 'Binary_Lmp' = None
+    colormap: 'Binary_Lmp' = None
+
+    @staticmethod
+    def toLightPixel(light: int, pixel: int) -> bytes:
+        return Binary_Lmp.palette.paletteRecords[Binary_Lmp.colormap.colormapRecords[(light >> 3) & 0x1F][pixel]]
+
+    def __init__(self, r: BinaryReader, f: FileSource, s: Archive):
+        self.paletteRecords = None
+        self.colormapRecords = None
+        self.pixels = None
+        match os.path.splitext(os.path.basename(f.path))[0]:
+            case 'palette':
+                self.paletteRecords = r.readFArray(lambda s: bytearray(s.readBytes(3)) + b'\x00', 256)
+                Binary_Lmp.palette = self
+                return
+            case 'colormap':
+                self.colormapRecords = r.readFArray(lambda s: s.readBytes(256), 32)
+                Binary_Lmp.colormap = self
+                return
+            case _:
+                if Binary_Lmp.palette is None or Binary_Lmp.palette.paletteRecords is None: raise NotImplementedError()
+                self.width = r.readInt32()
+                self.height = r.readInt32()
+                indices = r.readBytes(self.width * self.height)
+                pixels = bytearray()
+                for index in indices: pixels += Binary_Lmp.toLightPixel(32 << 3, index)
+                self.pixels = pixels
+                return
+
+    #region ITexture
+
+    format: tuple = (TextureFormat.BGRA32, TexturePixel.Unknown)
+    width: int = 0
+    height: int = 0
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.pixels, self.format, None))
+
+    #endregion
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'TextureName', name = os.path.basename(file.path), value = self)),
+        MetaInfo('TextureName', items = [
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
+            ])
+        ]
+
+#endregion - end::Binary_Lmp[]
+
+#region Binary_Mdl - tag::Binary_Mdl[]
+
+# Binary_Mdl
+class Binary_Mdl(IHaveMetaInfo):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl(r)
+
+    def __init__(self, r: BinaryReader):
+        pass
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'UnknownFileModel File')),
+        MetaInfo('UnknownFileModel', items = [
+            MetaInfo(f'Records: {1}')
+            ])
+        ]
+
+#endregion - end::Binary_Mdl[]
+
 #region Binary_Spr - tag::Binary_Spr[]
 
 # Binary_Spr
@@ -100,7 +178,7 @@ class Binary_Spr(ITextureFrames, IHaveMetaInfo):
             pixels[i] = r.readBytes(frame.width * frame.height)
         self.width = frames[0].width
         self.height = frames[0].height
-        self.bytes = bytearray(self.width * self.height << 4)
+        self.bytes = bytearray(self.width * self.height << 2)
         self.frame = 0
 
     #region ITexture
@@ -112,7 +190,7 @@ class Binary_Spr(ITextureFrames, IHaveMetaInfo):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
     fps: int = 60
-    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.bytes, format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.bytes, self.format, None))
 
     def hasFrames(self) -> bool: return self.frame < len(self.frames)
 
@@ -229,3 +307,93 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
         ]
 
 #endregion - end::Binary_Wad3X[]
+
+#region Binary_Pak - tag::Binary_Pak[]
+
+# Binary_Pak
+class Binary_Pak(ArcBinaryT):
+    #region Headers
+
+    P_MAGIC = 0x4b434150 #: PACK
+
+    class P_Header:
+        _struct = ('<I2i', 12)
+        def __init__(self, t):
+            (self.magic,
+            self.dirOffset,
+            self.dirLength) = t
+
+    class P_File:
+        _struct = ('<56s2i', 64)
+        def __init__(self, t):
+            (self.path,
+            self.offset,
+            self.fileSize) = t
+
+    #endregion
+
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
+        header = r.readS(self.P_Header)
+        if header.magic != self.P_MAGIC: raise Exception('BAD MAGIC')
+        numFiles = header.dirLength // self.P_File._struct[1]
+        r.seek(header.dirOffset)
+        files = []
+        for s in r.readSArray(self.P_File, numFiles):
+            path = unsafe.fixedAString(s.path, 56).replace('\\', '/')
+            file = FileSource(path = path, offset = s.offset, fileSize = s.fileSize)
+            if path.lower().endswith('.wad'): file.arc = Binary_Wad.SubArchive(source, file, path)
+            files.append(file)
+        source.files = files
+
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
+        r.seek(file.offset)
+        return BytesIO(r.readBytes(file.fileSize))
+
+#endregion - end::Binary_Pak[]
+
+#region Binary_Wad - tag::Binary_Wad[]
+
+# Binary_Wad
+class Binary_Wad(ArcBinaryT):
+    #region Headers
+
+    W_MAGIC = 0x32444157 #: WAD2
+
+    class W_Header:
+        _struct = ('<I2i', 12)
+        def __init__(self, t):
+            (self.magic,
+            self.lumpCount,
+            self.lumpOffset) = t
+
+    class W_Lump:
+        _struct = ('<3i4b16s', 32)
+        def __init__(self, t):
+            (self.offset,
+            self.packedSize,
+            self.fileSize,
+            self.type,
+            self.compression,
+            self.padding0,
+            self.padding1,
+            self.path) = t
+
+    #endregion
+
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
+        header = r.readS(self.W_Header)
+        if header.magic != self.W_MAGIC: raise Exception('BAD MAGIC')
+        r.seek(header.lumpOffset)
+        source.files = [FileSource(
+            path = f'{unsafe.fixedAString(s.path, 16).replace("\\", "/")}.tex',
+            hash = s.type,
+            offset = s.offset,
+            packedSize = s.packedSize,
+            fileSize = s.fileSize,
+            compressed = s.compression) for s in r.readSArray(self.W_Lump, header.lumpCount)]
+
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
+        r.seek(file.offset)
+        return BytesIO(r.readBytes(file.fileSize))
+
+#endregion - end::Binary_Wad[]

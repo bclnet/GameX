@@ -24,7 +24,7 @@ class GodotClientHost(IClientHost):
 # GodotObjectModelBuilder
 class GodotObjectModelBuilder(ObjectModelBuilder):
     def instance(self, src: object) -> object:
-        return 'clone'
+        return src
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
         builder = GodotX.buildersByType[path.__class__.__name__]
         try:

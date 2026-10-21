@@ -127,7 +127,8 @@ mod tests {
         for op in [0x80u8, 0x91] {
             let out = logger().format(&[op, 0xDE, 0xAD], true, 0).unwrap();
             assert!(out.contains("[ACCOUNT CREDENTIALS HIDDEN]"));
-            assert!(!out.contains("DE"), "payload must not be dumped: {out}");
+            // "DE" is inside CREDENTIALS. The payload bytes would show up as " DE AD".
+            assert!(!out.contains(" DE AD"), "payload must not be dumped: {out}");
         }
     }
 
@@ -155,7 +156,8 @@ mod tests {
     #[test]
     fn non_printable_bytes_become_dots() {
         let out = logger().format(&[0x01, 0x7F, 0xFF], false, 0).unwrap();
-        assert!(out.contains("..."), "{out}");
+        // C# prints c when 0x20 <= c < 0x80, so DEL (0x7F) stays. 0x01 and 0xFF become dots.
+        assert!(out.contains(".\u{7F}."), "{out}");
     }
 
     #[test]

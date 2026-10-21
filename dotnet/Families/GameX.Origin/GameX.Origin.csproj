@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -23,6 +23,10 @@
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
     <ProjectReference Include="..\GameX.Xbox\GameX.Xbox.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GameX.Origin.Netcode" />
   </ItemGroup>
 
 </Project>

@@ -4,6 +4,7 @@ using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.OpenGL;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -42,12 +43,10 @@ public static class OpenGLNifObjectBuilder {
         }
         else {
             Log.Info($"{name} has multiple roots.");
-            var gobj = new Object(); // name);
-            foreach (var rootRef in o.Roots) {
-                var child = await InstantiateRootNiObject(name, source, isStatic, materialManager, rootRef.Value);
-                //child?.transform.SetParent(gobj.transform, false);
-            }
-            return gobj;
+            var parts = new List<IGlDrawable>();
+            foreach (var rootRef in o.Roots)
+                Collect(await InstantiateRootNiObject(name, source, isStatic, materialManager, rootRef.Value), parts);
+            return new OpenGLNifObject(parts);
         }
     }
 
@@ -101,9 +100,10 @@ public static class OpenGLNifObjectBuilder {
         };
 
     static async Task<Object> InstantiateNiNode(ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiNode s) {
-        var obj = new Object(); // s.Name);
+        var parts = new List<IGlDrawable>();
         foreach (var t in s.Children)
-            if (t != null) await InstantiateNiObject(source, isStatic, materialManager, t.Value); //?.transform.SetParent(obj.transform, false);
+            if (t != null) Collect(await InstantiateNiObject(source, isStatic, materialManager, t.Value), parts);
+        var obj = new OpenGLNifObject(parts);
         ApplyNiAVObject(obj, s);
         return obj;
     }
@@ -140,8 +140,10 @@ public static class OpenGLNifObjectBuilder {
     //}
 
     static async Task<Object> InstantiateNiTriShape(ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiTriShape s, bool visual, bool collidable) {
-        var mesh = ToGeometry((NiTriShapeData)s.Data.Value);
-        var obj = new Object();// s.Name);
+        var (vertices, triangles) = ToGeometry((NiTriShapeData)s.Data.Value);
+        var obj = visual && vertices != null && vertices.Length > 0 && triangles != null && triangles.Length > 0
+            ? (object)new GlMeshDraw(vertices, triangles)
+            : new Object();
         //if (visual) {
         //    obj.AddComponent<MeshFilter>().mesh = mesh;
         //    var materialProps = NiAVObjectToMaterialProp(s);
@@ -161,7 +163,11 @@ public static class OpenGLNifObjectBuilder {
         return obj;
     }
 
-    static object ToGeometry(NiTriShapeData s) {
+    static void Collect(object obj, List<IGlDrawable> parts) {
+        if (obj is IGlDrawable draw) parts.Add(draw);
+    }
+
+    static (Vector3[] vertices, int[] triangles) ToGeometry(NiTriShapeData s) {
         var length = s.Vertices.Length;
         // vertex positions
         var vertices = new Vector3[length];
@@ -188,11 +194,19 @@ public static class OpenGLNifObjectBuilder {
             triangles[baseI + 1] = s.Triangles[i].v3;
             triangles[baseI + 2] = s.Triangles[i].v2;
         }
-        // create the mesh.
-        return null;
+        return (vertices, triangles);
         //var mesh = new Mesh { vertices = vertices, normals = normals, uv = UVs, triangles = triangles };
         //if (s.Normals == null) mesh.RecalculateNormals();
         //mesh.RecalculateBounds();
         //return mesh;
+    }
+}
+
+/// <summary>NiTriShape parts collected from one NIF. Each part draws itself.</summary>
+public sealed class OpenGLNifObject : IGlDrawable {
+    readonly List<IGlDrawable> _parts;
+    public OpenGLNifObject(List<IGlDrawable> parts) => _parts = parts ?? [];
+    public void DrawGl() {
+        foreach (var part in _parts) part.DrawGl();
     }
 }

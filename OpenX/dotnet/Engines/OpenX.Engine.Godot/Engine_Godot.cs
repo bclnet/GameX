@@ -30,10 +30,15 @@ class GodotObjectModelBuilder : ObjectModelBuilder<Node, Material, Texture2D> {
     Node _prefabObj;
 
     public override Node Instance(Node src, Node parent) {
-        //var s = UnityEngine.Object.Instantiate(src);
-        //if (parent != null) s.transform.parent = parent.transform;
-        //return s;
-        throw new NotImplementedException();
+        if (src == null) return null;
+        var s = src.Duplicate();
+        if (parent != null) parent.AddChild(s);
+        else {
+            var tree = Godot.Engine.GetMainLoop() as SceneTree;
+            var root = tree?.CurrentScene ?? tree?.Root;
+            root?.AddChild(s);
+        }
+        return s;
     }
 
     public async override Task<Node> Create(ISource source, object path, bool isStatic, MaterialManager<Material, Texture2D> materialManager) {

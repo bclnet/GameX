@@ -39,3 +39,26 @@ public class SpriteRenderer : Renderer {
 }
 
 #endregion
+
+#region ObjectRenderer
+
+/// <summary>
+/// ObjectRenderer. Calls BuildersByType when the object's type is registered. No GPU upload.
+/// </summary>
+public class ObjectRenderer : Renderer {
+    readonly object Obj;
+    public object Holder { get; private set; }
+
+    public ObjectRenderer(IOpenGfx[] gfx, ISource source, object obj) {
+        Obj = obj;
+    }
+
+    public override void Start() {
+        if (Obj == null || !MgX.BuildersByType.TryGetValue(Obj.GetType(), out var build)) return;
+        Holder = build(Obj, true, null);
+    }
+
+    public override void Update(float deltaTime) { }
+}
+
+#endregion

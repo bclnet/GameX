@@ -24,7 +24,7 @@ class OpenGLClientHost(IClientHost):
 # OpenGLObjectModelBuilder
 class OpenGLObjectModelBuilder(ObjectModelBuilder):
     def instance(self, src: object, parent: object = None) -> object:
-        return 'clone'
+        return src
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
         builder = OpenGLX.buildersByType[path.__class__.__name__]
         try:
@@ -36,7 +36,7 @@ class OpenGLObjectModelBuilder(ObjectModelBuilder):
 # OpenGLObjectBuilder. Key is the type, and a missing builder is not caught.
 class OpenGLObjectBuilder(ObjectModelBuilder):
     def instance(self, src: object, parent: object = None) -> object:
-        return 'clone'
+        return src
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
         builder = OpenGLX.buildersByType[type(path)]
         s = await builder(source, path, static_, materialManager)

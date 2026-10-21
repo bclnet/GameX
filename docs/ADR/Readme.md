@@ -16,3 +16,6 @@ Decisions that shape how GameX is built, and why. Add a new numbered file for ea
 | [0009](0009-review-silk-vs-opentk.md) | Recheck Silk.NET.Vulkan against OpenTK by October 2027 | Superseded in part by 0010
 | [0010](0010-wpf-vulkan-surface-stays-on-silk.md) | The WPF Vulkan surface stays on Silk | Accepted
 | [0011](0011-explorer-and-explorerm-stay-one-to-one.md) | Explorer and ExplorerM stay one-to-one | Accepted
+| [0012](0012-game-networking-lives-in-a-netcode-sibling.md) | Game networking lives in a Netcode sibling | Accepted
+| [0013](0013-scripts-are-cmd-files.md) | Repo scripts are .cmd files | Accepted
+| [0014](0014-csharp-projects-do-not-multi-target.md) | A C# project has one TargetFramework | Accepted

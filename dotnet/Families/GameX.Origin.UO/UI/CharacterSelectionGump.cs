@@ -1,12 +1,13 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using GameX.Origin.Formats.UO;
+using GameX.Origin.Netcode.UO;
 
 namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO CharacterSelectionGump. Shows scene.Characters, or no rows when that array is null.
-/// Next enters Britannia when a named character exists. New opens the creation shell. No socket.
+/// Next sends 0x5D for the first named character. New opens the creation shell.
 /// </summary>
 public class CharacterSelectionGump : Gump {
     readonly LoginScene _scene;
@@ -71,6 +72,7 @@ public class CharacterSelectionGump : Gump {
                 if (characters == null) return;
                 for (var i = 0; i < characters.Length; i++) {
                     if (string.IsNullOrEmpty(characters[i])) continue;
+                    UOLoginNet.SelectCharacter(i, characters[i]);
                     _scene.CurrentLoginStep = LoginSteps.EnteringBritania;
                     return;
                 }

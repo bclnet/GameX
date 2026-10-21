@@ -3,6 +3,8 @@ import os
 from openx.core import _pathExtension
 from gamex import Family, FamilyGame, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
+from gamex.families.Uncore.formats.binary import Binary_Zip
+from gamex.families.ID.formats.binary import Binary_Lmp, Binary_Mdl, Binary_Pak, Binary_Spr, Binary_Wad
 
 # QGame
 class QGame(FamilyGame):
@@ -19,11 +21,22 @@ class IDArchive(BinaryArchive):
 
     @staticmethod
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
-        pass
+        match extension:
+            case '': return None
+            case '.pk3' | '.pk4' | '.zip': return Binary_Zip()
+            case '.arc': return Binary_Pak()
+            case '.wad': return Binary_Wad()
+            case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
-        match _pathExtension(source.path).lower():
-            case _: return UncoreArchive.assetFactory(source, game)
+        match game.engine[0]:
+            case 'idTech':
+                match _pathExtension(source.path).lower():
+                    case '.lmp' | '.tex': return (0, Binary_Lmp.factory)
+                    case '.mdl': return (0, Binary_Mdl.factory)
+                    case '.spr': return (0, Binary_Spr.factory)
+                    case _: return UncoreArchive.assetFactory(source, game)
+            case _: raise Exception(f'Unknown: {game.engine[0]}')
 
     #endregion

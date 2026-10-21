@@ -6,16 +6,17 @@ using OpenX.Client;
 using System;
 using System.Collections.Generic;
 
-namespace GameX.Engines.Mg;
+namespace GameX.Origin.Mg.UO;
 
 /// <summary>
-/// Uploads UO gump pixels to Texture2D. Lives here because GameX.Origin.UO is netstandard2.1
-/// and cannot reference MonoGame. Not an OpenX type.
+/// Uploads UO gump pixels to Texture2D and draws them with SpriteBatch. Lives here because
+/// GameX.Origin and GameX.Origin.UO are netstandard2.1 and do not reference MonoGame. Not an OpenX type.
 /// </summary>
 public sealed class UoGumpArt : IGumpArt {
     readonly GraphicsDevice _device;
     readonly SpriteBatch _batch;
     readonly Dictionary<ushort, Texture2D> _cache = [];
+    readonly Dictionary<int, Texture2D> _raw = [];
     readonly Dictionary<(ushort graphic, ushort hue), Texture2D> _tinted = [];
     readonly Dictionary<(byte font, char ch, ushort hue), Texture2D> _ascii = [];
     Texture2D _glyphs;
@@ -57,6 +58,17 @@ public sealed class UoGumpArt : IGumpArt {
         }
         if (tile) DrawTiled(tex, x, y, destWidth, destHeight, color);
         else _batch.Draw(tex, new Rectangle(x, y, destWidth, destHeight), color);
+    }
+
+    /// <summary>Land and static art. A separate cache so a gump id is not reused as a tile.</summary>
+    public void DrawRaw(int key, int x, int y, int destWidth, int destHeight, byte[] pixels1555, int srcWidth, int srcHeight) {
+        if (destWidth <= 0 || destHeight <= 0) return;
+        if (!_raw.TryGetValue(key, out var tex)) {
+            tex = Upload(pixels1555, srcWidth, srcHeight);
+            if (tex == null) return;
+            _raw[key] = tex;
+        }
+        _batch.Draw(tex, new Rectangle(x, y, destWidth, destHeight), Color.White);
     }
 
     /// <summary>

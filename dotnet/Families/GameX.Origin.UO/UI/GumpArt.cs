@@ -17,6 +17,14 @@ public interface IGumpArt {
     void End();
     void Draw(ushort graphic, int x, int y, int destWidth, int destHeight, byte[] pixels1555, int srcWidth, int srcHeight, bool tile, ushort hue = 0);
 
+    /// <summary>
+    /// Same pixels as Draw. key is not a gump id, so the host must not reuse the gump cache.
+    /// The default body keeps the low 16 bits and calls Draw.
+    /// </summary>
+    void DrawRaw(int key, int x, int y, int destWidth, int destHeight, byte[] pixels1555, int srcWidth, int srcHeight) {
+        Draw((ushort)(key & 0xFFFF), x, y, destWidth, destHeight, pixels1555, srcWidth, srcHeight, false, 0);
+    }
+
     /// <summary>One line of text. font is fonts.mul 0..9. The default body draws nothing.</summary>
     void DrawText(int x, int y, string text, ushort hue, byte font = 1) { }
 
@@ -25,7 +33,7 @@ public interface IGumpArt {
 }
 
 /// <summary>
-/// Set by GameX.Engine.Mg.UoGumpArt.Attach. Null means the scene only walks the tree.
+/// Set by GameX.Origin.Mg.UO.UoGumpArt.Attach. Null means the scene only walks the tree.
 /// </summary>
 public static class GumpArt {
     public static IGumpArt Sink { get; set; }

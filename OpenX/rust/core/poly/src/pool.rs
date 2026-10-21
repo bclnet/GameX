@@ -206,7 +206,8 @@ mod tests {
         let kv = sample();
         let scale = kv.get("entity").and_then(|e| e.get("scale")).unwrap();
         assert_eq!(scale.asF32(), Some(2.5));
-        assert_eq!(scale.asI64(), Some(2), "string -> int truncates");
+        // C# Convert.ToInt64("2.5") throws FormatException. A boxed double would round; this value is a string.
+        assert_eq!(scale.asI64(), None, "a numeric string is not an int");
     }
 
     #[test]

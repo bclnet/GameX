@@ -10,6 +10,7 @@ public static class OpenGLRenderer {
     static OpenGLRenderer() {
         OpenGLX.BuildersByType[typeof(Binary_Nif)] = OpenGLNifObjectBuilder.BuildObject;
         OpenGLX.BuildersByType[typeof(Binary_Ftl)] = OpenGLFtlObjectBuilder.BuildObject;
+        OpenGLX.BuildersByType[typeof(Binary_Fts)] = OpenGLFtsObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

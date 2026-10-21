@@ -1,4 +1,5 @@
 ﻿using GameX;
+using GameX.Origin.Formats;
 using GameX.Origin.Formats.UO;
 using GameX.Xbox;
 using OpenX.Client;
@@ -41,6 +42,16 @@ public class Assets(UOGame game) {
     //ChairTable ChairTable;
     readonly Dictionary<int, (byte[] pixels, int width, int height)> _gumpPixels = [];
     readonly HashSet<int> _gumpPixelsMiss = [];
+    Stream _map;
+    int _mapWidth;
+    Stream _staidx;
+    Stream _statics;
+    readonly Dictionary<long, byte[]> _landBlocks = [];
+    readonly Dictionary<long, byte[]> _staticBlocks = [];
+    readonly Dictionary<int, (byte[] pixels, int width, int height)> _artPixels = [];
+    readonly HashSet<int> _artMiss = [];
+    readonly Dictionary<long, (byte[] pixels, int width, int height, int cx, int cy)> _bodyFrames = [];
+    readonly HashSet<long> _bodyMiss = [];
 
 
     public class UoAnimations {
@@ -106,6 +117,7 @@ public class Assets(UOGame game) {
         //Fonts = await game.GetAsset<Binary_UnicodeFont>("fonts.mul");
         Hues = await TryAsset<Binary_Hues>(game, "hues.mul");
         HuesRadar = await TryAsset<Binary_RadarColor>(game, "radarcol.mul");
+        await OpenFelucca(game);
         //TileData = new TileDataoader(this);
         //Multis = new Multi(this);
         //Skills = new Skills(this);
@@ -204,6 +216,192 @@ public class Assets(UOGame game) {
         return true;
     }
 
+    /// <summary>
+    /// Felucca. map0LegacyMUL.uop is flattened by OpenMap. A missing map leaves the overhead labels.
+    /// </summary>
+    async Task OpenFelucca(Archive game) {
+        try {
+            var map = OpenPack(game, "map0LegacyMUL.uop");
+            if (map is BinaryArchive bin && bin.Files != null && bin.Files.Count > 0)
+                _map = Binary_UO.OpenMap(bin);
+            if (_map == null) _map = await TryData(game, "map0.mul");
+            if (_map != null && _map.CanSeek && _map.Length > 0)
+                _mapWidth = (int)(_map.Length / (512 * 196));
+            _staidx = await TryData(game, "staidx0.mul");
+            _statics = await TryData(game, "statics0.mul");
+        }
+        catch (Exception) {
+            _map = null;
+            _mapWidth = 0;
+        }
+    }
+
+    static async Task<Stream> TryData(Archive game, string name) {
+        try {
+            var s = await game.GetData(name, default, false);
+            if (s == null) return null;
+            if (s.CanSeek) return s;
+            var ms = new MemoryStream();
+            await s.CopyToAsync(ms);
+            ms.Position = 0;
+            return ms;
+        }
+        catch (Exception) { return null; }
+    }
+
+    /// <summary>
+    /// One Felucca land tile. x is the outer index inside the 8x8 block, matching UltimaCell.ReadLand.
+    /// </summary>
+    public bool TryLandTile(int wx, int wy, out ushort tile, out sbyte z) {
+        tile = 0;
+        z = 0;
+        if (_map == null || _mapWidth <= 0 || wx < 0 || wy < 0) return false;
+        var cx = wx >> 3;
+        var cy = wy >> 3;
+        if (cx >= _mapWidth || cy >= 512) return false;
+        var block = LandBlock(cx, cy);
+        if (block == null) return false;
+        var o = ((wx & 7) * 8 + (wy & 7)) * 3;
+        tile = (ushort)((block[o] | (block[o + 1] << 8)) & 0x3FFF);
+        z = (sbyte)block[o + 2];
+        return true;
+    }
+
+    byte[] LandBlock(int cx, int cy) {
+        var key = ((long)cx << 32) | (uint)cy;
+        if (_landBlocks.TryGetValue(key, out var hit)) return hit;
+        var ptr = ((long)cx * 512 + cy) * 196 + 4;
+        var data = new byte[192];
+        lock (_map) {
+            if (ptr < 0 || ptr + 192 > _map.Length) return null;
+            _map.Position = ptr;
+            if (_map.Read(data, 0, 192) < 192) return null;
+        }
+        _landBlocks[key] = data;
+        return data;
+    }
+
+    /// <summary>
+    /// Statics whose local x,y is this tile. Skips 0x0C45..0x0DAF. graphic is the item id, not the art file id.
+    /// </summary>
+    public void CopyStatics(int wx, int wy, List<(ushort graphic, sbyte z)> dest) {
+        if (dest == null || _staidx == null || _statics == null || _mapWidth <= 0 || wx < 0 || wy < 0) return;
+        var cx = wx >> 3;
+        var cy = wy >> 3;
+        if (cx >= _mapWidth || cy >= 512) return;
+        var recs = StaticBlock(cx, cy);
+        if (recs == null || recs.Length < 7) return;
+        var lx = wx & 7;
+        var ly = wy & 7;
+        for (var i = 0; i + 7 <= recs.Length; i += 7) {
+            var tile = (ushort)(recs[i] | (recs[i + 1] << 8));
+            if (recs[i + 2] != lx || recs[i + 3] != ly) continue;
+            if (tile >= 0x0C45 && tile <= 0x0DAF) continue;
+            dest.Add((tile, (sbyte)recs[i + 4]));
+        }
+    }
+
+    byte[] StaticBlock(int cx, int cy) {
+        var key = ((long)cx << 32) | (uint)cy;
+        if (_staticBlocks.TryGetValue(key, out var hit)) return hit;
+        var pos = ((long)cx * 512 + cy) * 12;
+        var idx = new byte[8];
+        lock (_staidx) {
+            if (pos < 0 || pos + 8 > _staidx.Length) return EmptyStatic(key);
+            _staidx.Position = pos;
+            if (_staidx.Read(idx, 0, 8) < 8) return EmptyStatic(key);
+        }
+        var lookup = BitConverter.ToInt32(idx, 0);
+        var length = BitConverter.ToInt32(idx, 4);
+        if (lookup < 0 || length <= 0) return EmptyStatic(key);
+        var buf = new byte[length];
+        lock (_statics) {
+            if (lookup + length > _statics.Length) return EmptyStatic(key);
+            _statics.Position = lookup;
+            length = _statics.Read(buf, 0, length);
+        }
+        if (length < buf.Length) buf = buf[..length];
+        _staticBlocks[key] = buf;
+        return buf;
+    }
+
+    byte[] EmptyStatic(long key) {
+        _staticBlocks[key] = [];
+        return _staticBlocks[key];
+    }
+
+    /// <summary>
+    /// Land file ids are 0..0x3FFF. Static art is the item graphic plus 0x4000.
+    /// Pixels are little-endian BGRA1555. A missing land tile falls back to radarcol.mul.
+    /// </summary>
+    public bool TryArtPixels(int fileId, out byte[] pixels, out int width, out int height) {
+        pixels = null;
+        width = height = 0;
+        if (_artPixels.TryGetValue(fileId, out var hit)) {
+            pixels = hit.pixels;
+            width = hit.width;
+            height = hit.height;
+            return pixels != null && width > 0 && height > 0;
+        }
+        if (fileId >= 0 && fileId <= 0xFFFF && !_artMiss.Contains(fileId) && Arts is BinaryArchive bin) {
+            var path = fileId < 0x4000 ? $"land/file{fileId:x5}.land" : $"art/file{fileId:x5}.art";
+            try {
+                var asset = bin.GetAsset<object>(path, throwOnError: false).GetAwaiter().GetResult();
+                if (asset is ITexture tex) {
+                    var packed = tex.Create("", o => (TextureAsBytes)o);
+                    pixels = packed.Bytes;
+                    width = tex.Width;
+                    height = tex.Height;
+                    if (pixels != null && width > 0 && height > 0 && pixels.Length >= width * height * 2) {
+                        _artPixels[fileId] = (pixels, width, height);
+                        return true;
+                    }
+                }
+            }
+            catch (Exception) { }
+            _artMiss.Add(fileId);
+        }
+        if (fileId >= 0 && fileId < 0x4000 && TryRadarDiamond(fileId, out pixels)) {
+            width = height = 44;
+            _artPixels[fileId] = (pixels, 44, 44);
+            return true;
+        }
+        pixels = null;
+        width = height = 0;
+        return false;
+    }
+
+    bool TryRadarDiamond(int id, out byte[] pixels) {
+        pixels = null;
+        if (HuesRadar == null || id < 0 || id >= HuesRadar.Colors.Length) return false;
+        var c = HuesRadar.Colors[id];
+        var r = (int)(c & 0xFF);
+        var g = (int)((c >> 8) & 0xFF);
+        var b = (int)((c >> 16) & 0xFF);
+        var p = (ushort)(((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3) | 0x8000);
+        var lo = (byte)p;
+        var hi = (byte)(p >> 8);
+        var bd = new byte[44 * 44 * 2];
+        var xOffset = 21;
+        var xRun = 2;
+        for (var y = 0; y < 22; y++, xOffset--, xRun += 2) FillRun(bd, y, xOffset, xRun, lo, hi);
+        xOffset = 0;
+        xRun = 44;
+        for (var y = 22; y < 44; y++, xOffset++, xRun -= 2) FillRun(bd, y, xOffset, xRun, lo, hi);
+        pixels = bd;
+        return true;
+    }
+
+    static void FillRun(byte[] bd, int y, int xOffset, int xRun, byte lo, byte hi) {
+        var row = y * 44;
+        var end = xOffset + xRun;
+        for (var x = xOffset; x < end; x++) {
+            var i = (row + x) * 2;
+            bd[i] = lo;
+            bd[i + 1] = hi;
+        }
+    }
+
     static FileSource FindGump(BinaryArchive bin, int graphic) {
         IList<FileSource> files = bin.Files;
         FileSource file = null;
@@ -217,6 +415,124 @@ public class Assets(UOGame game) {
                 if (at != null && at.Id == graphic) { file = at; break; }
             }
         return file == null || file.Offset < 0 ? null : file;
+    }
+
+    /// <summary>
+    /// One frame of a body. People stand on action 4. Directions 5..7 mirror 3..1.
+    /// Pixels are little-endian BGRA1555. The anchor is the frame center.
+    /// </summary>
+    public bool TryBodyFrame(int body, int action, int direction, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {
+        pixels = null;
+        width = height = centerX = centerY = 0;
+        if (body <= 0 || direction < 0 || direction > 7) return false;
+        var key = ((long)body << 16) | ((long)(action & 0xFF) << 8) | (uint)(direction & 7);
+        if (_bodyFrames.TryGetValue(key, out var hit)) {
+            pixels = hit.pixels;
+            width = hit.width;
+            height = hit.height;
+            centerX = hit.cx;
+            centerY = hit.cy;
+            return pixels != null;
+        }
+        if (_bodyMiss.Contains(key)) return false;
+        for (var file = 0; file < 5; file++) {
+            var index = AnimIndex(body, action, direction, file);
+            if (!TryAnimGroup(file, index, out var group)) continue;
+            if (!DecodeFrame(group, direction > 4, out pixels, out width, out height, out centerX, out centerY)) continue;
+            _bodyFrames[key] = (pixels, width, height, centerX, centerY);
+            return true;
+        }
+        _bodyMiss.Add(key);
+        return false;
+    }
+
+    static int AnimIndex(int body, int action, int direction, int file) {
+        int index;
+        if (file == 1) index = body < 200 ? body * 110 : 22000 + (body - 200) * 65;
+        else if (file == 2) {
+            if (body < 300) index = body * 65;
+            else if (body < 400) index = 33000 + (body - 300) * 110;
+            else index = 35000 + (body - 400) * 175;
+        }
+        else if (file == 4 && body == 34) index = 22000 + (body - 200) * 65;
+        else if (body < 200) index = body * 110;
+        else if (body < 400) index = 22000 + (body - 200) * 65;
+        else index = 35000 + (body - 400) * 175;
+        index += action * 5;
+        if (direction <= 4) index += direction;
+        else index += direction - (direction - 4) * 2;
+        return index;
+    }
+
+    bool TryAnimGroup(int file, int index, out byte[] group) {
+        group = null;
+        if (Animations == null || file < 0 || file >= Animations.Anims.Length || index < 0) return false;
+        if (Animations.Anims[file] is not BinaryArchive bin) return false;
+        try {
+            var s = bin.GetData($"file{index:x5}.anim", default, false).GetAwaiter().GetResult();
+            if (s == null) return false;
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            group = ms.ToArray();
+            return group.Length >= 516;
+        }
+        catch (Exception) { return false; }
+    }
+
+    static bool DecodeFrame(byte[] group, bool flip, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {
+        pixels = null;
+        width = height = centerX = centerY = 0;
+        var count = BitConverter.ToInt32(group, 512);
+        if (count <= 0 || count > 64) return false;
+        var table = 516;
+        if (table + count * 4 > group.Length) return false;
+        var at = 512 + BitConverter.ToInt32(group, table);
+        if (at < 0 || at + 8 > group.Length) return false;
+        centerX = BitConverter.ToInt16(group, at);
+        centerY = BitConverter.ToInt16(group, at + 2);
+        width = BitConverter.ToUInt16(group, at + 4);
+        height = BitConverter.ToUInt16(group, at + 6);
+        if (width <= 0 || height <= 0 || width > 512 || height > 512) return false;
+        pixels = new byte[width * height * 2];
+        var xBase = centerX - 0x200;
+        var yBase = centerY + height - 0x200;
+        const uint mask = (0x200u << 22) | (0x200u << 12);
+        var p = at + 8;
+        if (p + 4 > group.Length) return false;
+        var header = BitConverter.ToUInt32(group, p);
+        p += 4;
+        while (header != 0x7FFF7FFF) {
+            header ^= mask;
+            var run = (int)(header & 0xFFF);
+            var x = (int)((header >> 22) & 0x3FF) + xBase;
+            var y = (int)((header >> 12) & 0x3FF) + yBase;
+            if (p + run > group.Length) return false;
+            for (var i = 0; i < run; i++) {
+                var c = (ushort)(BitConverter.ToUInt16(group, group[p + i] * 2) ^ 0x8000);
+                var px = x + i;
+                if (c != 0 && px >= 0 && px < width && y >= 0 && y < height) {
+                    var o = (y * width + px) * 2;
+                    pixels[o] = (byte)c;
+                    pixels[o + 1] = (byte)(c >> 8);
+                }
+            }
+            p += run;
+            if (p + 4 > group.Length) break;
+            header = BitConverter.ToUInt32(group, p);
+            p += 4;
+        }
+        if (!flip) return true;
+        var flipped = new byte[pixels.Length];
+        for (var y = 0; y < height; y++)
+            for (var x = 0; x < width; x++) {
+                var s = (y * width + x) * 2;
+                var d = (y * width + (width - 1 - x)) * 2;
+                flipped[d] = pixels[s];
+                flipped[d + 1] = pixels[s + 1];
+            }
+        pixels = flipped;
+        centerX = width - centerX;
+        return true;
     }
 }
 
@@ -257,17 +573,17 @@ public class UOGameClient : GameClient {
         return (SceneBase)create.Invoke(null, [client]);
     }
 
-    // Origin cannot reference GameX.Engine.Mg (net10.0). The painter lives there because this project has no Texture2D.
+    // Origin cannot reference GameX.Origin.Mg because that project is net10.0. The painter lives there because this project has no Texture2D.
     static void AttachGumpArt(IClientHost host) {
         Assembly asm = null;
         foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
-            if (loaded.GetName().Name == "GameX.Engine.Mg") { asm = loaded; break; }
+            if (loaded.GetName().Name == "GameX.Origin.Mg") { asm = loaded; break; }
         if (asm == null) {
-            var file = Path.Combine(AppContext.BaseDirectory, "GameX.Engine.Mg.dll");
+            var file = Path.Combine(AppContext.BaseDirectory, "GameX.Origin.Mg.dll");
             if (!File.Exists(file)) return;
             asm = Assembly.LoadFrom(file);
         }
-        var type = asm.GetType("GameX.Engines.Mg.UoGumpArt");
+        var type = asm.GetType("GameX.Origin.Mg.UO.UoGumpArt");
         type?.GetMethod("Attach")?.Invoke(null, [host]);
     }
 

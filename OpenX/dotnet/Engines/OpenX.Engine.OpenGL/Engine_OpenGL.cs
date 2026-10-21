@@ -34,9 +34,7 @@ public class OpenGLClientHost : IClientHost {
 /// OpenGLObjectBuilder
 /// </summary>
 class OpenGLObjectBuilder : ObjectModelBuilder<object, GLRenderMaterial, int> {
-    public override object Instance(object prefab, object parent) {
-        return "clone";
-    }
+    public override object Instance(object prefab, object parent) => prefab;
     public async override Task<object> Create(ISource source, object path, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager) {
         var builder = OpenGLX.BuildersByType[path.GetType()];
         var s = await builder(source, path, isStatic, materialManager);

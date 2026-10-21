@@ -15,3 +15,4 @@ openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
 openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }
 bytemuck = { workspace = true }
+glam = { workspace = true }

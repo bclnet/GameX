@@ -30,6 +30,15 @@ pub fn GL() -> &'static glow::Context { _GL.get().expect("no GL context: call se
 /// Sets the context `GL()` returns. The first context set stays.
 pub fn setGL(gl: Arc<glow::Context>) { let _ = _GL.set(gl); }
 
+static OBJECT_DRAW: Mutex<Option<fn(&(dyn Any + Send + Sync))>> = Mutex::new(None);
+
+/// GameX registers this so an Object view can draw an FTL or FTS. OpenX does not name those types.
+pub fn setObjectDraw(f: fn(&(dyn Any + Send + Sync))) { *OBJECT_DRAW.lock().unwrap() = Some(f); }
+
+pub fn objectDraw(obj: &(dyn Any + Send + Sync)) {
+    if let Some(f) = *OBJECT_DRAW.lock().unwrap() { f(obj); }
+}
+
 // #region Extensions
 
 /// C# `Func<ISource, object, bool, MaterialManager<GLRenderMaterial, int>, Task<object>>`.

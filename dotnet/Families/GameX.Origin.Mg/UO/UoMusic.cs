@@ -4,15 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace GameX.Engines.Mg;
+namespace GameX.Origin.Mg.UO;
 
 /// <summary>
-/// Plays a login song from the UO install Music folder. Lives here because
-/// GameX.Origin.UO is netstandard2.1 and cannot reference MonoGame.
+/// Plays a login song from the UO install Music folder through Song and MediaPlayer. Lives here because
+/// GameX.Origin and GameX.Origin.UO are netstandard2.1 and do not reference MonoGame. Not an OpenX type.
 /// </summary>
 public static class UoMusic {
     static bool _done;
     static int _tries;
+    static Song _song; // held so SetEnabled does not call FromUri again
 
     /// <summary>
     /// Plays once. An empty client path can be retried. A missing folder, a successful play,
@@ -43,6 +44,7 @@ public static class UoMusic {
             MediaPlayer.IsRepeating = true;
             MediaPlayer.Volume = 0.4f;
             MediaPlayer.Play(song);
+            _song = song;
             _done = true;
             Console.WriteLine($"UO music: {Path.GetFileName(path)}");
             Console.Out.Flush();
@@ -52,5 +54,14 @@ public static class UoMusic {
             Console.WriteLine($"UO music: {ex.GetType().Name}: {ex.Message}");
             Console.Out.Flush();
         }
+    }
+
+    /// <summary>
+    /// Pauses or resumes the song from a successful Attach. Does nothing when play never succeeded, and does not log.
+    /// </summary>
+    public static void SetEnabled(bool on) {
+        if (_song == null) return;
+        if (on) MediaPlayer.Resume();
+        else MediaPlayer.Pause();
     }
 }

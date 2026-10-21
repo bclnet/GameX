@@ -71,7 +71,8 @@ pub struct OpenGLObjectBuilder;
 
 impl ObjectModelBuilder<OpenGLBackend, OpenGLTextureBuilder, OpenGLMaterialBuilder> for OpenGLObjectBuilder {
     fn instance(&mut self, prefab: &Option<AnyArc>, parent: Option<&Option<AnyArc>>) -> Option<AnyArc> {
-        Some(Arc::new("clone"))
+        let _ = parent;
+        prefab.clone()
     }
 
     fn create<'a>(&'a mut self, source: &'a SourceRef, path: &'a (dyn Any + Send + Sync), isStatic: bool, materialManager: &'a mut OpenGLMaterialManager) -> BoxFuture<'a, Result<Option<AnyArc>, Error>> {

@@ -157,13 +157,23 @@ public class TextureRenderer : EginRenderer {
 /// <summary>
 /// ObjectRenderer
 /// </summary>
+/// <summary>A built object that can draw itself. GameX meshes implement this. OpenX does not know those types.</summary>
+public interface IGlDrawable {
+    void DrawGl();
+}
+
 public class ObjectRenderer(IOpenGfx[] gfx, ISource source, object obj) : EginRenderer {
     readonly OpenGLGfxModel GfxModel = (OpenGLGfxModel)gfx[GfX.XModel];
     readonly ISource Source = source;
     readonly object Obj = obj;
+    object _built;
 
     public override void Start() {
-        GfxModel.ObjectManager.Create(Source, Obj, true, null).Wait();
+        (_built, _) = GfxModel.ObjectManager.Create(Source, Obj, true, null).Result;
+    }
+
+    public override void Render(Camera camera, Pass pass) {
+        if (_built is IGlDrawable draw) draw.DrawGl();
     }
 }
 

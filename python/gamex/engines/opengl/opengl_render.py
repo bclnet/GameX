@@ -3,10 +3,17 @@ import os
 from openx.core import ISource, IHaveSource
 from openx.engines.opengl.gfx import OpenGLX, TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
 from gamex.engines.opengl.openglFtlObjectBuilder import OpenGLFtlObjectBuilder
-from gamex.families.Arkane.formats.danae.binary import Binary_Ftl
+from gamex.engines.opengl.openglFtsObjectBuilder import OpenGLFtsObjectBuilder
+from gamex.engines.opengl.openglNifObjectBuilder import OpenGLNifObjectBuilder
+from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts
+from gamex.families.Gamebryo.formats.binary import Binary_Nif
 
 OpenGLX.buildersByType['Binary_Ftl'] = OpenGLFtlObjectBuilder.buildObject
 OpenGLX.buildersByType[Binary_Ftl] = OpenGLFtlObjectBuilder.buildObject
+OpenGLX.buildersByType['Binary_Fts'] = OpenGLFtsObjectBuilder.buildObject
+OpenGLX.buildersByType[Binary_Fts] = OpenGLFtsObjectBuilder.buildObject
+OpenGLX.buildersByType['Binary_Nif'] = OpenGLNifObjectBuilder.buildObject
+OpenGLX.buildersByType[Binary_Nif] = OpenGLNifObjectBuilder.buildObject
 
 # typedefs
 class IOpenGfx: pass

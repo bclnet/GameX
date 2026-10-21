@@ -21,9 +21,9 @@
 // still fails the cast. The cell coroutine isn't ported, so a started engine
 // loads empty containers.
 //
-// `ObjectRenderer` passes the loaded object as `SourcePath::Obj`. Nothing is
-// registered in `BuildersByType` until `Binary_Nif`'s builder is ported, so
-// `Start` logs the missing builder and the view stays empty, as C# does.
+// `ObjectRenderer` passes the loaded object as `SourcePath::Obj`. GameX
+// registers FTL and FTS builders and `setObjectDraw`. `Start` keeps the built
+// object. `Render` calls that hook. NIF stays unregistered.
 //
 // A renderer gets C#'s `IOpenGfx[]` as `IOpenGfxs` and downcasts the model
 // slot, as C# casts `(OpenGLGfxModel)gfx[GfX.XModel]`. C#'s `.Result` on a
@@ -40,7 +40,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::io::{Error, ErrorKind};
 use std::ops::Range;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::task::{Context, Poll, Wake, Waker};
 use glam::{Mat4, Vec3};
 use glow::HasContext;
@@ -53,7 +53,7 @@ use openx_poly::core::{ISourceExt, SourcePath, SourceRef};
 use openx_poly::pool::KV;
 use crate::egin::gl_render::{program, tex, uniform, GLRenderMaterial};
 use crate::engine_open_gl::{OpenGLGfxApi, OpenGLGfxModel};
-use crate::gfx::open_gl::{OpenGLCellBuilder, GL};
+use crate::gfx::open_gl::{objectDraw, OpenGLCellBuilder, GL};
 use crate::gfx::open_gl_open_engine::OpenGLOpenEngine;
 
 /// C# `task.Result`.
@@ -260,11 +260,12 @@ pub struct ObjectRenderer {
     gfxModel: Arc<Mutex<OpenGLGfxModel>>,
     source: SourceRef,
     obj: Arc<dyn Any + Send + Sync>,
+    built: Option<openx_gfx::gfx::AnyArc>,
 }
 
 impl ObjectRenderer {
     pub fn new(gfx: &IOpenGfxs, source: &SourceRef, obj: Arc<dyn Any + Send + Sync>) -> Result<Self, Error> {
-        Ok(Self { gfxModel: gfxModel(gfx)?, source: source.clone(), obj })
+        Ok(Self { gfxModel: gfxModel(gfx)?, source: source.clone(), obj, built: None })
     }
 }
 
@@ -272,13 +273,96 @@ impl Renderer for ObjectRenderer {
     fn start(&mut self) {
         let path = SourcePath::Obj(self.obj.clone());
         // C# `ObjectManager.Create` catches and logs. The Rust manager returns the error.
-        if let Err(e) = result(self.gfxModel.lock().unwrap().objectManager().create(&self.source, &path, true, None)) {
-            eprintln!("ERROR: {e}");
+        match result(self.gfxModel.lock().unwrap().objectManager().create(&self.source, &path, true, None)) {
+            Ok((obj, _)) => self.built = obj,
+            Err(e) => eprintln!("ERROR: {e}"),
         }
     }
 }
 
-impl EginRenderer for ObjectRenderer {}
+impl EginRenderer for ObjectRenderer {
+    fn render(&mut self, _camera: &Camera, _pass: Pass) {
+        if let Some(built) = &self.built { objectDraw(built.as_ref()); }
+    }
+}
+
+/// Fit positions into clip space and draw them once per `key`. GameX passes the object address.
+pub fn drawPositions(key: usize, positions: &[[f32; 3]], indices: &[u32]) {
+    if positions.is_empty() || indices.is_empty() { return; }
+    let gl = GL();
+    let program = meshProgram(gl);
+    let (vao, count) = meshSlot(gl, key, positions, indices);
+    unsafe {
+        gl.use_program(Some(program));
+        gl.bind_vertex_array(Some(vao));
+        gl.draw_elements(glow::TRIANGLES, count, glow::UNSIGNED_INT, 0);
+        gl.bind_vertex_array(None);
+        gl.use_program(None);
+    }
+}
+
+fn meshProgram(gl: &glow::Context) -> glow::Program {
+    static PROGRAM: OnceLock<glow::Program> = OnceLock::new();
+    *PROGRAM.get_or_init(|| unsafe {
+        let vs = gl.create_shader(glow::VERTEX_SHADER).expect("vertex shader");
+        gl.shader_source(vs, "#version 330 core\nlayout(location=0) in vec3 a;\nvoid main(){ gl_Position = vec4(a, 1.0); }\n");
+        gl.compile_shader(vs);
+        let fs = gl.create_shader(glow::FRAGMENT_SHADER).expect("fragment shader");
+        gl.shader_source(fs, "#version 330 core\nout vec4 c;\nvoid main(){ c = vec4(0.75, 0.78, 0.82, 1.0); }\n");
+        gl.compile_shader(fs);
+        let program = gl.create_program().expect("program");
+        gl.attach_shader(program, vs);
+        gl.attach_shader(program, fs);
+        gl.link_program(program);
+        gl.delete_shader(vs);
+        gl.delete_shader(fs);
+        program
+    })
+}
+
+fn meshSlot(gl: &glow::Context, key: usize, positions: &[[f32; 3]], indices: &[u32]) -> (glow::VertexArray, i32) {
+    static CACHE: OnceLock<Mutex<HashMap<usize, (glow::VertexArray, i32)>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(slot) = cache.lock().unwrap().get(&key).copied() { return slot; }
+    let mut min = positions[0];
+    let mut max = positions[0];
+    for p in positions {
+        for c in 0..3 {
+            min[c] = min[c].min(p[c]);
+            max[c] = max[c].max(p[c]);
+        }
+    }
+    let center = [(min[0] + max[0]) * 0.5, (min[1] + max[1]) * 0.5, (min[2] + max[2]) * 0.5];
+    let mut scale = 1e-6f32;
+    for c in 0..3 { scale = scale.max((max[c] - center[c]).abs()); }
+    scale = 0.8 / scale;
+    let mut packed = Vec::with_capacity(positions.len() * 3);
+    for p in positions {
+        let x = (p[0] - center[0]) * scale;
+        let y = (p[1] - center[1]) * scale;
+        let z = (p[2] - center[2]) * scale;
+        packed.push(x * 0.9 + z * 0.35);
+        packed.push(y * 0.9 - z * 0.2);
+        packed.push(0.0);
+    }
+    let vao = unsafe {
+        let vao = gl.create_vertex_array().expect("vao");
+        gl.bind_vertex_array(Some(vao));
+        let vbo = gl.create_buffer().expect("vbo");
+        gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
+        gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, std::slice::from_raw_parts(packed.as_ptr() as *const u8, packed.len() * 4), glow::STATIC_DRAW);
+        gl.enable_vertex_attrib_array(0);
+        gl.vertex_attrib_pointer_f32(0, 3, glow::FLOAT, false, 12, 0);
+        let ibo = gl.create_buffer().expect("ibo");
+        gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(ibo));
+        gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, std::slice::from_raw_parts(indices.as_ptr() as *const u8, indices.len() * 4), glow::STATIC_DRAW);
+        gl.bind_vertex_array(None);
+        vao
+    };
+    let slot = (vao, indices.len() as i32);
+    cache.lock().unwrap().insert(key, slot);
+    slot
+}
 
 // #endregion
 

@@ -14,6 +14,8 @@ public static class LoginStepGumps {
             case LoginSteps.EnteringBritania:
             case LoginSteps.CharacterCreationDone:
                 return new LoadingGump(world, scene);
+            case LoginSteps.InWorld:
+                return new WorldGump(world, scene);
             case LoginSteps.ServerSelection:
                 return new ServerSelectionGump(world, scene);
             case LoginSteps.CharacterSelection:

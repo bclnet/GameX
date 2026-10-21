@@ -7,7 +7,8 @@
 // isn't wired: `UnknownTransform` is a stub. Not registered. The spec names
 // `GameX.ID.IDArchive`, and `register` waits until `QGame` is ported.
 // `.lmp` / `.tex` is `Binary_Lmp`, `.spr` is `Binary_Spr`, `.mdl` is the empty
-// `Binary_Mdl`. `.bsp` is still a slot and fails when opened.
+// `Binary_Mdl`. `.bsp` is `Binary_BspX`: the constructor and the three header
+// `Read`s. `Ent`, miptex, and the content enums are still out.
 
 use std::io::{self, Error, ErrorKind};
 use std::sync::Arc;

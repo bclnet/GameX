@@ -2,7 +2,7 @@
 
 using System.IO;
 
-namespace GameX.Origin.UO;
+namespace GameX.Origin.Netcode.UO;
 
 /// <summary>
 /// Reads the install's Login.cfg. First LoginServer=host,port that parses.

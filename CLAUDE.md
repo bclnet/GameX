@@ -61,7 +61,7 @@ Python: put `python/` and `OpenX/python/` on `sys.path`, then `import gamex` (wh
 - **Every change goes to every language** ([ADR 0001](docs/ADR/0001-ports-stay-one-to-one.md)). A change to C# is made to its Python twin (`python/gamex/...`, `OpenX/python/...`) and its Rust twin (listed in `PORT_MAP.tsv`) in the same change, with the same names and shape. Where a twin doesn't exist yet, say so; list each language as updated, not applicable, or still to do. The MAUI explorer (`dotnet/Apps/GameX.App.ExplorerM`) is C#-only: it has no Python or Rust port and doesn't need one. The Ultima Online client port is also C# only until it is merged into GameX (see Known, accepted exceptions). UI: C# WPF, Python PyQt6, Rust egui (eframe), with each XAML view and its code-behind one `.rs` file (`views/file_explorer_xaml.rs`) ([ADR 0005](docs/ADR/0005-rust-ui-egui.md)).
 - **Porting a file to Rust: follow the `port-to-rust` skill** (`.claude/skills/port-to-rust/SKILL.md`). It covers the `PORT-SOURCE` / `PORT-SHA` / `PORT-STATUS` headers (keep them when editing, and don't trust a `done` header), `PORT_MAP.tsv`, and registering spec types, since Rust has no `Type.GetType`. An unregistered family fails with "unknown ArchiveType".
 - **Stale tests exist in all three ports.** A test module referring to names that no longer exist is stale, not a signal the code is wrong.
-- **Line endings on Windows.** `.rs`, `.md` and `.tsv` files are LF; `.cs` are CRLF + BOM (see Conventions); `.py` files are mixed (about 60% CRLF), so keep each file's endings. Python's text mode writes CRLF on Windows (open with `newline="\n"`), Git Bash's `sed -i` drops the CRs of a CRLF file, and PowerShell's `Set-Content -Encoding utf8` adds a BOM; check with `file` after a scripted edit.
+- **Line endings on Windows.** `.rs`, `.md` and `.tsv` files are LF; `.cs` are CRLF + BOM (see Conventions); `.py` files are mixed (about 60% CRLF), so keep each file's endings. Python's text mode writes CRLF on Windows (open with `newline="\n"`), Git Bash's `sed -i` drops the CRs of a CRLF file, and repo scripts are `.cmd` files, not PowerShell ([ADR 0013](docs/ADR/0013-scripts-are-cmd-files.md)); a script must not add a UTF-8 BOM to a file that lacks one; `.cs` and `.csproj` keep CRLF and their BOM; check with `file` after a scripted edit.
 - **No reflection in Rust.** Archive types, engines and apps are found by registration (the `port-to-rust` skill, step 3); a Rust Explorer that can't open a family or list an engine is usually missing a `register()` or `EngineX::EnginesUnionWith` call.
 
 ## Conventions
@@ -76,13 +76,16 @@ Python: put `python/` and `OpenX/python/` on `sys.path`, then `import gamex` (wh
 - C# caches keyed on `(ISource source, object path)` rely on reference identity; the Rust equivalent is `openx_poly::core::SourceRef`.
 - Match the surrounding file's density and idiom over general style preferences.
 - Prefer lean code. Don't add defensive checks, validation or hardening the code doesn't already have unless asked; fix the bug in front of you and stop.
+- Game networking lives in `GameX.<Family>.Netcode`, a sibling of the family project, with game code in a subfolder and namespace (first case `GameX.Origin.Netcode` / `UO`). No Python or Rust twin while the UO client is unmerged ([ADR 0012](docs/ADR/0012-game-networking-lives-in-a-netcode-sibling.md)).
+- Repo scripts are `.cmd` files ([ADR 0013](docs/ADR/0013-scripts-are-cmd-files.md)).
+- A C# project sets a single `TargetFramework` and does not set `TargetFrameworks`; ExplorerM's existing MAUI targets are the exception and stay ([ADR 0014](docs/ADR/0014-csharp-projects-do-not-multi-target.md)).
 
 ## Known, accepted exceptions
 
 Don't fix or report these:
 
 - **Archive paths aren't sanitized.** `ExportManager`/`ImportManager` (C#) and `exportManager.py` combine archive entry names with the output folder unchecked, so a `../` or rooted entry name can write (or, on import, read) outside that folder. This is deliberate: GameX trusts the archives it opens.
-- **Ultima Online is C# until it is merged.** The client port (`dotnet/Families/GameX.Origin.UO`, `dotnet/Families/GameX.Origin/Clients/UO`, and MonoGame host changes that exist only to run that client) does not get a Python or Rust twin yet. Do not add `gamex-origin-uo` to the Rust workspace or keep `GameX_Origin_UO.py` in step. ADR 0001 applies again when the owner says the client is merged. Origin resource parsers that already have twins stay in all three languages.
+- **Ultima Online is C# until it is merged.** The client port (`dotnet/Families/GameX.Origin.UO`, `dotnet/Families/GameX.Origin.Netcode`, `dotnet/Families/GameX.Origin.Mg`, `dotnet/Families/GameX.Origin/Clients/UO`, and MonoGame host changes that exist only to run that client) does not get a Python or Rust twin yet. Do not add `gamex-origin-uo` to the Rust workspace or keep `GameX_Origin_UO.py` in step. ADR 0001 applies again when the owner says the client is merged. Origin resource parsers that already have twins stay in all three languages.
 
 ## Git
 

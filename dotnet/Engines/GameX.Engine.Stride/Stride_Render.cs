@@ -1,11 +1,18 @@
 ﻿using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.Stride;
+using GameX.Arkane.Formats.Danae;
+using GameX.Gamebryo.Formats;
 #pragma warning disable CS9113
 
 namespace GameX.Engines.Stride;
 
 public static class StrideRenderer {
+    static StrideRenderer() {
+        StrideX.BuildersByType[typeof(Binary_Nif)] = StrideNifObjectBuilder.BuildObject;
+        StrideX.BuildersByType[typeof(Binary_Ftl)] = StrideFtlObjectBuilder.BuildObject;
+        StrideX.BuildersByType[typeof(Binary_Fts)] = StrideFtsObjectBuilder.BuildObject;
+    }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
@@ -13,7 +20,7 @@ public static class StrideRenderer {
             //"Material" => new MaterialRenderer(gfx, source, obj),
             //"Particle" => new ParticleRenderer(gfx, source, obj),
             "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0..),
-            //"Object" => new ObjectRenderer(gfx, source, obj),
+            "Object" => new ObjectRenderer(gfx, source, obj),
             //"Cell" => new CellRenderer(gfx, source, obj),
             //"World" => throw new NotImplementedException(),
             //"Engine" => new EngineRenderer(gfx, source, obj),

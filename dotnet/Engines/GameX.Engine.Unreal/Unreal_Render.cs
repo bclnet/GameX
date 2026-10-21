@@ -1,18 +1,25 @@
 ﻿using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.Unreal;
+using GameX.Arkane.Formats.Danae;
+using GameX.Gamebryo.Formats;
 using System.Collections.Generic;
 #pragma warning disable CS9113, CS0169
 
 namespace GameX.Engines.Unreal;
 
 public static class UnrealRenderer {
+    static UnrealRenderer() {
+        UnrealEngine.BuildersByType[typeof(Binary_Nif)] = UnrealNifObjectBuilder.BuildObject;
+        UnrealEngine.BuildersByType[typeof(Binary_Ftl)] = UnrealFtlObjectBuilder.BuildObject;
+        UnrealEngine.BuildersByType[typeof(Binary_Fts)] = UnrealFtsObjectBuilder.BuildObject;
+    }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
             "Texture" => new TextureRenderer(gfx, source, obj, 0..),
-            //"Object" => new ObjectRenderer(gfx, source, obj),
+            "Object" => new ObjectRenderer(gfx, source, obj),
             //"Cell" => new CellRenderer(gfx, source, obj),
             //"Engine" => new EngineRenderer(gfx, source, obj),
             _ => default

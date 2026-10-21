@@ -5,8 +5,7 @@ using System.Collections.Generic;
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO World, only the lists the login scene clears.
-/// Item, Mobile, and the managers World constructs are not in this project yet.
+/// ClassicUO World. Mobiles and Items are filled from the game socket once 0x1B arrives.
 /// </summary>
 public sealed class World {
     public Dictionary<uint, object> Items { get; } = new();

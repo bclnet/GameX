@@ -1,17 +1,24 @@
 ﻿using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.O3de;
+using GameX.Arkane.Formats.Danae;
+using GameX.Gamebryo.Formats;
 #pragma warning disable CS9113, CS0169
 
 namespace GameX.Engines.O3de;
 
 public static class O3deRenderer {
+    static O3deRenderer() {
+        O3deX.BuildersByType[typeof(Binary_Nif)] = O3deNifObjectBuilder.BuildObject;
+        O3deX.BuildersByType[typeof(Binary_Ftl)] = O3deFtlObjectBuilder.BuildObject;
+        O3deX.BuildersByType[typeof(Binary_Fts)] = O3deFtsObjectBuilder.BuildObject;
+    }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
             "Texture" => new TextureRenderer(gfx, source, obj, 0..),
-            //"Object" => new ObjectRenderer(gfx, source, obj),
+            "Object" => new ObjectRenderer(gfx, source, obj),
             //"Cell" => new CellRenderer(gfx, source, obj),
             //"Engine" => new EngineRenderer(gfx, source, obj),
             _ => default

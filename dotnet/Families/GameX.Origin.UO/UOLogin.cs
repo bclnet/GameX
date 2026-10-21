@@ -29,18 +29,18 @@ public static class UOLogin {
         return new LoginScene(new World());
     }
 
-    // Origin.UO cannot reference GameX.Engine.Mg (net10.0). Music lives there because this project has no MediaPlayer.
+    // Origin.UO cannot reference GameX.Origin.Mg because that project is net10.0. Music lives there because this project has no MediaPlayer.
     static void TryAttachMusic() {
         try {
             Assembly asm = null;
             foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
-                if (loaded.GetName().Name == "GameX.Engine.Mg") { asm = loaded; break; }
+                if (loaded.GetName().Name == "GameX.Origin.Mg") { asm = loaded; break; }
             if (asm == null) {
-                var file = Path.Combine(AppContext.BaseDirectory, "GameX.Engine.Mg.dll");
+                var file = Path.Combine(AppContext.BaseDirectory, "GameX.Origin.Mg.dll");
                 if (!File.Exists(file)) return;
                 asm = Assembly.LoadFrom(file);
             }
-            asm.GetType("GameX.Engines.Mg.UoMusic")?.GetMethod("Attach")?.Invoke(null, null);
+            asm.GetType("GameX.Origin.Mg.UO.UoMusic")?.GetMethod("Attach")?.Invoke(null, null);
         }
         catch { }
     }

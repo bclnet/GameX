@@ -66,7 +66,7 @@ public class ObjectRenderer(object parent, IOpenGfx[] gfx, ISource source, objec
     readonly object Obj = obj;
 
     public override void Start() {
-        GfxModel.ObjectManager.Create(source, Obj, true, null).Wait();
+        GfxModel.ObjectManager.Create(source, Obj, true, parent as Node).Wait();
     }
 }
 

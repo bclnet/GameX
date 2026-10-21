@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX.All\GameX.All.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Origin.UO\GameX.Origin.UO.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Origin.Mg\GameX.Origin.Mg.csproj" />
     <ProjectReference Include="..\..\Engines\GameX.Engine.EginX\GameX.Engine.EginX.csproj" />
     <ProjectReference Include="..\..\Engines\GameX.Engine.Mg\GameX.Engine.Mg.csproj" />
   </ItemGroup>

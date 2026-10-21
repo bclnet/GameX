@@ -5,7 +5,7 @@ from io import BytesIO
 from PIL import Image
 from enum import Enum
 from quaternion import quaternion
-from openx.core import _pathExtension, EngineX, Int3, ICellDatabase, log, Writer
+from openx.core import _pathExtension, EngineX, Int3, ICellDatabase, CellManager, log, Writer
 from openx.gfx import Raster, DDS_HEADER, TextureAsDds, TextureAsBytes, ITexture, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from .apple.plist_reader import PlistReader
@@ -424,8 +424,8 @@ class Binary_Img(IHaveMetaInfo, ITexture):
             # 8-bit pixels, mapped to any other mode using a color palette
             case 'P' | 'L':
                 self.format = (self.image.format, (TextureFormat.RGB24, TexturePixel.Unknown))
-                # 8-bit pixels, Grayscale
-                if self.image.mode == 'L': palette = [x for xs in [[x, x, x] for x in range(255)] for x in xs]
+                # 8-bit pixels, Grayscale. C# Format8bppIndexed is 256 entries; 255 drops index 255.
+                if self.image.mode == 'L': palette = [x for xs in [[x, x, x] for x in range(256)] for x in xs]
             # 3×8-bit pixels, true color
             case 'RGB': self.format = (self.image.format, (TextureFormat.RGB24, TexturePixel.Unknown))
             # 4×8-bit pixels, true color with transparency mask
@@ -1092,20 +1092,28 @@ class Binary_Zip(ArcBinaryT):
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.useReader = False
         arc = source.tag = ZipFile(r.f)
-        match self.key:
-            case None: pass
-            case s if isinstance(key, str): arc.setpassword(s)
-            case z if isinstance(key, bytes): raise NotImplementedError('Binary_Zip')
+        # A null key is ZipArchive: keep a name that does not end in '/'.
+        # Any other key is SharpZipLib: skip '/' and '\', and flag an encrypted entry.
+        useSystem = self.key is None
+        if not useSystem:
+            match self.key:
+                case str() as s: arc.setpassword(s.encode('utf-8'))
+                case bytes() | bytearray(): pass
+                case _: pass
+        # zipfile rewrites '\' to '/' in filename on Windows. C# tests the raw name, which is orig_filename.
         source.files = [FileSource(
-            path = s.filename, #.replace('\\', '/'),
+            path = s.orig_filename.replace('\\', '/'),
+            flags = 0 if useSystem else (1 if s.flag_bits & 1 else 0),
             packedSize = s.compress_size,
             fileSize = s.file_size,
-            tag = s) for s in arc.infolist() if not s.is_dir()]
+            tag = s) for s in arc.infolist() if not s.orig_filename.endswith('/' if useSystem else ('/', '\\'))]
 
     # readData
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         arc: ZipFile = source.tag
-        return BytesIO(arc.read(file.path))
+        # zipfile cannot set SharpZipLib's ZipFile.Key, so an encrypted entry fails closed.
+        if isinstance(self.key, (bytes, bytearray)) and file.flags: raise Exception('NotSupportedException: ZipFile.Key')
+        return BytesIO(arc.read(file.tag))
 
 #endregion
 
@@ -1130,20 +1138,34 @@ class Binary_Engine(IHaveMetaInfo, ICellDatabase):
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r, s)
 
     def __init__(self, r: BinaryReader, s: Archive):
-        values = r.readToEnd().decode('ascii').split(':')
+        # Encoding.ASCII: a byte above 127 is '?'.
+        values = ''.join(chr(b) if b < 128 else '?' for b in r.readToEnd()).split(':')
         ar = values[0]
         qa = values[1]
-        ci = [int(s) for s in values[2].split(',')]
-        cb = bool(values[3])
-        pp = [float(s) for s in values[4].split(',')]
-        pr = [float(s) for s in values[5].split(',')]
-        self.archive = s.getArchive(ar)
-        self.queryArchive = s.getArchive(qa)
-        self.query = self.queryArchive.arcBinary.getQuery()
+        ci = [int(x) for x in values[2].split(',')]
+        interior = values[3]
+        match interior.lower():
+            case 'true': cb = True
+            case 'false': cb = False
+            case _: raise Exception(f'FormatException: {interior}')
+        pp = [float(x) for x in values[4].split(',')]
+        pr = [float(x) for x in values[5].split(',')]
+        archive = s.getArchive(ar)
+        queryArchive = s.getArchive(qa)
+        if archive is not None and not isinstance(archive, BinaryArchive): raise Exception('InvalidCastException: BinaryArchive')
+        if queryArchive is None: raise Exception('NullReferenceException: QueryArchive')
+        if not isinstance(queryArchive, BinaryArchive): raise Exception('InvalidCastException: BinaryArchive')
+        arcBinary = queryArchive.arcBinary
+        if arcBinary is None: raise Exception('NullReferenceException: ArcBinary')
+        if not isinstance(arcBinary, CellManager.IQueryFunc): raise Exception('InvalidCastException: IQueryFunc')
+        self.archive = archive
+        self.queryArchive = queryArchive
+        self.query = arcBinary.getQuery()
         self.cellId = Int3(ci[0], ci[1], ci[2])
         self.cellInterior = cb
         self.playerPosition = array([pp[0], pp[1], pp[2]], dtype=float)
-        self.playerRotation = quaternion() if len(pr) == 1 else quaternion(pr[0], pr[1], pr[2], pr[3])
+        # pr.Length <= 3 is Quaternion.Identity. A longer list is (x, y, z, w).
+        self.playerRotation = quaternion(1, 0, 0, 0) if len(pr) <= 3 else quaternion(pr[3], pr[0], pr[1], pr[2])
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Engine', name = os.path.basename(file.path), value = self)),

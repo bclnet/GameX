@@ -6,7 +6,7 @@
 // big-endian, .v64 byte-swapped, .n64 word-swapped) are detected by magic and
 // normalised to native order before the header is read.
 //
-// ===================== FOUR C#-SIDE BUGS ==================================
+// ===================== FIVE C#-SIDE BUGS ==================================
 //
 //   1. **A one-byte buffer overflow.** `Header.Name` is `fixed sbyte Name[20]`,
 //      so valid indices are 0..19 — but the constructor does
@@ -30,6 +30,14 @@
 //      `FileInfo`, and `Open` all `throw new NotImplementedException()`;
 //      `Glob` returns empty. Like `NetworkFileSystem`, it reads as a feature
 //      and is not one. Not ported — see the bottom of this file.
+//
+//   5. **`N64_MAGIC` is one digit off.** The constant is the little-endian
+//      reading of the on-disk signature; the comment is those bytes as a
+//      big-endian literal. Z64's comment `0x80371240` is bytes `80 37 12 40`
+//      and the constant `0x40123780`. `.n64`'s comment `0x40123780` is bytes
+//      `40 12 37 80`, so the constant is `0x80371240`. The C# wrote
+//      `0x90371240`, and `IsValidRom` rejects every word-swapped image before
+//      `m64p_swap32` runs. This port uses `0x80371240`.
 
 use crate::util::endianness;
 
@@ -67,7 +75,7 @@ pub enum SystemType {
 // the big-endian spelling in a trailing comment on each.
 const Z64_MAGIC: u32 = 0x4012_3780; // 0x80371240 big-endian
 const V64_MAGIC: u32 = 0x1240_8037; // 0x37804012
-const N64_MAGIC: u32 = 0x9037_1240; // 0x40123780
+const N64_MAGIC: u32 = 0x8037_1240; // 0x40123780, bytes 40 12 37 80. C# wrote 0x90371240.
 
 /// C# `N64Rom.RomHeader`, 0x40 bytes.
 ///

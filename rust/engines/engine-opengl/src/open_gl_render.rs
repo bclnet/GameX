@@ -1,12 +1,12 @@
 // PORT-SOURCE: Engines/GameX.Engine.OpenGL/OpenGL_Render.cs
 // PORT-SHA: 85e7fd691556ba6d
-// PORT-STATUS: done
+// PORT-STATUS: partial
 //
-// PARTIAL PORT: the static constructor registers `Binary_Nif` with
-// `OpenGLNifObjectBuilder.BuildObject`, both unported (Gamebryo's Nif.cs and
-// OpenGLNifObjectBuilder.cs). `Binary_Ftl` is registered on the first
-// `createRenderer` (`open_gl_ftl_object_builder`). An "Object" view of a NIF
-// still has no builder.
+// PARTIAL PORT: `Binary_Ftl` and `Binary_Fts` are registered on the first
+// `createRenderer` (`open_gl_ftl_object_builder`, `open_gl_fts_object_builder`).
+// FTS is registered. `Binary_Nif` stays unregistered: Gamebryo's Nif is
+// unported (`OpenGLNifObjectBuilder.cs`), so an "Object" view of a NIF still
+// has no builder. The file is not `done` while NIF is unregistered.
 // "Particle" builds the outer `ParticleRenderer`, which draws nothing.
 // "Engine" needs the value to be an `Arc<dyn CellDatabase>` inside the `Any`.
 // `Binary_Engine` supplies that when the query archive implements `IQueryFunc`.
@@ -20,9 +20,9 @@ use std::any::{Any, TypeId};
 use std::io::{Error, ErrorKind};
 use std::sync::{Arc, Once};
 use gamex::meta::Tag;
-use gamex_arkane::formats::danae::binary::Binary_Ftl;
-use openx_engine_opengl::gfx::open_gl::OpenGLX;
-use openx_engine_opengl::gfx::open_gl_render::{EngineRenderer, MaterialRenderer, ObjectRenderer, ParticleRenderer, TestTriRenderer, TextureRenderer};
+use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use openx_engine_opengl::gfx::open_gl::{setObjectDraw, OpenGLX};
+use openx_engine_opengl::gfx::open_gl_render::{drawPositions, EngineRenderer, MaterialRenderer, ObjectRenderer, ParticleRenderer, TestTriRenderer, TextureRenderer};
 use openx_gfx::gfx::{IOpenGfxs, MaterialProp};
 use openx_gfx_egin::egin_render::EginRenderer;
 use openx_poly::core::{SourcePath, SourceRef};
@@ -30,11 +30,13 @@ use openx_poly::core::{SourcePath, SourceRef};
 pub struct OpenGLRenderer;
 
 impl OpenGLRenderer {
-    /// C# `OpenGLRenderer`'s static constructor. NIF stays unregistered.
+    /// C# `OpenGLRenderer`'s static constructor. FTS is registered. NIF stays unregistered.
     fn register() {
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
             OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Ftl>(), crate::open_gl_ftl_object_builder::buildObject);
+            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Fts>(), crate::open_gl_fts_object_builder::buildObject);
+            setObjectDraw(drawBuilt);
         });
     }
 
@@ -70,4 +72,27 @@ impl OpenGLRenderer {
             _ => return Ok(None),
         }))
     }
+}
+
+fn drawBuilt(obj: &(dyn std::any::Any + Send + Sync)) {
+    let key = dataAddr(obj);
+    if let Some(o) = obj.downcast_ref::<crate::open_gl_ftl_object_builder::OpenGLFtlObject>() {
+        let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
+        drawPositions(key, &positions, &indices);
+    } else if let Some(o) = obj.downcast_ref::<crate::open_gl_fts_object_builder::OpenGLFtsObject>() {
+        let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
+        drawPositions(key, &positions, &indices);
+    }
+}
+
+fn dataAddr(obj: &(dyn std::any::Any + Send + Sync)) -> usize {
+    let raw = obj as *const dyn std::any::Any;
+    unsafe { std::mem::transmute_copy::<_, usize>(&raw) }
+}
+
+fn pack<'a>(vertices: &[glam::Vec3], subs: impl Iterator<Item = &'a [i32]>) -> (Vec<[f32; 3]>, Vec<u32>) {
+    let positions = vertices.iter().map(|v| [v.x, v.y, v.z]).collect();
+    let mut indices = Vec::new();
+    for tris in subs { for i in tris { indices.push(*i as u32); } }
+    (positions, indices)
 }

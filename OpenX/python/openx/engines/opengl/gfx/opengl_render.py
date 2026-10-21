@@ -142,7 +142,12 @@ class ObjectRenderer(EginRenderer):
         self.obj: object = obj
 
     def start(self) -> None:
-        asyncio.run(self.gfxModel.objectManager.createObject(self.source, self.obj, True, None))
+        created = asyncio.run(self.gfxModel.objectManager.create(self.source, self.obj, True, None))
+        self.built = created[0] if isinstance(created, tuple) else created
+
+    def render(self, camera: Camera, passx: Pass) -> None:
+        draw = getattr(self.built, 'drawGl', None)
+        if callable(draw): draw()
 
 #endregion
 

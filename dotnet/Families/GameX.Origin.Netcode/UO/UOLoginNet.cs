@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GameX.Origin.UO;
+namespace GameX.Origin.Netcode.UO;
 
 /// <summary>
 /// Login-socket result for LoginScene. Network thread posts; UI thread takes.
@@ -18,12 +18,13 @@ public enum UOLoginPhase {
     ServersReady,
     CharactersReady,
     Failed,
-    RelayInProgress
+    RelayInProgress,
+    WorldEntered
 }
 
 /// <summary>
 /// ClassicUO's first login socket. Clear 4-byte seed, optional encrypted 0xEF, encrypted 0x80, then login replies.
-/// Login packets are not Huffman. No play-character packet.
+/// Login packets are not Huffman. 0x5D switches this socket onto the Huffman game stream.
 /// </summary>
 public static class UOLoginNet {
     const int AsciiField = 30;
@@ -39,6 +40,25 @@ public static class UOLoginNet {
     static string[] _takeServers, _takeCharacters;
     static string _takeMessage;
     static UOLoginPhase _takePhase;
+    static int? _playIndex;
+    static string _playName;
+    static readonly Queue<byte> _walks = new();
+    static readonly Queue<uint> _fastWalk = new();
+    static readonly Dictionary<uint, UOMobileState> _mobiles = new();
+    static readonly Dictionary<uint, UOItemState> _items = new();
+    static int _revision;
+    static uint _player;
+    static ushort _pbody;
+    static int _px, _py, _pz;
+    static byte _pdir;
+    static uint _auth;
+    static byte _seq;
+    static bool _inWorld;
+    static bool _gameStream;
+    static bool _sawCharacters;
+    static bool _postedWorld;
+    static volatile bool _gameReady;
+    static UOHuffman _huff = new();
 
     /// <summary>Connect or protocol failure.</summary>
     public static string LastError { get; private set; }
@@ -51,26 +71,35 @@ public static class UOLoginNet {
     /// Opens the login server on a background thread and writes the seed and encrypted account packet.
     /// A null or empty host returns without throwing.
     /// </summary>
-    public static void Begin(string host, int port, string account, string password) {
+    public static void Begin(string host, int port, string account, string password, ClientVersion version) {
         if (string.IsNullOrEmpty(host)) return;
-        var current = UltimaOnline.Current;
-        if (current == null || current.Version == 0) {
+        if (version == 0) {
             _started = false;
             LastError = "client version is missing";
             Post(UOLoginPhase.Failed, message: LastError);
             return;
         }
+        UOGamePackets.UseVersion(version);
         _started = false;
         LastError = null;
         var id = Interlocked.Increment(ref _runId);
         TcpClient previous;
         lock (Gate) {
             _select = null;
+            _playIndex = null;
+            _playName = null;
+            _walks.Clear();
+            _mobiles.Clear();
+            _items.Clear();
+            _player = 0;
+            _pbody = 0;
+            _px = _py = _pz = 0;
+            _pdir = 0;
+            _revision++;
             previous = _client;
             _client = null;
         }
         previous?.Close();
-        var version = current.Version;
         Task.Run(() => Connect(host, port, account, password, version, id));
     }
 
@@ -105,9 +134,51 @@ public static class UOLoginNet {
         lock (Gate) _select = index;
     }
 
+    /// <summary>Queues 0x5D. The network thread sends it. Does not open a socket.</summary>
+    public static void SelectCharacter(int index, string name) {
+        lock (Gate) {
+            _playIndex = index;
+            _playName = name ?? "";
+        }
+    }
+
+    /// <summary>Queues 0x02 once the game stream is up. Ignored before 0x5D.</summary>
+    public static void Walk(byte direction) {
+        if (!_gameReady) return;
+        lock (Gate) {
+            if (_walks.Count >= 4) return;
+            _walks.Enqueue(direction);
+        }
+    }
+
+    public static uint PlayerSerial { get { lock (Gate) return _player; } }
+    public static ushort PlayerBody { get { lock (Gate) return _pbody; } }
+    public static int PlayerX { get { lock (Gate) return _px; } }
+    public static int PlayerY { get { lock (Gate) return _py; } }
+    public static int PlayerZ { get { lock (Gate) return _pz; } }
+    public static byte PlayerDirection { get { lock (Gate) return _pdir; } }
+    public static int WorldRevision { get { lock (Gate) return _revision; } }
+
+    public static void CopyActors(List<UOMobileState> mobiles, List<UOItemState> items) {
+        lock (Gate) {
+            mobiles.Clear();
+            items.Clear();
+            foreach (var m in _mobiles.Values) mobiles.Add(m);
+            foreach (var it in _items.Values) items.Add(it);
+        }
+    }
+
     static void Connect(string host, int port, string account, string password, ClientVersion version, int id) {
         TcpClient client = null;
         _password = password;
+        _inWorld = false;
+        _gameReady = false;
+        _gameStream = false;
+        _sawCharacters = false;
+        _postedWorld = false;
+        _seq = 0;
+        _huff = new UOHuffman();
+        lock (Gate) _fastWalk.Clear();
         try {
             client = new TcpClient { NoDelay = true };
             client.Connect(host, port);
@@ -117,14 +188,13 @@ public static class UOLoginNet {
             stream.ReadTimeout = ReadWaitMs;
             var seed = Seed(client);
             var seedUint = ReadU32(seed, 0);
-            stream.Write(seed, 0, seed.Length);
             var crypt = new UOLoginCrypt(version);
             crypt.Initialize(seedUint);
             if (((uint)version >> 24) >= 6) {
                 var ef = LoginSeed(seedUint, version);
-                crypt.Encrypt(ef);
                 stream.Write(ef, 0, ef.Length);
             }
+            else stream.Write(seed, 0, seed.Length);
             var login = AccountLogin(account, password);
             crypt.Encrypt(login);
             stream.Write(login, 0, login.Length);
@@ -149,17 +219,21 @@ public static class UOLoginNet {
         var acc = new byte[8192];
         var tmp = new byte[4096];
         var accLen = 0;
-        var gotCharacters = false;
         while (id == Volatile.Read(ref _runId)) {
             WriteSelect(stream, crypt);
+            WritePlay(stream, crypt, client);
+            WriteWalk(stream, crypt);
             int n;
             try { n = stream.Read(tmp, 0, tmp.Length); }
             catch (Exception ex) when (TimedOut(ex)) { continue; }
             if (n <= 0) {
-                if (!gotCharacters) Fail("disconnected", id);
+                if (!_sawCharacters && !_inWorld) Fail("disconnected", id);
                 return;
             }
-            crypt.Encrypt(tmp.AsSpan(0, n));
+            if (_gameStream) {
+                if (!IngestGame(tmp, n, crypt, ref acc, ref accLen, id)) return;
+                continue;
+            }
             if (accLen + n > acc.Length) {
                 var bigger = new byte[Math.Max(acc.Length * 2, accLen + n)];
                 Buffer.BlockCopy(acc, 0, bigger, 0, accLen);
@@ -182,7 +256,7 @@ public static class UOLoginNet {
                     used = 0;
                     break;
                 }
-                if (acc[used] == 0xA9) gotCharacters = true;
+                if (acc[used] == 0xA9) _sawCharacters = true;
                 used += need;
             }
             if (used > 0 && accLen > used) {
@@ -223,6 +297,7 @@ public static class UOLoginNet {
         var ip = new IPAddress([p[o + 1], p[o + 2], p[o + 3], p[o + 4]]);
         var port = (p[o + 5] << 8) | p[o + 6];
         var auth = ReadU32(p, o + 7);
+        _auth = auth;
         Post(UOLoginPhase.RelayInProgress);
         client.Close();
         var next = new TcpClient { NoDelay = true };
@@ -237,25 +312,17 @@ public static class UOLoginNet {
         stream.ReadTimeout = ReadWaitMs;
         var seed = new[] { (byte)(auth >> 24), (byte)(auth >> 16), (byte)(auth >> 8), (byte)auth };
         stream.Write(seed, 0, seed.Length);
-        crypt.Initialize(auth);
+        crypt.BeginGame(auth);
+        _huff.Reset();
+        _gameStream = true;
         var login = GameLogin(auth, account, _password);
-        crypt.Encrypt(login);
+        crypt.EncryptGame(login);
         stream.Write(login, 0, login.Length);
         stream.Flush();
         return true;
     }
 
-    static int PacketLength(Span<byte> s) {
-        if (s.Length < 1) return 0;
-        var id = s[0];
-        if (id == 0x82) return s.Length >= 2 ? 2 : 0;
-        if (id == 0x8C) return s.Length >= 11 ? 11 : 0;
-        if (s.Length < 3) return 0;
-        var size = (s[1] << 8) | s[2];
-        if (size < 3) return -1;
-        if (size > s.Length) return 0;
-        return size;
-    }
+    static int PacketLength(Span<byte> s) => UOGamePackets.FrameLength(s);
 
     static string[] ReadServerNames(byte[] p, int o, int len) {
         if (len < 6) return [];
@@ -338,15 +405,216 @@ public static class UOLoginNet {
         return false;
     }
 
-    /// <summary>Four address bytes of the remote endpoint, or 0x7F000001 when that address is not IPv4.</summary>
+    /// <summary>Four address bytes of the local endpoint, or 0x7F000001 when that address is not IPv4.</summary>
     static byte[] Seed(TcpClient client) {
         uint seed = SeedWhenNotIpv4;
-        if (client.Client?.RemoteEndPoint is IPEndPoint ep && ep.Address.AddressFamily == AddressFamily.InterNetwork) {
+        if (client.Client?.LocalEndPoint is IPEndPoint ep && ep.Address.AddressFamily == AddressFamily.InterNetwork) {
             var b = ep.Address.GetAddressBytes();
             if (b.Length == 4)
                 seed = ((uint)b[0] << 24) | ((uint)b[1] << 16) | ((uint)b[2] << 8) | b[3];
         }
         return [(byte)(seed >> 24), (byte)(seed >> 16), (byte)(seed >> 8), (byte)seed];
+    }
+
+    static bool WritePlay(NetworkStream stream, UOLoginCrypt crypt, TcpClient client) {
+        int index;
+        string name;
+        lock (Gate) {
+            if (_playIndex is not int i) return false;
+            index = i;
+            name = _playName ?? "";
+            _playIndex = null;
+            _playName = null;
+        }
+        var pkt = UOGamePackets.PlayCharacter(name, index, ClientIp(client));
+        crypt.EncryptGame(pkt);
+        stream.Write(pkt, 0, pkt.Length);
+        stream.Flush();
+        _inWorld = true;
+        _gameReady = true;
+        return true;
+    }
+
+    static uint ClientIp(TcpClient client) {
+        if (client?.Client?.LocalEndPoint is IPEndPoint ep && ep.Address.AddressFamily == AddressFamily.InterNetwork) {
+            var b = ep.Address.GetAddressBytes();
+            if (b.Length == 4)
+                return ((uint)b[0] << 24) | ((uint)b[1] << 16) | ((uint)b[2] << 8) | b[3];
+        }
+        return SeedWhenNotIpv4;
+    }
+
+    static void WriteWalk(NetworkStream stream, UOLoginCrypt crypt) {
+        if (!_inWorld) return;
+        byte dir;
+        uint key;
+        lock (Gate) {
+            if (_walks.Count == 0 || _fastWalk.Count == 0) return;
+            dir = _walks.Dequeue();
+            key = _fastWalk.Dequeue();
+        }
+        var pkt = new byte[7];
+        pkt[0] = 0x02;
+        pkt[1] = dir;
+        pkt[2] = _seq++;
+        WriteU32(pkt, 3, key);
+        crypt.EncryptGame(pkt);
+        stream.Write(pkt, 0, pkt.Length);
+        stream.Flush();
+        Predict(dir);
+    }
+
+    static void Predict(byte dir) {
+        int dx = 0, dy = 0;
+        switch (dir & 7) {
+            case 0: dy = -1; break;
+            case 1: dx = 1; dy = -1; break;
+            case 2: dx = 1; break;
+            case 3: dx = 1; dy = 1; break;
+            case 4: dy = 1; break;
+            case 5: dx = -1; dy = 1; break;
+            case 6: dx = -1; break;
+            default: dx = -1; dy = -1; break;
+        }
+        lock (Gate) {
+            _px += dx;
+            _py += dy;
+            _pdir = (byte)(dir & 7);
+            if (_player != 0 && _mobiles.TryGetValue(_player, out var m))
+                _mobiles[_player] = new UOMobileState(_player, m.Body, _px, _py, _pz, _pdir);
+            _revision++;
+        }
+    }
+
+    static bool IngestGame(byte[] src, int n, UOLoginCrypt crypt, ref byte[] acc, ref int accLen, int id) {
+        var raw = src.AsSpan(0, n);
+        crypt.DecryptGame(raw);
+        var decoded = new byte[n * 8 + 64];
+        int produced;
+        try { produced = _huff.Decompress(raw, decoded); }
+        catch (Exception ex) {
+            Fail(ex.Message, id);
+            return false;
+        }
+        if (produced <= 0) return true;
+        if (accLen + produced > acc.Length) {
+            var bigger = new byte[Math.Max(acc.Length * 2, accLen + produced)];
+            Buffer.BlockCopy(acc, 0, bigger, 0, accLen);
+            acc = bigger;
+        }
+        Buffer.BlockCopy(decoded, 0, acc, accLen, produced);
+        accLen += produced;
+        var used = 0;
+        while (used < accLen) {
+            var need = PacketLength(acc.AsSpan(used, accLen - used));
+            if (need == 0) break;
+            if (need < 0) {
+                Fail($"unknown packet 0x{acc[used]:X2}", id);
+                return false;
+            }
+            if (HandleGame(acc, used, need, id) == HandleResult.Stop) return false;
+            used += need;
+        }
+        if (used > 0 && accLen > used) {
+            Buffer.BlockCopy(acc, used, acc, 0, accLen - used);
+            accLen -= used;
+        }
+        else if (used > 0) accLen = 0;
+        return true;
+    }
+
+    static HandleResult HandleGame(byte[] p, int o, int len, int id) {
+        switch (p[o]) {
+            case 0x1B:
+                if (UOGamePackets.LoginConfirm(p, o, out var serial, out var body, out var x, out var y, out var z, out var dir))
+                    SetPlayer(serial, body, x, y, z, dir, post: true);
+                return HandleResult.Continue;
+            case 0x55:
+                PostWorld();
+                return HandleResult.Continue;
+            case 0x20:
+                if (UOGamePackets.UpdatePlayer(p, o, len, out serial, out body, out x, out y, out z, out dir))
+                    SetPlayer(serial, body, x, y, z, dir, post: true);
+                return HandleResult.Continue;
+            case 0x21:
+                if (UOGamePackets.MoveReject(p, o, out x, out y, out dir, out z)) {
+                    _seq = p[o + 1];
+                    lock (Gate) _walks.Clear();
+                    SetPlayer(_player, _pbody, x, y, z, dir, post: false);
+                }
+                return HandleResult.Continue;
+            case 0x22:
+                return HandleResult.Continue;
+            case 0x77:
+                if (UOGamePackets.Moving(p, o, len, out serial, out body, out x, out y, out z, out dir))
+                    SetMobile(serial, body, x, y, z, dir);
+                return HandleResult.Continue;
+            case 0x78:
+                if (UOGamePackets.Incoming(p, o, len, out serial, out body, out x, out y, out z, out dir))
+                    SetMobile(serial, body, x, y, z, dir);
+                return HandleResult.Continue;
+            case 0x1A:
+                if (UOGamePackets.WorldItem(p, o, len, out var iserial, out var graphic, out x, out y, out z))
+                    SetItem(iserial, graphic, x, y, z);
+                return HandleResult.Continue;
+            case 0xBF:
+                // Subcommand 0x0002 is the six fast-walk keys.
+                UOGamePackets.FastWalk(p, o, len, _fastWalk);
+                return HandleResult.Continue;
+            case 0xA9: {
+                var names = ReadCharacterNames(p, o, len);
+                if (names == null) {
+                    Fail("bad character list", id);
+                    return HandleResult.Stop;
+                }
+                _sawCharacters = true;
+                Post(UOLoginPhase.CharactersReady, characters: names);
+                return HandleResult.Continue;
+            }
+            case 0x82:
+                Fail(RejectReason(len > 1 ? p[o + 1] : (byte)0xFF), id);
+                return HandleResult.Stop;
+            default:
+                return HandleResult.Continue;
+        }
+    }
+
+    static void SetPlayer(uint serial, ushort body, int x, int y, int z, byte dir, bool post) {
+        lock (Gate) {
+            _player = serial;
+            _pbody = body;
+            _px = x;
+            _py = y;
+            _pz = z;
+            _pdir = (byte)(dir & 7);
+            _mobiles[serial] = new UOMobileState(serial, body, x, y, z, _pdir);
+            _revision++;
+        }
+        if (post) PostWorld();
+    }
+
+    static void SetMobile(uint serial, ushort body, int x, int y, int z, byte dir) {
+        if (serial == _player) {
+            SetPlayer(serial, body, x, y, z, dir, post: false);
+            return;
+        }
+        lock (Gate) {
+            _mobiles[serial] = new UOMobileState(serial, body, x, y, z, (byte)(dir & 7));
+            _revision++;
+        }
+    }
+
+    static void SetItem(uint serial, ushort graphic, int x, int y, int z) {
+        lock (Gate) {
+            _items[serial] = new UOItemState(serial, graphic, x, y, z);
+            _revision++;
+        }
+    }
+
+    static void PostWorld() {
+        if (_postedWorld) return;
+        _postedWorld = true;
+        Post(UOLoginPhase.WorldEntered);
     }
 
     static byte[] LoginSeed(uint seed, ClientVersion version) {

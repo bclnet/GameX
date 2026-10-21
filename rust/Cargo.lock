@@ -1654,7 +1654,10 @@ name = "gamex-engine-bevy"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-bevy",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1662,7 +1665,10 @@ name = "gamex-engine-bgfx"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-bgfx",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1670,7 +1676,10 @@ name = "gamex-engine-diligent"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-diligent",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1678,7 +1687,10 @@ name = "gamex-engine-eginx"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-eginx",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1686,6 +1698,8 @@ name = "gamex-engine-godot"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-godot",
 ]
 
@@ -1694,8 +1708,11 @@ name = "gamex-engine-mg"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-mg",
  "openx-engine-sdl",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1703,7 +1720,10 @@ name = "gamex-engine-o3de"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-o3de",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1711,7 +1731,10 @@ name = "gamex-engine-ogre"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-ogre",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1733,7 +1756,10 @@ name = "gamex-engine-raylib"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-raylib",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1741,7 +1767,10 @@ name = "gamex-engine-sdl"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-sdl",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1749,7 +1778,10 @@ name = "gamex-engine-stride"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-stride",
+ "openx-gfx",
  "openx-sfx",
 ]
 
@@ -1758,7 +1790,9 @@ name = "gamex-engine-unity"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
  "gamex-gamebryo",
+ "glam",
  "openx-engine-unity",
 ]
 
@@ -1767,7 +1801,10 @@ name = "gamex-engine-unreal"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-unreal",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1775,7 +1812,10 @@ name = "gamex-engine-vulkan"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-vulkan",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1783,7 +1823,10 @@ name = "gamex-engine-wgpu"
 version = "0.1.0"
 dependencies = [
  "gamex",
+ "gamex-arkane",
+ "glam",
  "openx-engine-wgpu",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1842,6 +1885,7 @@ dependencies = [
  "bytemuck",
  "gamex",
  "gamex-uncore",
+ "glam",
  "openx-gfx",
  "openx-poly",
  "openx-vfx",
@@ -3412,6 +3456,8 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "openx",
+ "openx-gfx",
+ "openx-poly",
 ]
 
 [[package]]

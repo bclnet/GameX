@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Renderer home later is GameX.Engine.Mg (OpenX engine code MG), not FNA copied out of ClassicUO. This project stays netstandard2.1 and does not reference GameX.Engine.Mg. -->
+  <!-- This project stays netstandard2.1, does not reference an engine, and its networking is GameX.Origin.Netcode. -->
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GameX.Origin\GameX.Origin.csproj" />
+    <ProjectReference Include="..\GameX.Origin.Netcode\GameX.Origin.Netcode.csproj" />
   </ItemGroup>
 
 </Project>

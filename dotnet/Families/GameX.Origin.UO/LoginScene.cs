@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Netcode.UO;
 using OpenX.Client;
 
 namespace GameX.Origin.UO;
@@ -15,6 +16,7 @@ public enum LoginSteps {
     LoginInToServer,
     CharacterSelection,
     EnteringBritania,
+    InWorld,
     CharacterCreation,
     CharacterCreationDone,
     PopUpMessage
@@ -82,11 +84,16 @@ public sealed class LoginScene : SceneBase {
                 case UOLoginPhase.RelayInProgress:
                     CurrentLoginStep = LoginSteps.LoginInToServer;
                     break;
+                case UOLoginPhase.WorldEntered:
+                    CurrentLoginStep = LoginSteps.InWorld;
+                    break;
             }
         }
         if (_lastLoginStep != CurrentLoginStep) {
-            _world.Items.Clear();
-            _world.Mobiles.Clear();
+            if (CurrentLoginStep != LoginSteps.InWorld) {
+                _world.Items.Clear();
+                _world.Mobiles.Clear();
+            }
             var next = GumpForStep();
             if (next != null) {
                 var prev = _currentGump;
@@ -122,8 +129,29 @@ public sealed class LoginScene : SceneBase {
     public override bool OnMouseDoubleClick(int button, int x, int y)
         => UIManager.OnMouseDoubleClick(button, x, y) || base.OnMouseDoubleClick(button, x, y);
 
-    public override bool OnKeyDown(int key, int mod)
-        => UIManager.OnKeyDown(key, mod) || base.OnKeyDown(key, mod);
+    public override bool OnKeyDown(int key, int mod) {
+        if (CurrentLoginStep == LoginSteps.InWorld && TryWalk(key, mod)) return true;
+        return UIManager.OnKeyDown(key, mod) || base.OnKeyDown(key, mod);
+    }
+
+    /// <summary>SDL keycodes. Shift (KMOD_SHIFT, bits 0 and 1) sets the run bit.</summary>
+    static bool TryWalk(int key, int mod) {
+        byte? dir = key switch {
+            1073741906 or 1073741920 => 0, // up, kp 8
+            1073741921 => 1, // kp 9
+            1073741903 or 1073741918 => 2, // right, kp 6
+            1073741915 => 3, // kp 3
+            1073741905 or 1073741914 => 4, // down, kp 2
+            1073741913 => 5, // kp 1
+            1073741904 or 1073741916 => 6, // left, kp 4
+            1073741919 => 7, // kp 7
+            _ => null,
+        };
+        if (dir is not byte d) return false;
+        if ((mod & 3) != 0) d |= 0x80;
+        UOLoginNet.Walk(d);
+        return true;
+    }
 
     public override bool OnKeyUp(int key, int mod)
         => UIManager.OnKeyUp(key, mod) || base.OnKeyUp(key, mod);

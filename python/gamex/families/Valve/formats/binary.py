@@ -7,10 +7,7 @@ from openx.gfx import Raster, TextureAsBytes, ITexture, ITextureSelect, ITexture
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore.formats.compression import decompressBlast
 from hashlib import md5
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import serialization
+from zlib import crc32
 
 # lumps
 class X_LumpON:
@@ -974,9 +971,15 @@ class Binary_Vpk(ArcBinaryT):
         signature: tuple = (0, bytearray())                    # Gets the signature.
 
         def __init__(self, r: BinaryReader, h: V_HeaderV2):
+            self.archiveMd5s = (0, None)
+            self.treeChecksum = None
+            self.archiveMd5EntriesChecksum = None
+            self.wholeFileChecksum = None
+            self.publicKey = None
+            self.signature = None
             # archive md5
             if h.archiveMd5SectionSize != 0:
-                self.archiveMd5s = (r.tell(), r.readSArray(PakBinary_Vpk.V_ArchiveMd5, h.archiveMd5SectionSize // 28))
+                self.archiveMd5s = (r.tell(), r.readSArray(Binary_Vpk.V_ArchiveMd5, h.archiveMd5SectionSize // 28))
             # other md5
             if h.otherMd5SectionSize != 0:
                 self.treeChecksum = r.readBytes(16)
@@ -986,41 +989,38 @@ class Binary_Vpk(ArcBinaryT):
             if h.signatureSectionSize != 0:
                 position = r.tell()
                 publicKeySize = r.readInt32()
-                if h.signatureSectionSize == 20 and publicKeySize == self.MAGIC: return; # CS2 has this
+                if h.signatureSectionSize == 20 and publicKeySize == Binary_Vpk.MAGIC: return; # CS2 has this
                 self.publicKey = r.readBytes(publicKeySize)
                 self.signature = (position, r.readBytes(r.readInt32()))
 
         # Verify checksums and signatures provided in the VPK
         def verifyHashes(self, r: BinaryReader, treeSize: int, h: V_HeaderV2, headerPosition: int) -> None:
             # treeChecksum
+            if self.treeChecksum is None: raise Exception('NullReferenceException: TreeChecksum')
             r.seek(headerPosition)
             hash = md5(r.readBytes(treeSize)).digest()
             if hash != self.treeChecksum: raise Exception(f'File tree checksum mismatch ({hash.hex()} != expected {self.treeChecksum.hex()})')
             # archiveMd5SectionSize
+            if self.archiveMd5EntriesChecksum is None: raise Exception('NullReferenceException: ArchiveMd5EntriesChecksum')
             r.seek(self.archiveMd5s[0])
             hash = md5(r.readBytes(h.archiveMd5SectionSize)).digest()
-            if hash != self.archiveMd5EntriesChecksum: raise Exception(f'Archive MD5 checksum mismatch ({hash.hex()} != expected {self.archiveMd5EntriesChecksum.hex()})')
+            if hash != self.archiveMd5EntriesChecksum: raise Exception(f'Query MD5 checksum mismatch ({hash.hex()} != expected {self.archiveMd5EntriesChecksum.hex()})')
             # wholeFileChecksum
+            if self.wholeFileChecksum is None: raise Exception('NullReferenceException: WholeFileChecksum')
             r.seek(0)
             hash = md5(r.readBytes(self.wholeFileChecksum[0])).digest()
             if hash != self.wholeFileChecksum[1]: raise Exception(f'Package checksum mismatch ({hash.hex()} != expected {self.wholeFileChecksum[1].hex()})')
 
-        # Verifies the RSA signature
+        # Verifies the RSA signature. No RSA verify here: a signature that must be checked fails closed.
         def verifySignature(self, r: BinaryReader) -> None:
-            if not self.publicKey or not self.signature[1]: return
-            publicKey = serialization.load_der_public_key(self.publicKey, backend = default_backend())
-            r.seek(0)
-            data = r.readBytes(self.signature[0])
-            publicKey.verify(
-                self.signature[1],
-                data,
-                padding.PKCS1v15(),
-                hashes.SHA256())
+            if self.publicKey is None or self.signature is None: return
+            raise Exception('NotImplementedException: RSA.VerifyData')
 
     #endregion
 
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
+        extended = source.game.engine[1] is not None and 'x' in source.game.engine[1]
         source.files = files = []
 
         # file mask
@@ -1045,16 +1045,16 @@ class Binary_Vpk(ArcBinaryT):
         headerV2 = r.readS(self.V_HeaderV2) if version == 2 else None
         headerPosition = r.tell()
         
-        # read entires
+        # read entires. UTF-16LE of the bytes stopped on the first 0, not UTF-32.
         ms = BytesIO()
         while True:
-            typeName = r.readVWString(ms=ms)
+            typeName = r.readToValue(ms=ms).decode('utf-16-le', 'replace')
             if not typeName: break
             while True:
-                directoryName = r.readVWString(ms=ms)
+                directoryName = r.readToValue(ms=ms).decode('utf-16-le', 'replace')
                 if not directoryName: break
                 while True:
-                    fileName = r.readVWString(ms=ms)
+                    fileName = r.readToValue(ms=ms).decode('utf-16-le', 'replace')
                     if not fileName: break
                     # get file
                     file = FileSource(
@@ -1079,7 +1079,7 @@ class Binary_Vpk(ArcBinaryT):
             # skip over file data, if any
             r.skip(headerV2.fileDataSectionSize)
             v = self.Verification(r, headerV2)
-            v.verifyHashes(r, treeSize, headerV2, headerPosition)
+            if not extended: v.verifyHashes(r, treeSize, headerV2, headerPosition)
             v.verifySignature(r)
 
     # readData
@@ -1091,6 +1091,8 @@ class Binary_Vpk(ArcBinaryT):
         if file.fileSize == 0: pass
         elif isinstance(file.tag, int): r.seek(file.offset + file.tag); r.read(mv, fileDataLength, file.fileSize)
         elif isinstance(file.tag, str): source.reader(_str, file.tag)
+        actualChecksum = crc32(data) & 0xFFFFFFFF
+        if file.hash != actualChecksum: raise Exception(f'CRC32 mismatch for read data (expected {file.hash:02X}, got {actualChecksum:02X})')
         return BytesIO(data)
 
 #endregion - end::Binary_Vpk[]

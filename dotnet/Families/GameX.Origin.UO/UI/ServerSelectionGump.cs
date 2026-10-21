@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using GameX.Origin.Formats.UO;
+using GameX.Origin.Netcode.UO;
 
 namespace GameX.Origin.UO;
 

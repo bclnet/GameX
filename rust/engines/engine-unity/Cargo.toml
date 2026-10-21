@@ -10,5 +10,9 @@ workspace = true
 
 [dependencies]
 gamex = { path = "../../core/gamex" }
+gamex-arkane = { path = "../../families/arkane" }
 gamex-gamebryo = { path = "../../families/gamebryo" }
 openx-engine-unity = { path = "../../../OpenX/rust/engines/unity" }
+
+[dev-dependencies]
+glam = { workspace = true }

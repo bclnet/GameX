@@ -1,7 +1,11 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using GameX.Origin.Formats.UO;
+using GameX.Origin.Netcode.UO;
 using OpenX.Client;
+using System;
+using System.IO;
+using System.Reflection;
 
 namespace GameX.Origin.UO;
 
@@ -62,9 +66,7 @@ public class LoginGump : Gump {
             Add(save);
             font = 1;
             hue = HUE;
-            Add(new Checkbox(0x00D2, 0x00D3, "Music", font, hue, false) {
-                X = save.X + save.Width + 10, Y = 417,
-            });
+            AddMusic(font, hue, save.X + save.Width + 10);
         }
         else {
             _buttonNormal = 0x5CD;
@@ -91,9 +93,7 @@ public class LoginGump : Gump {
             Add(save);
             font = 9;
             hue = 0x0481;
-            Add(new Checkbox(0x00D2, 0x00D3, "Music", font, hue, false) {
-                X = save.X + save.Width + 10, Y = 417,
-            });
+            AddMusic(font, hue, save.X + save.Width + 10);
         }
 
         offsetX += 7;
@@ -125,23 +125,54 @@ public class LoginGump : Gump {
     public override void OnButtonClick(int buttonID) {
         switch ((Buttons)buttonID) {
             case Buttons.NextArrow: Submit(); break;
+            case Buttons.Credits:
+                if (UIManager.GetGump<CreditsGump>() == null)
+                    UIManager.Add(new CreditsGump(World));
+                break;
             // Quit would close the window. ISceneHost has no Exit.
-            // CreditsGump is not in this project.
         }
     }
 
     void Submit() {
+        if (UIManager.GetGump<CreditsGump>() != null) return;
         if (_account == null || _account.IsDisposed) return;
         _scene.RememberLogin(_account.Text, _password?.Text, _auto != null && !_auto.IsDisposed && _auto.IsChecked);
         if (!UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) return;
         _scene.CurrentLoginStep = LoginSteps.Connecting;
-        UOLoginNet.Begin(host, port, _account.Text, _password?.Text);
+        UOLoginNet.Begin(host, port, _account.Text, _password?.Text, UltimaOnline.Current?.Version ?? default);
     }
 
     static void FocusHue(TextBox box) {
         if (box == null || box.IsDisposed) return;
         var hue = box.HasKeyboardFocus ? (ushort)0x0021 : (ushort)0;
         if (box.Hue != hue) box.Hue = hue;
+    }
+
+    void AddMusic(byte font, ushort hue, int x) {
+        var music = new Checkbox(0x00D2, 0x00D3, "Music", font, hue, false) { X = x, Y = 417 };
+        music.IsChecked = true;
+        music.ValueChanged += OnMusicChanged;
+        Add(music);
+    }
+
+    static void OnMusicChanged(object sender, EventArgs e) {
+        if (sender is Checkbox box) TrySetMusic(box.IsChecked);
+    }
+
+    // Origin.UO cannot reference GameX.Origin.Mg. Same lookup UOLogin uses for Attach.
+    static void TrySetMusic(bool on) {
+        try {
+            Assembly asm = null;
+            foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+                if (loaded.GetName().Name == "GameX.Origin.Mg") { asm = loaded; break; }
+            if (asm == null) {
+                var file = Path.Combine(AppContext.BaseDirectory, "GameX.Origin.Mg.dll");
+                if (!File.Exists(file)) return;
+                asm = Assembly.LoadFrom(file);
+            }
+            asm.GetType("GameX.Origin.Mg.UO.UoMusic")?.GetMethod("SetEnabled")?.Invoke(null, new object[] { on });
+        }
+        catch { }
     }
 
     enum Buttons { NextArrow, Quit, Credits }

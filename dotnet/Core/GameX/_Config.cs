@@ -1,6 +1,6 @@
-﻿#define Arkane
+﻿//#define Arkane
 //#define Beamdog
-//#define Bethesda
+#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard

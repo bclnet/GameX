@@ -48,18 +48,15 @@ public class ViewInfo : Node {
 
     public override void _Ready() {
         try {
-            // parse args
-            var args = System.Environment.GetCommandLineArgs();
-            ShellState s;
-            if (args.Length > 1 && (s = ShellState.Parse(args[1])) != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
-            //Log.Info($"FamilyId: '{FamilyId}'");
-            //Log.Info($"ArcUri: '{ArcUri}'");
-            //Log.Info($"Type: '{Type}'");
-            //Log.Info($"Path: '{Path}'");
-
-            if (string.IsNullOrEmpty(FamilyId)) return;
+            var s = ShellState.FromArgs(System.Environment.GetCommandLineArgs()) ?? ShellState.FromArgs(OS.GetCmdlineUserArgs());
+            if (s != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
+            var scenePath = ShellState.SceneFor(Type) == "Scene2D" ? "res://scenes/scene_2d.tscn" : "res://scenes/scene_3d.tscn";
+            var packed = GD.Load<PackedScene>(scenePath);
+            if (packed != null) AddChild(packed.Instantiate());
+            if (string.IsNullOrEmpty(FamilyId) || string.IsNullOrEmpty(Path)) return;
             Family = FamilyManager.GetFamily(FamilyId);
             if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
+            if (Source == null) return;
             var value = Source.GetAsset<object>(Path).Result;
             Renderer = GodotRenderer.CreateRenderer(this, EngineX.Gfx, Source, value, Type);
             Renderer?.Start();

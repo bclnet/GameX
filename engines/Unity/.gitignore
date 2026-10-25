@@ -1,6 +1,7 @@
 # Folder to exclude
 Data Files/
 Library/
+Build/
 Logs/
 UserSettings/
 Screenshots/

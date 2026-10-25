@@ -5,6 +5,9 @@ using System.Windows;
 namespace OpenX.Wpf.Control;
 
 public abstract class GodotControl(Func<object, object, object, string, object> shellState) : ShellControl {
+    protected override string GetShellFile() => FindRepoFile(@"engines\Godot\Shell\_build\Shell.exe");
+    protected override string LogArgument(string log) => $"--log-file \"{log}\"";
+
     #region Binding
 
     protected Renderer Renderer;

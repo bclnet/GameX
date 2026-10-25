@@ -1,6 +1,6 @@
 # Unreal
 
-Shell3D is the 3D sample, next to Unity's Shell3D at `engines/Unity/Shell3D`. Unreal is the host process.
+Shell3D is the 3D sample, next to Unity's Shell at `engines/Unity/Shell`. Unreal is the host process.
 
 The build is in [Shell3D/README.md](Shell3D/README.md). The C++/CLI DLL is `OpenX/dotnet/Engines/Unreal/CliBridge`.
 

@@ -44,23 +44,43 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     protected Family Family;
     protected Archive Source;
     Renderer Renderer;
+    bool _opened;
 
     public void Awake() {
-        // parse args
-        var args = Environment.GetCommandLineArgs();
-        ShellState s;
-        if (args.Length > 1 && (s = ShellState.Parse(args[1])) != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
-        //Log.Info($"FamilyId: '{FamilyId}'");
-        //Log.Info($"ArcUri: '{ArcUri}'");
-        //Log.Info($"Type: '{Type}'");
-        //Log.Info($"Path: '{Path}'");
+        var s = ShellState.FromArgs(Environment.GetCommandLineArgs());
+        if (s != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
+        UnityEngine.Object.DontDestroyOnLoad(gameObject);
+    }
 
-        // awake
-        if (string.IsNullOrEmpty(FamilyId)) return;
+    public void Start() {
+        var scene = ShellState.SceneFor(Type);
+        if (!SceneInBuild(scene) || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == scene) { Open(); return; }
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(scene);
+    }
+
+    static bool SceneInBuild(string scene) {
+        for (var i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            var path = UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i);
+            if (path.EndsWith("/" + scene + ".unity", StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+    }
+
+    void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        Open();
+    }
+
+    void Open() {
+        if (_opened || string.IsNullOrEmpty(FamilyId) || string.IsNullOrEmpty(Path)) return;
+        _opened = true;
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
+        if (Source == null) return;
         var value = Source.GetAsset<object>(Path).Result;
         Renderer = UnityRenderer.CreateRenderer(this, EngineX.Gfx, Source, value, Type);
+        Renderer?.Start();
     }
 
     public void OnDestroy() {
@@ -68,6 +88,5 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
         Source?.Dispose();
     }
 
-    public void Start() => Renderer?.Start();
     public void Update() => Renderer?.Update(0);
 }

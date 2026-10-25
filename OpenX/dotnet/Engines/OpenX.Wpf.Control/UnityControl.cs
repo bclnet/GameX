@@ -5,6 +5,11 @@ using System.Windows;
 namespace OpenX.Wpf.Control;
 
 public abstract class UnityControl(Func<object, object, object, string, object> shellState) : ShellControl {
+    protected override string GetShellFile() => FindRepoFile(@"engines\Unity\Shell\Build\Shell.exe");
+    protected override string LogArgument(string log) => $"-logFile \"{log}\"";
+    protected override string ExtraArguments(IntPtr parent) => $"-parentHWND {parent.ToInt64()}";
+    protected override bool AttachParent => false;
+
     #region Binding
 
     protected Renderer Renderer;

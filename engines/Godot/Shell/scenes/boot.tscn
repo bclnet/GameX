@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b8shellboot01"]
+
+[ext_resource type="Script" uid="uid://ccxoo4hrfdmpd" path="res://scripts/ViewInfoX.cs" id="1_view"]
+
+[node name="Boot" type="Node"]
+script = ExtResource("1_view")

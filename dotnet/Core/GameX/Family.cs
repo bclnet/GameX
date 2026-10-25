@@ -1356,19 +1356,62 @@ public class ShellState {
     public string Type;
     public override string ToString() => string.Join('|', ["ST", FamilyId, ArcUri, Path, Type]);
 
+    public static string SceneFor(string type) => type is "Texture" or "VideoTexture" ? "Scene2D" : "Scene3D";
+
     public static ShellState Create(object source, object path, object value, string type) {
-        var i = (MetaItem)path;
-        var a = i.Archive;
+        _ = value;
+        var item = path as MetaItem;
+        var top = source as Archive ?? item?.Archive;
         return new ShellState {
-            FamilyId = a.Family.Id,
-            ArcUri = a.Game.ToUris(a.Edition?.Id).FirstOrDefault()?.ToString(),
-            Path = i.Path,
+            FamilyId = top?.Family?.Id,
+            ArcUri = ArchiveUri(top),
+            Path = AssetPath(top, item),
             Type = type,
         };
     }
+
     public static ShellState Parse(string state) {
         var p = state?.Split('|');
-        return p != null && p[0] == "ST" ? new() { FamilyId = p[1], ArcUri = p[2], Path = p[3], Type = p[4] } : null;
+        if (p == null || p.Length < 5 || p[0] != "ST") return null;
+        var assetPath = p.Length == 5 ? p[3] : string.Join("|", p.Skip(3).Take(p.Length - 4));
+        return new ShellState { FamilyId = p[1], ArcUri = p[2], Path = assetPath, Type = p[^1] };
+    }
+
+    public static ShellState FromArgument(string arg) {
+        if (string.IsNullOrEmpty(arg)) return null;
+        if (!arg.StartsWith("ST.", StringComparison.Ordinal)) return Parse(arg);
+        try { return Parse(Encoding.UTF8.GetString(DecodeArgument(arg[3..]))); }
+        catch (FormatException) { return null; }
+    }
+
+    public static ShellState FromArgs(string[] args) {
+        if (args == null) return null;
+        foreach (var arg in args) {
+            var state = FromArgument(arg);
+            if (state != null) return state;
+        }
+        return null;
+    }
+
+    static string ArchiveUri(Archive archive) => archive?.Game == null ? null : FamilyGame.ToUri(archive.Game.Id, archive.Edition?.Id).ToString();
+
+    static string AssetPath(Archive top, MetaItem item) {
+        if (item?.Source is not FileSource file || string.IsNullOrEmpty(file.Path)) return null;
+        var entry = file.Path.Replace('\\', '/');
+        var owner = item.Archive;
+        if (owner == null || ReferenceEquals(owner, top)) return entry;
+        if (top is MultiArchive) return string.IsNullOrEmpty(owner.Name) ? entry : $"{owner.Name}:{entry}";
+        var pak = owner.BinPath?.Replace('\\', '/');
+        return string.IsNullOrEmpty(pak) ? entry : $"{pak}:{entry}";
+    }
+
+    static byte[] DecodeArgument(string text) {
+        var s = text.Replace('-', '+').Replace('_', '/');
+        switch (s.Length % 4) {
+            case 2: s += "=="; break;
+            case 3: s += "="; break;
+        }
+        return Convert.FromBase64String(s);
     }
 }
 

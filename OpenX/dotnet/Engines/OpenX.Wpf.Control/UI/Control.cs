@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,30 +29,55 @@ public abstract class ShellControl : UserControl {
 
     #region Attach
 
-    static readonly string ShellFile = "C:\\T_\\junk\\Shell3D.exe"; // Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Game2.exe");
     readonly WindowsFormsHost Host;
     Process Process;
     protected abstract object GetShellState();
+    protected virtual string GetShellFile() => null;
+    protected virtual string LogArgument(string log) => "";
+    protected virtual string ExtraArguments(IntPtr parent) => "";
+    protected virtual bool AttachParent => true;
+
+    protected static string FindRepoFile(string relative) {
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
+            if (File.Exists(Path.Combine(dir.FullName, "ENGINES.md")))
+                return Path.Combine(dir.FullName, relative);
+        return null;
+    }
+
+    // Matches ShellState.FromArgument. ST| fields are Base64Url so paths survive the command line.
+    static string EncodeState(object state) {
+        var text = state?.ToString();
+        if (string.IsNullOrEmpty(text) || !text.StartsWith("ST|", StringComparison.Ordinal)) return text ?? "";
+        var b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(text)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        return "ST." + b64;
+    }
 
     void OnLoaded(object sender, RoutedEventArgs e) {
         Process = null;
+        var shellFile = GetShellFile();
+        if (string.IsNullOrEmpty(shellFile)) return;
         var handle = Host.Handle;
-        var processFile = new FileInfo(ShellFile);
-        var processName = processFile.Name.Replace(".exe", ""); // Clean up extra processes beforehand
-        foreach (var p in Process.GetProcesses().Where(p => p.ProcessName == processName)) {
+        var processFile = new FileInfo(shellFile);
+        if (!processFile.Exists) return;
+        var processName = Path.GetFileNameWithoutExtension(processFile.Name);
+        foreach (var p in System.Diagnostics.Process.GetProcesses().Where(p => p.ProcessName == processName)) {
             Console.WriteLine("Clean up extra processes, Process number: {0}", p.Id);
             p.Kill();
         }
-        if (!processFile.Exists) return;
+        Directory.CreateDirectory(processFile.DirectoryName);
+        var log = Path.Combine(processFile.DirectoryName, "Shell.log");
+        var token = EncodeState(GetShellState());
         Process = new Process();
         var si = Process.StartInfo;
-        si.Arguments = $"{GetShellState()} -logfile C:\\T_\\junk\\here.log";
-        si.FileName = ShellFile;
-        si.UseShellExecute = true;
+        si.FileName = processFile.FullName;
+        si.WorkingDirectory = processFile.DirectoryName;
+        si.Arguments = string.Join(" ", new[] { LogArgument(log), ExtraArguments(handle), "--", token }.Where(s => !string.IsNullOrEmpty(s)));
+        si.UseShellExecute = false;
         si.CreateNoWindow = true;
         Process.Start();
         Process.WaitForInputIdle();
         Thread.Sleep(100); // Wait a minute for the handle
+        if (!AttachParent) return;
         SetParent(Process.MainWindowHandle, handle);
         _ = ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
     }

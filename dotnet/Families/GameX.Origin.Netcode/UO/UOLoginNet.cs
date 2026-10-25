@@ -59,6 +59,14 @@ public static class UOLoginNet {
     static bool _postedWorld;
     static volatile bool _gameReady;
     static UOHuffman _huff = new();
+    static int _mapIndex;
+    static int _nextWalk;
+
+    /// <summary>Stand height for a predicted step. Set from the UO asset slot. Null keeps the current Z.</summary>
+    public static Func<int, int, int, int> StepHeight;
+
+    /// <summary>Opens the map pack for 0xBF subcommand 0x0008. Set from the UO asset slot.</summary>
+    public static Action<int> FacetSwitch;
 
     /// <summary>Connect or protocol failure.</summary>
     public static string LastError { get; private set; }
@@ -89,17 +97,21 @@ public static class UOLoginNet {
             _playIndex = null;
             _playName = null;
             _walks.Clear();
+            _fastWalk.Clear();
             _mobiles.Clear();
             _items.Clear();
             _player = 0;
             _pbody = 0;
             _px = _py = _pz = 0;
             _pdir = 0;
+            _mapIndex = 0;
+            _nextWalk = 0;
             _revision++;
             previous = _client;
             _client = null;
         }
         previous?.Close();
+        FacetSwitch?.Invoke(0);
         Task.Run(() => Connect(host, port, account, password, version, id));
     }
 
@@ -156,6 +168,7 @@ public static class UOLoginNet {
     public static int PlayerX { get { lock (Gate) return _px; } }
     public static int PlayerY { get { lock (Gate) return _py; } }
     public static int PlayerZ { get { lock (Gate) return _pz; } }
+    public static int MapIndex { get { lock (Gate) return _mapIndex; } }
     public static byte PlayerDirection { get { lock (Gate) return _pdir; } }
     public static int WorldRevision { get { lock (Gate) return _revision; } }
 
@@ -446,6 +459,8 @@ public static class UOLoginNet {
 
     static void WriteWalk(NetworkStream stream, UOLoginCrypt crypt) {
         if (!_inWorld) return;
+        var now = Environment.TickCount;
+        if (unchecked(now - _nextWalk) < 0) return;
         byte dir;
         uint key;
         lock (Gate) {
@@ -461,6 +476,7 @@ public static class UOLoginNet {
         crypt.EncryptGame(pkt);
         stream.Write(pkt, 0, pkt.Length);
         stream.Flush();
+        _nextWalk = unchecked(now + ((dir & 0x80) != 0 ? 200 : 400));
         Predict(dir);
     }
 
@@ -479,6 +495,8 @@ public static class UOLoginNet {
         lock (Gate) {
             _px += dx;
             _py += dy;
+            var step = StepHeight;
+            if (step != null) _pz = step(_px, _py, _pz);
             _pdir = (byte)(dir & 7);
             if (_player != 0 && _mobiles.TryGetValue(_player, out var m))
                 _mobiles[_player] = new UOMobileState(_player, m.Body, _px, _py, _pz, _pdir);
@@ -539,6 +557,7 @@ public static class UOLoginNet {
             case 0x21:
                 if (UOGamePackets.MoveReject(p, o, out x, out y, out dir, out z)) {
                     _seq = p[o + 1];
+                    _nextWalk = 0;
                     lock (Gate) _walks.Clear();
                     SetPlayer(_player, _pbody, x, y, z, dir, post: false);
                 }
@@ -557,9 +576,23 @@ public static class UOLoginNet {
                 if (UOGamePackets.WorldItem(p, o, len, out var iserial, out var graphic, out x, out y, out z))
                     SetItem(iserial, graphic, x, y, z);
                 return HandleResult.Continue;
+            case 0x1D:
+                if (UOGamePackets.DeleteObject(p, o, len, out var gone) && gone != _player)
+                    RemoveActor(gone);
+                return HandleResult.Continue;
+            case 0xF3:
+                if (UOGamePackets.WorldObject(p, o, len, out var kind, out iserial, out graphic, out x, out y, out z, out dir)) {
+                    if (kind == 1) SetMobile(iserial, graphic, x, y, z, dir);
+                    else if (iserial != _player) SetItem(iserial, graphic, x, y, z);
+                }
+                return HandleResult.Continue;
             case 0xBF:
-                // Subcommand 0x0002 is the six fast-walk keys.
+                // Subcommand 0x0002 is the six fast-walk keys. Subcommand 0x0008 is the facet.
                 UOGamePackets.FastWalk(p, o, len, _fastWalk);
+                if (UOGamePackets.TryFacet(p, o, len, out var facet)) {
+                    lock (Gate) _mapIndex = facet;
+                    FacetSwitch?.Invoke(facet);
+                }
                 return HandleResult.Continue;
             case 0xA9: {
                 var names = ReadCharacterNames(p, o, len);
@@ -601,6 +634,14 @@ public static class UOLoginNet {
         lock (Gate) {
             _mobiles[serial] = new UOMobileState(serial, body, x, y, z, (byte)(dir & 7));
             _revision++;
+        }
+    }
+
+    static void RemoveActor(uint serial) {
+        lock (Gate) {
+            var changed = _mobiles.Remove(serial);
+            if (_items.Remove(serial)) changed = true;
+            if (changed) _revision++;
         }
     }
 

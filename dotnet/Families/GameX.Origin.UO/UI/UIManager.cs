@@ -104,6 +104,7 @@ public static class UIManager {
         else if (button == 1 && hit != null && hit == down) {
             if (hit is Button b) b.OnButtonClick(b.ButtonID);
             else if (hit is Checkbox box) box.IsChecked = !box.IsChecked;
+            else hit.OnMouseClick(x, y);
         }
         return hit != null;
     }

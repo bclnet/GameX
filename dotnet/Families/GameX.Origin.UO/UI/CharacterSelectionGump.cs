@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using System.Collections.Generic;
 using GameX.Origin.Formats.UO;
 using GameX.Origin.Netcode.UO;
 
@@ -7,10 +8,12 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO CharacterSelectionGump. Shows scene.Characters, or no rows when that array is null.
-/// Next sends 0x5D for the first named character. New opens the creation shell.
+/// A row selects that slot. Next sends 0x5D for the selected name. New opens the creation shell.
 /// </summary>
 public class CharacterSelectionGump : Gump {
     readonly LoginScene _scene;
+    readonly Dictionary<int, Label> _names = new();
+    int _selected = -1;
 
     public CharacterSelectionGump(World world, LoginScene scene) : base(world, 0, 0) {
         _scene = scene;
@@ -31,17 +34,20 @@ public class CharacterSelectionGump : Gump {
         Add(new ResizePic(0x0A28) { X = 160, Y = 70, Width = 408, Height = 343 + yBonus });
         Add(new Label("Character Selection", false, 0x0386, 2) { X = 267, Y = listTitleY });
 
-        var selected = characters.Length > 0 ? 0 : -1;
         var pos = 0;
         for (var i = 0; i < characters.Length; i++) {
             var name = characters[i];
             if (string.IsNullOrEmpty(name)) continue;
+            if (_selected < 0) _selected = i;
             var y = yOffset + pos * 40;
             Add(new ResizePic(0x0BB8) { X = 224, Y = y, Width = 280, Height = 30 });
-            var hue = (ushort)(i == selected ? 0x0021 : 0x034F);
+            var hue = (ushort)(i == _selected ? 0x0021 : 0x034F);
             var textW = GumpArt.Sink?.MeasureText(name, 5) ?? name.Length * 6;
             var nameX = textW < 280 ? 224 + (280 - textW) / 2 : 224;
-            Add(new Label(name, false, hue, 5) { X = nameX, Y = y });
+            var label = new Label(name, false, hue, 5) { X = nameX, Y = y };
+            _names[i] = label;
+            Add(label);
+            Add(new CharHit(this, i) { X = 224, Y = y });
             pos++;
         }
 
@@ -69,15 +75,34 @@ public class CharacterSelectionGump : Gump {
                 break;
             case Buttons.Next:
                 var characters = _scene.Characters;
-                if (characters == null) return;
-                for (var i = 0; i < characters.Length; i++) {
-                    if (string.IsNullOrEmpty(characters[i])) continue;
-                    UOLoginNet.SelectCharacter(i, characters[i]);
-                    _scene.CurrentLoginStep = LoginSteps.EnteringBritania;
-                    return;
-                }
+                if (characters == null || _selected < 0 || _selected >= characters.Length) return;
+                if (string.IsNullOrEmpty(characters[_selected])) return;
+                UOLoginNet.SelectCharacter(_selected, characters[_selected]);
+                _scene.CurrentLoginStep = LoginSteps.EnteringBritania;
                 break;
         }
+    }
+
+    void Select(int slot) {
+        if (slot == _selected) return;
+        if (_names.TryGetValue(_selected, out var prev)) prev.Hue = 0x034F;
+        _selected = slot;
+        if (_names.TryGetValue(slot, out var next)) next.Hue = 0x0021;
+    }
+
+    sealed class CharHit : Control {
+        readonly CharacterSelectionGump _gump;
+        readonly int _slot;
+
+        public CharHit(CharacterSelectionGump gump, int slot) {
+            _gump = gump;
+            _slot = slot;
+            Width = 280;
+            Height = 30;
+            AcceptMouseInput = true;
+        }
+
+        public override void OnMouseClick(int x, int y) => _gump.Select(_slot);
     }
 
     enum Buttons { New, Delete, Next, Prev }

@@ -246,6 +246,46 @@ public static class UOGamePackets {
         return true;
     }
 
+    /// <summary>
+    /// 0xF3, 26 bytes. ClassicUO UpdateItemSA reads past the opcode: ushort, type, serial, graphic, increment, then x at +15.
+    /// Type 1 is a mobile and the graphic is the body. Any other type adds the increment and is an item.
+    /// </summary>
+    public static bool WorldObject(byte[] p, int o, int len, out byte type, out uint serial, out ushort graphic, out int x, out int y, out int z, out byte dir) {
+        type = 0;
+        serial = 0;
+        graphic = 0;
+        x = y = z = 0;
+        dir = 0;
+        if (len < 26 || o + 26 > p.Length) return false;
+        type = p[o + 3];
+        serial = ReadU32(p, o + 4);
+        graphic = ReadU16(p, o + 8);
+        if (type != 1) graphic = (ushort)(graphic + p[o + 10]);
+        x = ReadU16(p, o + 15);
+        y = ReadU16(p, o + 17);
+        z = (sbyte)p[o + 19];
+        dir = p[o + 20];
+        return true;
+    }
+
+    /// <summary>0x1D. Five bytes. The serial is not removed when it is the player.</summary>
+    public static bool DeleteObject(byte[] p, int o, int len, out uint serial) {
+        serial = 0;
+        if (len < 5 || o + 5 > p.Length) return false;
+        serial = ReadU32(p, o + 1);
+        return true;
+    }
+
+    /// <summary>0xBF subcommand 0x0008. The map byte follows the big-endian subcommand.</summary>
+    public static bool TryFacet(byte[] p, int o, int len, out int map) {
+        map = 0;
+        if (len < 6) return false;
+        var sub = (p[o + 3] << 8) | p[o + 4];
+        if (sub != 0x0008) return false;
+        map = p[o + 5];
+        return true;
+    }
+
     /// <summary>0xBF subcommand 0x0002: big-endian keys.</summary>
     public static void FastWalk(byte[] p, int o, int len, Queue<uint> keys) {
         if (len < 5) return;

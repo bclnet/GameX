@@ -52,6 +52,11 @@ public class Assets(UOGame game) {
     readonly HashSet<int> _artMiss = [];
     readonly Dictionary<long, (byte[] pixels, int width, int height, int cx, int cy)> _bodyFrames = [];
     readonly HashSet<long> _bodyMiss = [];
+    readonly object _mapGate = new();
+    Archive _game;
+    Binary_TileData _tile;
+    int _blockHeight = 512;
+    int _facet;
 
 
     public class UoAnimations {
@@ -117,6 +122,8 @@ public class Assets(UOGame game) {
         //Fonts = await game.GetAsset<Binary_UnicodeFont>("fonts.mul");
         Hues = await TryAsset<Binary_Hues>(game, "hues.mul");
         HuesRadar = await TryAsset<Binary_RadarColor>(game, "radarcol.mul");
+        _game = game;
+        _tile = await TryAsset<Binary_TileData>(game, "tiledata.mul");
         await OpenFelucca(game);
         //TileData = new TileDataoader(this);
         //Multis = new Multi(this);
@@ -216,24 +223,65 @@ public class Assets(UOGame game) {
         return true;
     }
 
+    /// <summary>Block rows for Felucca, Trammel, Ilshenar, Malas, Tokuno, and Ter Mur.</summary>
+    static readonly int[] FacetBlocks = [512, 512, 200, 256, 181, 512];
+
     /// <summary>
     /// Felucca. map0LegacyMUL.uop is flattened by OpenMap. A missing map leaves the overhead labels.
     /// </summary>
     async Task OpenFelucca(Archive game) {
         try {
-            var map = OpenPack(game, "map0LegacyMUL.uop");
-            if (map is BinaryArchive bin && bin.Files != null && bin.Files.Count > 0)
-                _map = Binary_UO.OpenMap(bin);
-            if (_map == null) _map = await TryData(game, "map0.mul");
-            if (_map != null && _map.CanSeek && _map.Length > 0)
-                _mapWidth = (int)(_map.Length / (512 * 196));
-            _staidx = await TryData(game, "staidx0.mul");
-            _statics = await TryData(game, "statics0.mul");
+            var map = await OpenMapStream(game, 0);
+            var sta = await TryData(game, "staidx0.mul");
+            var stat = await TryData(game, "statics0.mul");
+            lock (_mapGate) ApplyMap(map, sta, stat, 0);
         }
         catch (Exception) {
-            _map = null;
-            _mapWidth = 0;
+            lock (_mapGate) {
+                _map = null;
+                _mapWidth = 0;
+            }
         }
+    }
+
+    /// <summary>
+    /// 0xBF subcommand 0x0008. A missing Trammel pack keeps Felucca's files.
+    /// Any other missing pack leaves the map that is already open.
+    /// </summary>
+    public void UseFacet(int index) {
+        if (_game == null || (uint)index >= (uint)FacetBlocks.Length || index == _facet) return;
+        try {
+            var map = OpenMapStream(_game, index).GetAwaiter().GetResult();
+            if (map == null && index == 1) {
+                lock (_mapGate) { if (_facet == 0) _facet = 1; }
+                return;
+            }
+            if (map == null) return;
+            var sta = TryData(_game, $"staidx{index}.mul").GetAwaiter().GetResult();
+            var stat = TryData(_game, $"statics{index}.mul").GetAwaiter().GetResult();
+            lock (_mapGate) ApplyMap(map, sta, stat, index);
+        }
+        catch (Exception) { }
+    }
+
+    static async Task<Stream> OpenMapStream(Archive game, int index) {
+        var pack = OpenPack(game, $"map{index}LegacyMUL.uop");
+        if (pack is BinaryArchive bin && bin.Files != null && bin.Files.Count > 0) {
+            var flat = Binary_UO.OpenMap(bin);
+            if (flat != null) return flat;
+        }
+        return await TryData(game, $"map{index}.mul");
+    }
+
+    void ApplyMap(Stream map, Stream sta, Stream stat, int index) {
+        _map = map;
+        _staidx = sta;
+        _statics = stat;
+        _blockHeight = FacetBlocks[index];
+        _facet = index;
+        _mapWidth = map != null && _blockHeight > 0 && map.CanSeek && map.Length > 0 ? (int)(map.Length / (_blockHeight * 196L)) : 0;
+        _landBlocks.Clear();
+        _staticBlocks.Clear();
     }
 
     static async Task<Stream> TryData(Archive game, string name) {
@@ -258,7 +306,7 @@ public class Assets(UOGame game) {
         if (_map == null || _mapWidth <= 0 || wx < 0 || wy < 0) return false;
         var cx = wx >> 3;
         var cy = wy >> 3;
-        if (cx >= _mapWidth || cy >= 512) return false;
+        if (cx >= _mapWidth || cy >= _blockHeight) return false;
         var block = LandBlock(cx, cy);
         if (block == null) return false;
         var o = ((wx & 7) * 8 + (wy & 7)) * 3;
@@ -269,16 +317,17 @@ public class Assets(UOGame game) {
 
     byte[] LandBlock(int cx, int cy) {
         var key = ((long)cx << 32) | (uint)cy;
-        if (_landBlocks.TryGetValue(key, out var hit)) return hit;
-        var ptr = ((long)cx * 512 + cy) * 196 + 4;
-        var data = new byte[192];
-        lock (_map) {
+        lock (_mapGate) {
+            if (_map == null || cy < 0 || cy >= _blockHeight || cx < 0 || cx >= _mapWidth) return null;
+            if (_landBlocks.TryGetValue(key, out var hit)) return hit;
+            var ptr = ((long)cx * _blockHeight + cy) * 196 + 4;
+            var data = new byte[192];
             if (ptr < 0 || ptr + 192 > _map.Length) return null;
             _map.Position = ptr;
             if (_map.Read(data, 0, 192) < 192) return null;
+            _landBlocks[key] = data;
+            return data;
         }
-        _landBlocks[key] = data;
-        return data;
     }
 
     /// <summary>
@@ -288,7 +337,7 @@ public class Assets(UOGame game) {
         if (dest == null || _staidx == null || _statics == null || _mapWidth <= 0 || wx < 0 || wy < 0) return;
         var cx = wx >> 3;
         var cy = wy >> 3;
-        if (cx >= _mapWidth || cy >= 512) return;
+        if (cx >= _mapWidth || cy >= _blockHeight) return;
         var recs = StaticBlock(cx, cy);
         if (recs == null || recs.Length < 7) return;
         var lx = wx & 7;
@@ -303,31 +352,68 @@ public class Assets(UOGame game) {
 
     byte[] StaticBlock(int cx, int cy) {
         var key = ((long)cx << 32) | (uint)cy;
-        if (_staticBlocks.TryGetValue(key, out var hit)) return hit;
-        var pos = ((long)cx * 512 + cy) * 12;
-        var idx = new byte[8];
-        lock (_staidx) {
+        lock (_mapGate) {
+            if (_staidx == null || _statics == null || cy < 0 || cy >= _blockHeight || cx < 0 || cx >= _mapWidth) return null;
+            if (_staticBlocks.TryGetValue(key, out var hit)) return hit;
+            var pos = ((long)cx * _blockHeight + cy) * 12;
+            var idx = new byte[8];
             if (pos < 0 || pos + 8 > _staidx.Length) return EmptyStatic(key);
             _staidx.Position = pos;
             if (_staidx.Read(idx, 0, 8) < 8) return EmptyStatic(key);
-        }
-        var lookup = BitConverter.ToInt32(idx, 0);
-        var length = BitConverter.ToInt32(idx, 4);
-        if (lookup < 0 || length <= 0) return EmptyStatic(key);
-        var buf = new byte[length];
-        lock (_statics) {
-            if (lookup + length > _statics.Length) return EmptyStatic(key);
+            var lookup = BitConverter.ToInt32(idx, 0);
+            var length = BitConverter.ToInt32(idx, 4);
+            if (lookup < 0 || length <= 0) return EmptyStatic(key);
+            var buf = new byte[length];
+            if ((long)lookup + length > _statics.Length) return EmptyStatic(key);
             _statics.Position = lookup;
             length = _statics.Read(buf, 0, length);
+            if (length < buf.Length) buf = buf[..length];
+            _staticBlocks[key] = buf;
+            return buf;
         }
-        if (length < buf.Length) buf = buf[..length];
-        _staticBlocks[key] = buf;
-        return buf;
     }
 
     byte[] EmptyStatic(long key) {
         _staticBlocks[key] = [];
         return _staticBlocks[key];
+    }
+
+    /// <summary>
+    /// Stand height for one predicted step. Land is the average of the four corners.
+    /// A static is included when tiledata marks it Surface or Bridge. Step up is 14, step down is 25.
+    /// </summary>
+    public int StepZ(int x, int y, int fromZ) {
+        if (!TryLandTile(x, y, out _, out var z0)) return fromZ;
+        var best = int.MinValue;
+        Note(LandAverage(x, y, z0), fromZ, ref best);
+        var list = new List<(ushort graphic, sbyte z)>(8);
+        CopyStatics(x, y, list);
+        var items = _tile?.ItemDatas;
+        for (var i = 0; i < list.Count; i++) {
+            var (graphic, z) = list[i];
+            if (items == null || graphic >= items.Length) continue;
+            var item = items[graphic];
+            if (!item.IsSurface && !item.IsBridge) continue;
+            Note(z + item.CalcHeight, fromZ, ref best);
+        }
+        return best == int.MinValue ? fromZ : best;
+    }
+
+    int LandAverage(int x, int y, sbyte z00) {
+        var z10 = z00;
+        var z01 = z00;
+        var z11 = z00;
+        if (TryLandTile(x + 1, y, out _, out var a)) z10 = a;
+        if (TryLandTile(x, y + 1, out _, out var b)) z01 = b;
+        if (TryLandTile(x + 1, y + 1, out _, out var c)) z11 = c;
+        var v = z00 + z10 + z01 + z11;
+        return v < 0 ? (v - 2) / 4 : v / 4;
+    }
+
+    static void Note(int top, int fromZ, ref int best) {
+        var d = top - fromZ;
+        if (d > 14 || d < -25) return;
+        if (top > best) best = top;
     }
 
     /// <summary>

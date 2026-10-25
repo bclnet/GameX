@@ -1,5 +1,6 @@
 ﻿using GameX.Origin.Clients.UO;
 using GameX.Origin.Formats.UO;
+using GameX.Origin.Netcode.UO;
 using OpenX.Client;
 using System;
 using System.IO;
@@ -25,6 +26,9 @@ public static class UOLogin {
             VersionText = versionText,
             Version = ClientVersionHelper.ValidateClientVersion(versionText) ?? default,
         };
+        var assets = client.Assets;
+        UOLoginNet.StepHeight = (x, y, z) => assets != null ? assets.StepZ(x, y, z) : z;
+        UOLoginNet.FacetSwitch = map => assets?.UseFacet(map);
         TryAttachMusic();
         return new LoginScene(new World());
     }

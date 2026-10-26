@@ -4,9 +4,9 @@ from openx.core import ISource, IHaveSource
 from openx.engines.eginx.gfx import EginX, TestTriRenderer
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
-from gamex.engines.eginx.eginxFtlObjectBuilder import EginXFtlObjectBuilder
-from gamex.engines.eginx.eginxFtsObjectBuilder import EginXFtsObjectBuilder
-from gamex.engines.eginx.eginxNifObjectBuilder import EginXNifObjectBuilder
+from gamex.engines.eginx.eginx_arkane import EginXFtlObjectBuilder
+from gamex.engines.eginx.eginx_arkane import EginXFtsObjectBuilder
+from gamex.engines.eginx.eginx_gamebryo import EginXNifObjectBuilder
 
 # typedefs
 class IOpenGfx: pass

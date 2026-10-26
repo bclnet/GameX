@@ -3,9 +3,9 @@
 // PORT-STATUS: partial
 //
 // PARTIAL PORT: `Binary_Ftl` and `Binary_Fts` are registered on the first
-// `createRenderer` (`open_gl_ftl_object_builder`, `open_gl_fts_object_builder`).
+// `createRenderer` (`open_gl_arkane::open_gl_ftl_object_builder`, `open_gl_arkane::open_gl_fts_object_builder`).
 // FTS is registered. `Binary_Nif` stays unregistered: Gamebryo's Nif is
-// unported (`OpenGLNifObjectBuilder.cs`), so an "Object" view of a NIF still
+// unported (`OpenGL_Gamebryo.cs`), so an "Object" view of a NIF still
 // has no builder. The file is not `done` while NIF is unregistered.
 // "Particle" builds the outer `ParticleRenderer`, which draws nothing.
 // "Engine" needs the value to be an `Arc<dyn CellDatabase>` inside the `Any`.
@@ -34,8 +34,8 @@ impl OpenGLRenderer {
     fn register() {
         static ONCE: Once = Once::new();
         ONCE.call_once(|| {
-            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Ftl>(), crate::open_gl_ftl_object_builder::buildObject);
-            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Fts>(), crate::open_gl_fts_object_builder::buildObject);
+            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Ftl>(), crate::open_gl_arkane::open_gl_ftl_object_builder::buildObject);
+            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Fts>(), crate::open_gl_arkane::open_gl_fts_object_builder::buildObject);
             setObjectDraw(drawBuilt);
         });
     }
@@ -76,10 +76,10 @@ impl OpenGLRenderer {
 
 fn drawBuilt(obj: &(dyn std::any::Any + Send + Sync)) {
     let key = dataAddr(obj);
-    if let Some(o) = obj.downcast_ref::<crate::open_gl_ftl_object_builder::OpenGLFtlObject>() {
+    if let Some(o) = obj.downcast_ref::<crate::open_gl_arkane::open_gl_ftl_object_builder::OpenGLFtlObject>() {
         let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
         drawPositions(key, &positions, &indices);
-    } else if let Some(o) = obj.downcast_ref::<crate::open_gl_fts_object_builder::OpenGLFtsObject>() {
+    } else if let Some(o) = obj.downcast_ref::<crate::open_gl_arkane::open_gl_fts_object_builder::OpenGLFtsObject>() {
         let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
         drawPositions(key, &positions, &indices);
     }

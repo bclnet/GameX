@@ -1,9 +1,9 @@
 from __future__ import annotations
 from openx.core import ISource, IHaveSource
 from openx.engines.panda3d.gfx import Panda3dX, TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
-from gamex.engines.panda3d.panda3dnifobjectbuilder import Panda3dNifObjectBuilder
-from gamex.engines.panda3d.panda3dftlobjectbuilder import Panda3dFtlObjectBuilder
-from gamex.engines.panda3d.panda3dftsobjectbuilder import Panda3dFtsObjectBuilder
+from gamex.engines.panda3d.panda3d_gamebryo import Panda3dNifObjectBuilder
+from gamex.engines.panda3d.panda3d_arkane import Panda3dFtlObjectBuilder
+from gamex.engines.panda3d.panda3d_arkane import Panda3dFtsObjectBuilder
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 

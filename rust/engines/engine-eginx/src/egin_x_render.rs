@@ -13,8 +13,8 @@ use std::sync::{Arc, LazyLock, Mutex, Once};
 
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
 
-use crate::egin_x_ftl_object_builder;
-use crate::egin_x_fts_object_builder;
+use crate::egin_x_arkane::egin_x_ftl_object_builder;
+use crate::egin_x_arkane::egin_x_fts_object_builder;
 use crate::egin_x_object_holder::EginXObjectHolder;
 
 pub type ObjectBuilder = fn(&dyn Any, bool, Option<&dyn Any>) -> EginXObjectHolder;

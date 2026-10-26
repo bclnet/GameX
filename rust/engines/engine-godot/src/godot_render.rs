@@ -62,8 +62,8 @@ fn register() {
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
         let mut map = builders().lock().unwrap();
-        map.insert(TypeId::of::<Binary_Ftl>(), crate::godot_ftl_object_builder::buildObject);
-        map.insert(TypeId::of::<Binary_Fts>(), crate::godot_fts_object_builder::buildObject);
+        map.insert(TypeId::of::<Binary_Ftl>(), crate::godot_arkane::godot_ftl_object_builder::buildObject);
+        map.insert(TypeId::of::<Binary_Fts>(), crate::godot_arkane::godot_fts_object_builder::buildObject);
     });
 }
 

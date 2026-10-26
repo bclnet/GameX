@@ -2,9 +2,9 @@ from __future__ import annotations
 import os
 from openx.core import ISource, IHaveSource
 from openx.engines.opengl.gfx import OpenGLX, TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
-from gamex.engines.opengl.openglFtlObjectBuilder import OpenGLFtlObjectBuilder
-from gamex.engines.opengl.openglFtsObjectBuilder import OpenGLFtsObjectBuilder
-from gamex.engines.opengl.openglNifObjectBuilder import OpenGLNifObjectBuilder
+from gamex.engines.opengl.opengl_arkane import OpenGLFtlObjectBuilder
+from gamex.engines.opengl.opengl_arkane import OpenGLFtsObjectBuilder
+from gamex.engines.opengl.opengl_gamebryo import OpenGLNifObjectBuilder
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 

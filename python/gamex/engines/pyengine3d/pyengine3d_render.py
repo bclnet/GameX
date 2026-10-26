@@ -4,9 +4,9 @@ from openx.core import ISource, IHaveSource
 from openx.engines.pyengine3d.gfx import PyEngine3dX, TestTriRenderer
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
-from gamex.engines.pyengine3d.pyengine3dftlobjectbuilder import PyEngine3dFtlObjectBuilder
-from gamex.engines.pyengine3d.pyengine3dftsobjectbuilder import PyEngine3dFtsObjectBuilder
-from gamex.engines.pyengine3d.pyengine3dnifobjectbuilder import PyEngine3dNifObjectBuilder
+from gamex.engines.pyengine3d.pyengine3d_arkane import PyEngine3dFtlObjectBuilder
+from gamex.engines.pyengine3d.pyengine3d_arkane import PyEngine3dFtsObjectBuilder
+from gamex.engines.pyengine3d.pyengine3d_gamebryo import PyEngine3dNifObjectBuilder
 
 PyEngine3dX.buildersByType['Binary_Nif'] = PyEngine3dNifObjectBuilder.buildObject
 PyEngine3dX.buildersByType[Binary_Nif] = PyEngine3dNifObjectBuilder.buildObject

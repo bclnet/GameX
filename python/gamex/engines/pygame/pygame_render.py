@@ -4,9 +4,9 @@ from openx.core import ISource, IHaveSource
 from openx.engines.pygame.gfx import PygameX, TestTriRenderer, TextureRenderer, TestAnimRenderer
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
-from gamex.engines.pygame.pygameftlobjectbuilder import PygameFtlObjectBuilder
-from gamex.engines.pygame.pygameftsobjectbuilder import PygameFtsObjectBuilder
-from gamex.engines.pygame.pygamenifobjectbuilder import PygameNifObjectBuilder
+from gamex.engines.pygame.pygame_arkane import PygameFtlObjectBuilder
+from gamex.engines.pygame.pygame_arkane import PygameFtsObjectBuilder
+from gamex.engines.pygame.pygame_gamebryo import PygameNifObjectBuilder
 
 PygameX.buildersByType['Binary_Nif'] = PygameNifObjectBuilder.buildObject
 PygameX.buildersByType[Binary_Nif] = PygameNifObjectBuilder.buildObject

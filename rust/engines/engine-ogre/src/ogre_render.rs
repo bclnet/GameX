@@ -13,8 +13,8 @@ use std::sync::{Arc, LazyLock, Mutex, Once};
 
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
 
-use crate::ogre_ftl_object_builder;
-use crate::ogre_fts_object_builder;
+use crate::ogre_arkane::ogre_ftl_object_builder;
+use crate::ogre_arkane::ogre_fts_object_builder;
 use crate::ogre_object_holder::OgreObjectHolder;
 
 pub type ObjectBuilder = fn(&dyn Any, bool, Option<&dyn Any>) -> OgreObjectHolder;

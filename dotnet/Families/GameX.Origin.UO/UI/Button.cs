@@ -30,7 +30,23 @@ public class Button : Control {
 
     public int ButtonID { get; }
     public ButtonAction ButtonAction { get; set; }
+    public int ToPage { get; set; }
+
+    /// <summary>Action 0 on a server gump. Default stays a click, because that enum value is also 0.</summary>
+    public bool IsPageButton { get; set; }
     public override ClickPriority Priority => ClickPriority.High;
+
+    public override void OnButtonClick(int buttonID) {
+        if (!IsPageButton) {
+            base.OnButtonClick(buttonID);
+            return;
+        }
+        for (var p = Parent; p != null; p = p.Parent)
+            if (p is Gump g) {
+                g.ActivePage = ToPage;
+                return;
+            }
+    }
 
     public ushort ButtonGraphicNormal {
         get => _normal;

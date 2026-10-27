@@ -3,7 +3,7 @@
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO Gump. Save and server reply are not here. Dispose does not touch items:
+/// ClassicUO Gump. The 0xB1 reply lives on ServerGump. Dispose does not touch items:
 /// World.Items is not a typed item list yet.
 /// </summary>
 public class Gump : Control {
@@ -17,6 +17,13 @@ public class Gump : Control {
 
     public World World { get; }
     public bool InvalidateContents { get; set; }
+    public bool IsFromServer { get; set; }
+
+    /// <summary>Right-click close. A server gump replies before it disposes.</summary>
+    public virtual void CloseWithRightClick() {
+        if (!CanCloseWithRightClick || IsDisposed) return;
+        Dispose();
+    }
 
     public override void Update() {
         if (InvalidateContents) {

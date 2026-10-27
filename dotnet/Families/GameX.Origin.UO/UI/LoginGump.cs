@@ -139,7 +139,7 @@ public class LoginGump : Gump {
         _scene.RememberLogin(_account.Text, _password?.Text, _auto != null && !_auto.IsDisposed && _auto.IsChecked);
         if (!UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) return;
         _scene.CurrentLoginStep = LoginSteps.Connecting;
-        UOLoginNet.Begin(host, port, _account.Text, _password?.Text, UltimaOnline.Current?.Version ?? default);
+        UOLoginNet.Begin(host, port, _account.Text, _password?.Text, UltimaOnline.Current?.Version ?? default, UltimaOnline.Current?.VersionText);
     }
 
     static void FocusHue(TextBox box) {

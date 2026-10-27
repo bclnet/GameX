@@ -128,6 +128,7 @@ public abstract class Control {
     public virtual void OnFocusLost() => IsFocused = false;
     public virtual void OnButtonClick(int buttonID) => Parent?.OnButtonClick(buttonID);
     public virtual void OnMouseClick(int x, int y) { }
+    public virtual bool OnMouseDoubleClick(int x, int y) => false;
     public virtual void OnKeyboardReturn(int textID, string text) => Parent?.OnKeyboardReturn(textID, text);
     protected virtual void OnChildAdded() { }
     protected virtual void OnChildRemoved() { }

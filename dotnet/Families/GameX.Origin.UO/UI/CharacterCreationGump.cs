@@ -1,11 +1,13 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Netcode.UO;
 using System;
 
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// Login character-creation shell. No paperdoll, race, profession, or city pages. No packet.
+/// Login character-creation shell. No paperdoll, race, profession, or city pages.
+/// Next sends 0x00 or 0xF8. Stats and skills are the fixed starter in UOGamePackets.CreateCharacter.
 /// </summary>
 public class CharacterCreationGump : Gump {
     readonly LoginScene _scene;
@@ -44,8 +46,10 @@ public class CharacterCreationGump : Gump {
                 _scene.CurrentLoginStep = LoginSteps.CharacterSelection;
                 break;
             case Buttons.Next:
-                _scene.AddCharacter(_name.Text);
-                _scene.CurrentLoginStep = LoginSteps.CharacterSelection;
+                var name = _name.Text;
+                if (string.IsNullOrWhiteSpace(name)) break;
+                UOLoginNet.CreateCharacter(name, _female.IsChecked, _scene.Characters?.Length ?? 0);
+                _scene.CurrentLoginStep = LoginSteps.CharacterCreationDone;
                 break;
         }
     }

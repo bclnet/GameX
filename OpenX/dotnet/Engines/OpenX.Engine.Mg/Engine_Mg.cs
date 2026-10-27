@@ -256,6 +256,15 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
         //}
     }
 
+    /// <summary>ClassicUO Mouse.Update. Window pixels map onto the backbuffer.</summary>
+    static void ToBackbuffer(MgClientHost* s, ref int x, ref int y) {
+        var win = s->Window.ClientBounds;
+        var bufW = s->GraphicManager.PreferredBackBufferWidth;
+        var bufH = s->GraphicManager.PreferredBackBufferHeight;
+        if (win.Width > 0 && bufW > 0) x = (int)((double)x * bufW / win.Width);
+        if (win.Height > 0 && bufH > 0) y = (int)((double)y * bufH / win.Height);
+    }
+
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     static SDLBool HandleSdlEvent(nint userData, SDL_Event* sdlEvent) {
         Log.Info($"{(nint)sdlEvent}");
@@ -299,7 +308,11 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
             case SDL_EventType.SDL_EVENT_MOUSE_MOTION: {
                 var motion = sdlEvent->motion;
                 var scene = s->Scene;
-                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseMove((int)motion.x, (int)motion.y);
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) {
+                    int x = (int)motion.x, y = (int)motion.y;
+                    ToBackbuffer(s, ref x, ref y);
+                    scene.OnMouseMove(x, y);
+                }
                 break;
             }
             case SDL_EventType.SDL_EVENT_MOUSE_WHEEL: {
@@ -311,6 +324,7 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
             case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN: {
                 var button = sdlEvent->button;
                 int b = button.button, x = (int)button.x, y = (int)button.y;
+                ToBackbuffer(s, ref x, ref y);
                 var scene = s->Scene;
                 if (scene != null && scene.IsLoaded && !scene.IsDestroyed) {
                     uint now = (uint)Environment.TickCount;
@@ -324,7 +338,9 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
             case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP: {
                 var button = sdlEvent->button;
                 var scene = s->Scene;
-                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseUp(button.button, (int)button.x, (int)button.y);
+                int x = (int)button.x, y = (int)button.y;
+                ToBackbuffer(s, ref x, ref y);
+                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseUp(button.button, x, y);
                 break;
             }
         }

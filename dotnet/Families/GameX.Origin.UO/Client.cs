@@ -22,7 +22,7 @@ public class UltimaOnline {
 
     // ClassicUO renderer slots. Not constructed here (no Texture2D):
     // Animations, Arts, Gumps, Texmaps, Lights, MultiMaps, Sounds.
-    // World in this project is only the login scene's entity lists. GameCursor is not in yet.
+    // World in this project is only the login scene's entity lists. GameCursor draws from LoginScene.
     // Protocol is ClassicUO ClientFlags. GameX's ClientFlags is internal.
 
     /// <summary>

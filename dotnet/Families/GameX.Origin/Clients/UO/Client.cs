@@ -6,6 +6,7 @@ using OpenX.Client;
 using OpenX.Gfx;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -51,7 +52,10 @@ public class Assets(UOGame game) {
     readonly Dictionary<int, (byte[] pixels, int width, int height)> _artPixels = [];
     readonly HashSet<int> _artMiss = [];
     readonly Dictionary<long, (byte[] pixels, int width, int height, int cx, int cy)> _bodyFrames = [];
+    readonly Dictionary<long, byte[]> _animGroups = [];
     readonly HashSet<long> _bodyMiss = [];
+    readonly Dictionary<int, (byte type, uint flags)> _mobTypes = [];
+    readonly List<(ushort group, byte replace)>[] _replaces = [new(), new()];
     readonly object _mapGate = new();
     Archive _game;
     Binary_TileData _tile;
@@ -124,6 +128,7 @@ public class Assets(UOGame game) {
         HuesRadar = await TryAsset<Binary_RadarColor>(game, "radarcol.mul");
         _game = game;
         _tile = await TryAsset<Binary_TileData>(game, "tiledata.mul");
+        if (game.Game is UOGame uo && !string.IsNullOrEmpty(uo.Found?.Root)) LoadAnimTables(uo.Found.Root);
         await OpenFelucca(game);
         //TileData = new TileDataoader(this);
         //Multis = new Multi(this);
@@ -430,21 +435,26 @@ public class Assets(UOGame game) {
             return pixels != null && width > 0 && height > 0;
         }
         if (fileId >= 0 && fileId <= 0xFFFF && !_artMiss.Contains(fileId) && Arts is BinaryArchive bin) {
-            var path = fileId < 0x4000 ? $"land/file{fileId:x5}.land" : $"art/file{fileId:x5}.art";
-            try {
-                var asset = bin.GetAsset<object>(path, throwOnError: false).GetAwaiter().GetResult();
-                if (asset is ITexture tex) {
-                    var packed = tex.Create("", o => (TextureAsBytes)o);
-                    pixels = packed.Bytes;
-                    width = tex.Width;
-                    height = tex.Height;
-                    if (pixels != null && width > 0 && height > 0 && pixels.Length >= width * height * 2) {
-                        _artPixels[fileId] = (pixels, width, height);
-                        return true;
+            // artLegacyMUL.uop names statics art/file. artidx.mul names them static/file.
+            var first = fileId < 0x4000 ? $"land/file{fileId:x5}.land" : $"art/file{fileId:x5}.art";
+            var second = fileId < 0x4000 ? null : $"static/file{fileId:x5}.art";
+            foreach (var path in new[] { first, second }) {
+                if (path == null) continue;
+                try {
+                    var asset = bin.GetAsset<object>(path, throwOnError: false).GetAwaiter().GetResult();
+                    if (asset is ITexture tex) {
+                        var packed = tex.Create("", o => (TextureAsBytes)o);
+                        pixels = packed.Bytes;
+                        width = tex.Width;
+                        height = tex.Height;
+                        if (pixels != null && width > 0 && height > 0 && pixels.Length >= width * height * 2) {
+                            _artPixels[fileId] = (pixels, width, height);
+                            return true;
+                        }
                     }
                 }
+                catch (Exception) { }
             }
-            catch (Exception) { }
             _artMiss.Add(fileId);
         }
         if (fileId >= 0 && fileId < 0x4000 && TryRadarDiamond(fileId, out pixels)) {
@@ -478,6 +488,21 @@ public class Assets(UOGame game) {
         return true;
     }
 
+    /// <summary>
+    /// radarcol.mul at this index, little-endian BGRA1555 with bit 15 set.
+    /// Same read as TryRadarDiamond. Land is 0..0x3FFF. A static is the graphic plus 0x4000.
+    /// </summary>
+    public bool TryRadarColor(int tileId, out ushort color) {
+        color = 0;
+        if (HuesRadar == null || tileId < 0 || tileId >= HuesRadar.Colors.Length) return false;
+        var c = HuesRadar.Colors[tileId];
+        var r = (int)(c & 0xFF);
+        var g = (int)((c >> 8) & 0xFF);
+        var b = (int)((c >> 16) & 0xFF);
+        color = (ushort)(((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3) | 0x8000);
+        return true;
+    }
+
     static void FillRun(byte[] bd, int y, int xOffset, int xRun, byte lo, byte hi) {
         var row = y * 44;
         var end = xOffset + xRun;
@@ -504,14 +529,363 @@ public class Assets(UOGame game) {
     }
 
     /// <summary>
-    /// One frame of a body. People stand on action 4. Directions 5..7 mirror 3..1.
+    /// ClassicUO GetGroupForAnimation for a body this client can classify.
+    /// People stand on 4, walk on 0 or 1, and run on 2 or 3. Layer 0x02 is the two-handed weapon.
+    /// A 0x6E action is replaced through Anim1.def and Anim2.def first.
+    /// The bow anim-id table stays in ClassicUO's MobileAnimation. New-character groups are ObjectNewAnimation.
+    /// </summary>
+    public byte GroupFor(ushort body, bool walking, bool running, bool war, bool twoHanded, bool fromServer, ushort rawAction) {
+        if (fromServer) return ReplacedAction(body, rawAction);
+        var type = AnimType(body);
+        var flags = AnimFlags(body);
+        switch (type) {
+            case 2:
+                if ((flags & 0x20) != 0) return HighGroup(flags, walking, running, war);
+                if (!walking) return 2;
+                return running ? (byte)1 : (byte)0;
+            case 1:
+                if (!walking) return 2;
+                return running ? (byte)1 : (byte)0;
+            case 0:
+                return HighGroup(flags, walking, running, war);
+            default:
+                if (!walking) return war ? (twoHanded ? (byte)8 : (byte)7) : (byte)4;
+                if (running) return twoHanded ? (byte)3 : (byte)2;
+                return twoHanded ? (byte)1 : (byte)0;
+        }
+    }
+
+    /// <summary>ClassicUO Mobile.GetReplacedObjectAnimation. 0xFF in the def uses the walk group.</summary>
+    public byte ReplacedAction(ushort body, ushort index) {
+        var type = AnimType(body);
+        if (type != 2 && type != 3 && type != 4) return (byte)(index % 22);
+        var list = type == 2 ? 0 : 1;
+        var count = type == 2 ? 13 : 35;
+        ushort replaced = index;
+        foreach (var item in _replaces[list]) {
+            if (item.group != index) continue;
+            replaced = item.replace == 0xFF ? (ushort)0 : item.replace;
+            break;
+        }
+        return (byte)(replaced % count);
+    }
+
+    /// <summary>
+    /// ClassicUO GetObjectNewAnimation. Types 0 through 11 and 14 select a group.
+    /// Kind and flags are AnimType and AnimFlags. A body past the 2048 index is group 0.
+    /// Mount and flying are not stored here, so those arms stay the grounded group.
+    /// Gargoyle is 0x029B, or 0x029A when the client is 7.0 or newer.
+    /// GroupFor still picks a move. This result is not run through ReplacedAction.
+    /// </summary>
+    public byte ObjectNewAnimation(ushort body, ushort type, ushort action, byte mode) {
+        if (body >= 2048) return 0;
+        switch (type) {
+            case 0: return ObjectNewAnimationType0(body, action, mode);
+            case 1:
+            case 2: return ObjectNewAnimationType1_2(body, action, mode);
+            case 3: return ObjectNewAnimationType3(body, action, mode);
+            case 4: return ObjectNewAnimationType4(body, action, mode);
+            case 5: return ObjectNewAnimationType5(body, action, mode);
+            case 6:
+            case 14: return ObjectNewAnimationType6_14(body, action, mode);
+            case 7: return ObjectNewAnimationType7(body, action, mode);
+            case 8: return ObjectNewAnimationType8(body, action, mode);
+            case 9: return ObjectNewAnimationType9(body, action, mode);
+            case 10: return ObjectNewAnimationType10(body, action, mode);
+            case 11: return ObjectNewAnimationType11(body, action, mode);
+        }
+        return 0;
+    }
+
+    // No mount layer and no mobile Flags. ClassicUO's mounted and flying tests stay false.
+    static bool Mounted() => false;
+    static bool Flying() => false;
+
+    bool Gargoyle(ushort body) => (game.Version >= ClientVersion.CV_7000 && body == 0x029A) || body == 0x029B;
+
+    bool AnimGroupExists(ushort body, int group) {
+        if ((uint)group >= 80) return false;
+        return TryFrameCount(body, group, 0, out _);
+    }
+
+    byte ObjectNewAnimationType0(ushort body, ushort action, byte mode) {
+        if (action > 10) return 0;
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type == 0) {
+            switch (mode % 4) {
+                case 1: return 5;
+                case 2: return 6;
+                case 3:
+                    if ((flags & 0x1) != 0) return 12;
+                    goto case 0;
+                case 0: return 4;
+            }
+        }
+        else if (type == 1) {
+            if (mode % 2 != 0) return 6;
+            return 5;
+        }
+        else if (type != 2) {
+            if (Mounted()) {
+                if (action > 0) {
+                    if (action == 1) return 27;
+                    if (action == 2) return 28;
+                    return 26;
+                }
+                return 29;
+            }
+            switch (action) {
+                default:
+                    if (Gargoyle(body) && Flying() && AnimGroupExists(body, 71)) return 71;
+                    else if (AnimGroupExists(body, 31)) return 31;
+                    break;
+                case 1: return 18;
+                case 2: return 19;
+                case 6: return 12;
+                case 7:
+                    if (Gargoyle(body) && Flying() && AnimGroupExists(body, 72)) return 72;
+                    return 13;
+                case 8: return 14;
+                case 3: return 11;
+                case 4: return 9;
+                case 5: return 10;
+            }
+        }
+        if ((flags & 0x2) != 0) return 2;
+        if (mode % 2 != 0 && AnimGroupExists(body, 6)) return 6;
+        return 5;
+    }
+
+    byte ObjectNewAnimationType1_2(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (type <= 2 || Mounted()) return 0xFF;
+            return 30;
+        }
+        if (mode % 2 != 0) return 15;
+        return 16;
+    }
+
+    byte ObjectNewAnimationType3(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (type == 1) return 8;
+            if (type == 2) {
+                if (mode % 2 != 0) return 21;
+                return 22;
+            }
+            if (mode % 2 != 0) return 8;
+            return 12;
+        }
+        if (mode % 2 != 0) return 2;
+        return 3;
+    }
+
+    byte ObjectNewAnimationType4(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (type > 2) {
+                if (Gargoyle(body) && Flying() && AnimGroupExists(body, 77)) return 77;
+                if (Mounted()) return 0xFF;
+                return 20;
+            }
+            return 7;
+        }
+        return 10;
+    }
+
+    byte ObjectNewAnimationType5(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type <= 1) {
+            if (mode % 2 != 0) return 18;
+            return 17;
+        }
+        if (type != 2) {
+            if (Mounted()) return 0xFF;
+            if (mode % 2 != 0) return 6;
+            return 5;
+        }
+        switch (mode % 3) {
+            case 1: return 10;
+            case 2: return 3;
+        }
+        return 9;
+    }
+
+    byte ObjectNewAnimationType6_14(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (type != 1) {
+                if (type == 2) return 3;
+                if (Mounted()) return 0xFF;
+                return 34;
+            }
+            return 5;
+        }
+        return 11;
+    }
+
+    byte ObjectNewAnimationType7(ushort body, ushort action, byte mode) {
+        if (Mounted()) return 0xFF;
+        if (action > 0) {
+            if (action == 1) return 33;
+        }
+        else return 32;
+        return 0;
+    }
+
+    byte ObjectNewAnimationType8(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (type != 1) {
+                if (type == 2) return 9;
+                return Mounted() ? (byte)0xFF : (byte)33;
+            }
+            return 3;
+        }
+        return 11;
+    }
+
+    byte ObjectNewAnimationType9(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (Gargoyle(body) && action == 0) return 60;
+            return 0xFF;
+        }
+        return 20;
+    }
+
+    byte ObjectNewAnimationType10(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (Gargoyle(body) && action == 0) return 61;
+            return 0xFF;
+        }
+        return 20;
+    }
+
+    byte ObjectNewAnimationType11(ushort body, ushort action, byte mode) {
+        var flags = AnimFlags(body);
+        byte type = 0;
+        if ((flags & 0x80000000) != 0) type = AnimType(body);
+        if (type != 0) {
+            if (type >= 2) {
+                if (Mounted()) return 0xFF;
+                switch (action) {
+                    case 1:
+                    case 2:
+                        if (Gargoyle(body) && Flying()) return 76;
+                        return 17;
+                }
+                if (Gargoyle(body) && Flying()) return 75;
+                return 16;
+            }
+            return 5;
+        }
+        return 12;
+    }
+
+    static byte HighGroup(uint flags, bool walking, bool running, bool war) {
+        if ((flags & 0x400) != 0) return 0;
+        if ((flags & 0x40) != 0) {
+            if (!walking) return 2;
+            return running ? (byte)1 : (byte)0;
+        }
+        if (!walking) {
+            if ((flags & 0x4) != 0) return 8;
+            if ((flags & 0x10000) != 0 && !war) return 25;
+            return 1;
+        }
+        if (running) {
+            if ((flags & 0x8) != 0) return 19;
+            if ((flags & 0x10000) != 0) return 24;
+            return 0;
+        }
+        if ((flags & 0x10000) != 0 && !war) return 22;
+        return 0;
+    }
+
+    byte AnimType(ushort body) => _mobTypes.TryGetValue(body, out var row) ? row.type : (byte)0;
+
+    uint AnimFlags(ushort body) => _mobTypes.TryGetValue(body, out var row) ? row.flags : 0;
+
+    void LoadAnimTables(string root) {
+        LoadMobTypes(Path.Combine(root, "mobtypes.txt"));
+        LoadReplaces(Path.Combine(root, "Anim1.def"), 0);
+        LoadReplaces(Path.Combine(root, "Anim2.def"), 1);
+    }
+
+    void LoadMobTypes(string path) {
+        if (!File.Exists(path)) return;
+        foreach (var raw in File.ReadAllLines(path)) {
+            var line = raw.Trim();
+            if (line.Length == 0 || line[0] == '#' || !char.IsDigit(line[0])) continue;
+            var hash = line.IndexOf('#');
+            if (hash >= 0) line = line.Substring(0, hash).Trim();
+            var parts = line.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3) continue;
+            var id = int.Parse(parts[0]);
+            var name = parts[1].ToLowerInvariant();
+            byte type = name switch {
+                "monster" => 0,
+                "sea_monster" => 1,
+                "animal" => 2,
+                "human" => 3,
+                "equipment" => 4,
+                _ => 255,
+            };
+            if (type == 255) continue;
+            var number = uint.Parse(parts[2], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            _mobTypes[id] = (type, 0x80000000 | number);
+        }
+    }
+
+    void LoadReplaces(string path, int slot) {
+        if (!File.Exists(path)) return;
+        foreach (var raw in File.ReadAllLines(path)) {
+            var line = raw.Trim();
+            if (line.Length == 0 || line[0] == '#' || !char.IsDigit(line[0])) continue;
+            var hash = line.IndexOf('#');
+            if (hash >= 0) line = line.Substring(0, hash).Trim();
+            var parts = line.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2) continue;
+            var group = int.Parse(parts[0], CultureInfo.InvariantCulture);
+            if (group == 0xFFFF) continue;
+            var brace = parts[1].Trim('{', '}');
+            if (brace.Length == 0) continue;
+            var replace = int.Parse(brace.Split(',')[0], CultureInfo.InvariantCulture);
+            _replaces[slot].Add(((ushort)group, (byte)replace));
+        }
+    }
+
+    /// <summary>
+    /// One frame of a body. frame is the index inside that direction's group.
+    /// People stand on action 4. Directions 5..7 mirror 3..1.
     /// Pixels are little-endian BGRA1555. The anchor is the frame center.
     /// </summary>
-    public bool TryBodyFrame(int body, int action, int direction, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {
+    public bool TryBodyFrame(int body, int action, int direction, int frame, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {
         pixels = null;
         width = height = centerX = centerY = 0;
         if (body <= 0 || direction < 0 || direction > 7) return false;
-        var key = ((long)body << 16) | ((long)(action & 0xFF) << 8) | (uint)(direction & 7);
+        var key = ((long)body << 32) | ((long)(action & 0xFF) << 16) | ((long)(direction & 7) << 8) | (uint)(frame & 0xFF);
         if (_bodyFrames.TryGetValue(key, out var hit)) {
             pixels = hit.pixels;
             width = hit.width;
@@ -524,11 +898,24 @@ public class Assets(UOGame game) {
         for (var file = 0; file < 5; file++) {
             var index = AnimIndex(body, action, direction, file);
             if (!TryAnimGroup(file, index, out var group)) continue;
-            if (!DecodeFrame(group, direction > 4, out pixels, out width, out height, out centerX, out centerY)) continue;
+            if (!DecodeFrame(group, frame, direction > 4, out pixels, out width, out height, out centerX, out centerY)) continue;
             _bodyFrames[key] = (pixels, width, height, centerX, centerY);
             return true;
         }
         _bodyMiss.Add(key);
+        return false;
+    }
+
+    /// <summary>Frame count of one direction group. ClassicUO walks this list in ProcessAnimation.</summary>
+    public bool TryFrameCount(int body, int action, int direction, out int count) {
+        count = 0;
+        if (body <= 0 || direction < 0 || direction > 7) return false;
+        for (var file = 0; file < 5; file++) {
+            var index = AnimIndex(body, action, direction, file);
+            if (!TryAnimGroup(file, index, out var group) || group.Length < 516) continue;
+            count = BitConverter.ToInt32(group, 512);
+            if (count > 0 && count <= 64) return true;
+        }
         return false;
     }
 
@@ -553,6 +940,8 @@ public class Assets(UOGame game) {
     bool TryAnimGroup(int file, int index, out byte[] group) {
         group = null;
         if (Animations == null || file < 0 || file >= Animations.Anims.Length || index < 0) return false;
+        var cache = ((long)file << 32) | (uint)index;
+        if (_animGroups.TryGetValue(cache, out group)) return group != null && group.Length >= 516;
         if (Animations.Anims[file] is not BinaryArchive bin) return false;
         try {
             var s = bin.GetData($"file{index:x5}.anim", default, false).GetAwaiter().GetResult();
@@ -560,18 +949,21 @@ public class Assets(UOGame game) {
             using var ms = new MemoryStream();
             s.CopyTo(ms);
             group = ms.ToArray();
+            _animGroups[cache] = group;
             return group.Length >= 516;
         }
         catch (Exception) { return false; }
     }
 
-    static bool DecodeFrame(byte[] group, bool flip, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {
+    static bool DecodeFrame(byte[] group, int frame, bool flip, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {
         pixels = null;
         width = height = centerX = centerY = 0;
         var count = BitConverter.ToInt32(group, 512);
         if (count <= 0 || count > 64) return false;
-        var table = 516;
-        if (table + count * 4 > group.Length) return false;
+        if (frame < 0) frame = 0;
+        if (frame >= count) frame %= count;
+        var table = 516 + frame * 4;
+        if (table + 4 > group.Length) return false;
         var at = 512 + BitConverter.ToInt32(group, table);
         if (at < 0 || at + 8 > group.Length) return false;
         centerX = BitConverter.ToInt16(group, at);

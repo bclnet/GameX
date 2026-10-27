@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Netcode.UO;
 using System.Collections.Generic;
 
 namespace GameX.Origin.UO;
@@ -16,6 +17,7 @@ public static class UIManager {
     public static LinkedList<Gump> Gumps { get; } = new();
     public static int MouseX { get; private set; }
     public static int MouseY { get; private set; }
+    public static Control MouseOverControl => HitTest(MouseX, MouseY);
 
     public static Control KeyboardFocusControl {
         get => _keyboardFocus;
@@ -37,6 +39,12 @@ public static class UIManager {
     public static T GetGump<T>() where T : Gump {
         for (var n = Gumps.First; n != null; n = n.Next)
             if (!n.Value.IsDisposed && n.Value is T t) return t;
+        return null;
+    }
+
+    public static T GetGump<T>(uint serial) where T : Gump {
+        for (var n = Gumps.First; n != null; n = n.Next)
+            if (!n.Value.IsDisposed && n.Value is T t && t.ServerSerial == serial) return t;
         return null;
     }
 
@@ -96,9 +104,16 @@ public static class UIManager {
             var gump = GumpOf(hit);
             // LoginBackground and LoginGump set CanCloseWithRightClick false.
             if (gump != null && !gump.IsDisposed && gump.CanCloseWithRightClick && gump == GumpOf(down)) {
-                gump.Dispose();
+                gump.CloseWithRightClick();
                 if (_keyboardFocus != null && _keyboardFocus.IsDisposed) _keyboardFocus = null;
                 return true;
+            }
+        }
+        else if (button == 1 && down is UseLabel src && src != hit && src.Serial != 0 && !UOLoginNet.HasTarget && !UOLoginNet.Holding) {
+            UOLoginNet.Lift(src.Serial);
+            if (UOLoginNet.Holding) {
+                if (DropHeldOn(hit)) return true;
+                return false;
             }
         }
         else if (button == 1 && hit != null && hit == down) {
@@ -109,10 +124,34 @@ public static class UIManager {
         return hit != null;
     }
 
+    /// <summary>A drag releases into a bag, onto a paperdoll (the backpack), or onto another label. False leaves the hold for the ground.</summary>
+    static bool DropHeldOn(Control hit) {
+        for (var p = hit; p != null; p = p.Parent) {
+            if (p is ContainerGump bag) {
+                UOLoginNet.DropHeld(40, 40, 0, bag.ServerSerial);
+                return true;
+            }
+            if (p is PaperdollGump) {
+                var pack = UOLoginNet.PlayerBackpack;
+                if (pack == 0) return false;
+                UOLoginNet.DropHeld(40, 40, 0, pack);
+                return true;
+            }
+        }
+        if (hit is UseLabel dest && dest.Serial != 0) {
+            UOLoginNet.DropHeld(0, 0, 0, dest.Serial);
+            return true;
+        }
+        return false;
+    }
+
     public static bool OnMouseDoubleClick(int button, int x, int y) {
         MouseX = x;
         MouseY = y;
-        return HitTest(x, y) != null;
+        var hit = HitTest(x, y);
+        if (hit == null) return false;
+        if (button == 1) hit.OnMouseDoubleClick(x, y);
+        return true;
     }
 
     /// <summary>SDL keycode. Escape does not close the process.</summary>

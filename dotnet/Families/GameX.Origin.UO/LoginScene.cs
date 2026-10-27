@@ -110,6 +110,7 @@ public sealed class LoginScene : SceneBase {
         sink?.Begin();
         try {
             RenderedObjectsCount = UIManager.Draw();
+            GameCursor.Draw(CurrentLoginStep == LoginSteps.InWorld);
             return base.Draw();
         }
         finally { sink?.End(); }
@@ -123,14 +124,42 @@ public sealed class LoginScene : SceneBase {
     public override bool OnMouseDown(int button, int x, int y)
         => UIManager.OnMouseDown(button, x, y) || base.OnMouseDown(button, x, y);
 
-    public override bool OnMouseUp(int button, int x, int y)
-        => UIManager.OnMouseUp(button, x, y) || base.OnMouseUp(button, x, y);
+    public override bool OnMouseUp(int button, int x, int y) {
+        if (UIManager.OnMouseUp(button, x, y)) return true;
+        if (CurrentLoginStep != LoginSteps.InWorld || button != 1) return base.OnMouseUp(button, x, y);
+        WorldGump.GroundTile(x, y, out var wx, out var wy, out var wz);
+        if (UOLoginNet.HasTarget) {
+            UOLoginNet.TargetGround(wx, wy, wz);
+            return true;
+        }
+        if (UOLoginNet.Holding) {
+            UOLoginNet.DropHeld(wx, wy, wz, 0xFFFFFFFF);
+            return true;
+        }
+        return base.OnMouseUp(button, x, y);
+    }
 
     public override bool OnMouseDoubleClick(int button, int x, int y)
         => UIManager.OnMouseDoubleClick(button, x, y) || base.OnMouseDoubleClick(button, x, y);
 
     public override bool OnKeyDown(int key, int mod) {
         if (CurrentLoginStep == LoginSteps.InWorld && TryWalk(key, mod)) return true;
+        if (CurrentLoginStep == LoginSteps.InWorld) {
+            if (key == 9) {
+                UOLoginNet.ToggleWar();
+                return true;
+            }
+            if (key == 27) {
+                if (UOLoginNet.HasTarget) {
+                    UOLoginNet.CancelTarget();
+                    return true;
+                }
+                if (UOLoginNet.HasPrompt) {
+                    UOLoginNet.ReplyPrompt("", true);
+                    return true;
+                }
+            }
+        }
         return UIManager.OnKeyDown(key, mod) || base.OnKeyDown(key, mod);
     }
 

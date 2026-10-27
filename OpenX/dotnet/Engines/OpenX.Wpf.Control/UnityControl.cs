@@ -46,9 +46,16 @@ public abstract class UnityControl(Func<object, object, object, string, object> 
         if (Pipe != null) return Pipe;
         lock (PipeLock) {
             if (Pipe != null) return Pipe;
-            var pipe = new NamedPipeServerStream("GameX.Unity.Shell", PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-            pipe.BeginWaitForConnection(ar => { try { pipe.EndWaitForConnection(ar); } catch { } }, null);
-            return Pipe = pipe;
+            NamedPipeServerStream pipe = null;
+            try {
+                pipe = new NamedPipeServerStream("GameX.Unity.Shell", PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                pipe.BeginWaitForConnection(ar => { try { pipe.EndWaitForConnection(ar); } catch { } }, null);
+                return Pipe = pipe;
+            }
+            catch {
+                try { pipe?.Dispose(); } catch { }
+                return null;
+            }
         }
     }
 

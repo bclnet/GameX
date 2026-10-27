@@ -117,7 +117,6 @@ public abstract class ShellControl : UserControl {
     }
 
     void OnLoaded(object sender, RoutedEventArgs e) {
-        Process = null;
         var shellFile = GetShellFile();
         if (string.IsNullOrEmpty(shellFile)) return;
         var processFile = new FileInfo(shellFile);

@@ -1,4 +1,5 @@
-﻿using GameX.Arkane.Formats.Danae;
+﻿#if ARKANE
+using GameX.Arkane.Formats.Danae;
 using OpenX;
 using OpenX.Gfx;
 using System.Threading.Tasks;
@@ -104,3 +105,4 @@ public static class UnityFtsObjectBuilder {
         return d;
     }
 }
+#endif

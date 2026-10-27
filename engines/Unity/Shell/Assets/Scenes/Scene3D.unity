@@ -403,7 +403,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1546406650, guid: cef62d075cbf34c42984e557ab63adce, type: 3}
+  m_Script: {fileID: 606121565, guid: b49496ef2f592374892e963f0335ecda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   FamilyId: Bethesda
@@ -571,6 +571,9 @@ MonoBehaviour:
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
+  m_SceneObjectReference:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
 --- !u!4 &832575519
 Transform:
   m_ObjectHideFlags: 0

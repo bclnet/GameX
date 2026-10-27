@@ -1,11 +1,8 @@
-using GameX.Engines.Godot;
 using GameX.Engines.O3de;
 using GameX.Engines.Ogre;
 using GameX.Engines.OpenGL;
 using GameX.Engines.Sdl;
 using GameX.Engines.Stride;
-using GameX.Engines.Unity;
-using GameX.Engines.Unreal;
 using GameX.Engines.Vulkan;
 using OpenX;
 using OpenX.Gfx;
@@ -22,7 +19,7 @@ public class AppVulkanControl() : VulkanControl(ShellState.Create) {
 }
 
 public class AppGodotControl() : GodotControl(ShellState.Create) {
-    protected override Renderer CreateRenderer() => GodotRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
+    protected override Renderer CreateRenderer() => null; // GodotRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
 }
 
 public class AppO3deControl() : O3deControl(ShellState.Create) {
@@ -42,9 +39,9 @@ public class AppStrideControl() : StrideControl(ShellState.Create) {
 }
 
 public class AppUnityControl() : UnityControl(ShellState.Create) {
-    protected override Renderer CreateRenderer() => UnityRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
+    protected override Renderer CreateRenderer() => null; // UnityRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
 }
 
 public class AppUnrealControl() : UnrealControl(ShellState.Create) {
-    protected override Renderer CreateRenderer() => UnrealRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
+    protected override Renderer CreateRenderer() => null; // UnrealRenderer.CreateRenderer(this, EngineX.Gfx, Source, Value, Type);
 }

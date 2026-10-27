@@ -56,30 +56,35 @@ public abstract class ShellControl : UserControl {
         Process = null;
         var shellFile = GetShellFile();
         if (string.IsNullOrEmpty(shellFile)) return;
-        var handle = Host.Handle;
         var processFile = new FileInfo(shellFile);
         if (!processFile.Exists) return;
-        var processName = Path.GetFileNameWithoutExtension(processFile.Name);
-        foreach (var p in System.Diagnostics.Process.GetProcesses().Where(p => p.ProcessName == processName)) {
-            Console.WriteLine("Clean up extra processes, Process number: {0}", p.Id);
-            p.Kill();
+        try {
+            var handle = Host.Handle;
+            var processName = Path.GetFileNameWithoutExtension(processFile.Name);
+            foreach (var p in System.Diagnostics.Process.GetProcesses().Where(p => p.ProcessName == processName)) {
+                Console.WriteLine("Clean up extra processes, Process number: {0}", p.Id);
+                try { p.Kill(); }
+                catch (Exception) { }
+            }
+            Directory.CreateDirectory(processFile.DirectoryName);
+            var log = Path.Combine(processFile.DirectoryName, "Shell.log");
+            var token = EncodeState(GetShellState());
+            Process = new Process();
+            var si = Process.StartInfo;
+            si.FileName = processFile.FullName;
+            si.WorkingDirectory = processFile.DirectoryName;
+            si.Arguments = string.Join(" ", new[] { LogArgument(log), ExtraArguments(handle), "--", token }.Where(s => !string.IsNullOrEmpty(s)));
+            si.UseShellExecute = false;
+            si.CreateNoWindow = true;
+            Process.Start();
+            try { Process.WaitForInputIdle(); }
+            catch (InvalidOperationException) { }
+            Thread.Sleep(100); // Wait a minute for the handle
+            if (!AttachParent) return;
+            SetParent(Process.MainWindowHandle, handle);
+            _ = ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
         }
-        Directory.CreateDirectory(processFile.DirectoryName);
-        var log = Path.Combine(processFile.DirectoryName, "Shell.log");
-        var token = EncodeState(GetShellState());
-        Process = new Process();
-        var si = Process.StartInfo;
-        si.FileName = processFile.FullName;
-        si.WorkingDirectory = processFile.DirectoryName;
-        si.Arguments = string.Join(" ", new[] { LogArgument(log), ExtraArguments(handle), "--", token }.Where(s => !string.IsNullOrEmpty(s)));
-        si.UseShellExecute = false;
-        si.CreateNoWindow = true;
-        Process.Start();
-        Process.WaitForInputIdle();
-        Thread.Sleep(100); // Wait a minute for the handle
-        if (!AttachParent) return;
-        SetParent(Process.MainWindowHandle, handle);
-        _ = ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
+        catch (Exception ex) { Console.WriteLine(ex); }
     }
 
     void OnUnloaded(object sender, RoutedEventArgs e) {

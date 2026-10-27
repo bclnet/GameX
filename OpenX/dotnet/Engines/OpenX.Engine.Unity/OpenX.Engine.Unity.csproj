@@ -12,28 +12,28 @@
 
 	<ItemGroup>
 	  <Reference Include="UnityEngine">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.AudioModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.AudioModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.CoreModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.ManagedKernelModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.ManagedKernelModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.ManagedKernelModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.PhysicsModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.PhysicsModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.TerrainModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.TerrainModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.TerrainPhysicsModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.TerrainPhysicsModule.dll</HintPath>
 	  </Reference>
 	  <Reference Include="UnityEngine.UIElementsModule">
-	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.UIElementsModule.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 

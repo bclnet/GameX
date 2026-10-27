@@ -16,7 +16,8 @@
     "name": "Ultima Online",
     "files": [
       {
-        "path": "Anim1.def"
+        "path": "artLegacyMUL.uop:art/file04000.art",
+        "type": "Art"
       },
       {
         "path": [

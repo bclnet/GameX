@@ -112,6 +112,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 2530405712376627200
       type: {class: ScreenSpaceReflectionPersistentResources, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:
@@ -390,7 +392,6 @@ MonoBehaviour:
       data:
         m_RasterizationShader: {fileID: 4800000, guid: 0849e84e3d62649e8882e9d6f056a017, type: 3}
         m_GTAOComputeShader: {fileID: 7200000, guid: 0e79c0fbcc6ffc642834ff60779ad086, type: 3}
-        m_GTAODepthPrefilterComputeShader: {fileID: 7200000, guid: 42244eac3d92497eb7dd4ad591a29e19, type: 3}
         m_Version: 0
     - rid: 7653588948350402562
       type: {class: ScreenSpaceAmbientOcclusionBlueNoiseResources, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
@@ -525,7 +526,6 @@ MonoBehaviour:
       data:
         m_Version: 1
         m_DepthBiasMode: 0
-        m_NormalBiasMode: 0
     - rid: 9139193861108662277
       type: {class: RenderingCapabilitiesSettings, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:

@@ -1,6 +1,6 @@
 ﻿//#define Arkane
 //#define Beamdog
-#define Bethesda
+//#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -22,7 +22,7 @@
 //#define Monolith
 //#define Mythic
 //#define Nintendo
-//#define Origin
+#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft
@@ -557,7 +557,7 @@ public partial class FamilyManager {
     };
 #elif Origin
     public static GlobalOption Option = new() {
-        Engine = "GL",
+        Engine = "MG",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Origin",

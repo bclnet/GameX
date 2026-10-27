@@ -24,7 +24,7 @@ GameX.Lucas.dll
 GameX.Monolith.dll
 GameX.Mythic.dll
 GameX.Nintendo.dll
-GameX.Origin.dll
+#GameX.Origin.dll
 GameX.Red.dll
 GameX.Rockstar.dll
 GameX.Ubisoft.dll
@@ -35,7 +35,7 @@ GameX.Valve.Engine.dll
 GameX.Volition.dll
 GameX.WB.dll
 GameX.X2K.dll
-GameX.Xbox.dll
+#GameX.Xbox.dll
 
 #GameX.dll
 GameX.All.dll

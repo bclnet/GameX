@@ -79,10 +79,31 @@ MonoBehaviour:
       - rid: 9139193861015339013
       - rid: 9139193861015339014
       - rid: 9139193861015339015
-      - rid: 9139193861055447040
     m_RuntimeSettings:
-      m_List: []
-  m_AssetVersion: 16
+      m_List:
+      - rid: 6852985685364965378
+      - rid: 6852985685364965380
+      - rid: 6852985685364965381
+      - rid: 6852985685364965382
+      - rid: 6852985685364965384
+      - rid: 6852985685364965392
+      - rid: 6852985685364965394
+      - rid: 8712630790384254976
+      - rid: 3585280179619233792
+      - rid: 7653588948265467905
+      - rid: 7653588948265467906
+      - rid: 7653588948265467908
+      - rid: 7653588948265467909
+      - rid: 4037018844090335234
+      - rid: 4037018844090335235
+      - rid: 2530405712142008322
+      - rid: 9139193861015339008
+      - rid: 9139193861015339010
+      - rid: 9139193861015339011
+      - rid: 9139193861015339012
+      - rid: 9139193861015339014
+      - rid: 9139193861015339015
+  m_AssetVersion: 14
   m_ObsoleteDefaultVolumeProfile: {fileID: 0}
   m_RenderingLayerNames:
   - Light Layer default
@@ -112,8 +133,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
     - rid: 2530405712142008320
       type: {class: ScreenSpaceReflectionPersistentResources, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
       data:
@@ -556,8 +575,3 @@ MonoBehaviour:
     - rid: 9139193861015339017
       type: {class: SoftShadowGeometryGenerator, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
       data: 
-    - rid: 9139193861055447040
-      type: {class: URPLightFalloffSettings, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.Runtime}
-      data:
-        m_Version: 1
-        m_LightFalloffMode: 0

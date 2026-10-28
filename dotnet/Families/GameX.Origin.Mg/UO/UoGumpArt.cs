@@ -29,6 +29,8 @@ public sealed class UoGumpArt : IGumpArt {
     public static void Attach(IClientHost host) {
         if (host is not MgClientHost mg) return;
         GumpArt.Sink = new UoGumpArt(mg.GraphicManager.GraphicsDevice);
+        UoMouse.Attach(mg);
+        UoKeys.Attach(mg);
     }
 
     public void Begin() {

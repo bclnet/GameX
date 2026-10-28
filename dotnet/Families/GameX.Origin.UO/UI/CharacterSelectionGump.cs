@@ -77,6 +77,7 @@ public class CharacterSelectionGump : Gump {
                 var characters = _scene.Characters;
                 if (characters == null || _selected < 0 || _selected >= characters.Length) return;
                 if (string.IsNullOrEmpty(characters[_selected])) return;
+                UOLoginSettings.NoteCharacter(LoginScene.Account, _scene.ServerName, characters[_selected]);
                 UOLoginNet.SelectCharacter(_selected, characters[_selected]);
                 _scene.CurrentLoginStep = LoginSteps.EnteringBritania;
                 break;

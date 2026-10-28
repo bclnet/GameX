@@ -1299,7 +1299,7 @@ public partial class FamilyManager {
     /// <summary>
     /// The families.
     /// </summary>
-    public static readonly Dictionary<string, Family> Families = new(StringComparer.OrdinalIgnoreCase);
+    public static readonly Dictionary<string, Family> Families = [with(StringComparer.OrdinalIgnoreCase)];
     /// <summary>
     /// The Unknown family.
     /// </summary>

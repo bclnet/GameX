@@ -36,7 +36,6 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
     //static SDL_EventFilter _filter;
     delegate* unmanaged[Cdecl]<nint, SDL_Event*, SDLBool> _filter;
     bool _ignoreNextTextInput;
-    readonly uint[] _mouseDownMs = new uint[8];
     readonly float[] _intervalFixedUpdate = new float[2];
     double _totalElapsed, _currentFpsTime;
     uint _totalFrames;
@@ -256,15 +255,6 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
         //}
     }
 
-    /// <summary>ClassicUO Mouse.Update. Window pixels map onto the backbuffer.</summary>
-    static void ToBackbuffer(MgClientHost* s, ref int x, ref int y) {
-        var win = s->Window.ClientBounds;
-        var bufW = s->GraphicManager.PreferredBackBufferWidth;
-        var bufH = s->GraphicManager.PreferredBackBufferHeight;
-        if (win.Width > 0 && bufW > 0) x = (int)((double)x * bufW / win.Width);
-        if (win.Height > 0 && bufH > 0) y = (int)((double)y * bufH / win.Height);
-    }
-
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     static SDLBool HandleSdlEvent(nint userData, SDL_Event* sdlEvent) {
         Log.Info($"{(nint)sdlEvent}");
@@ -303,44 +293,6 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
                     var scene = s->Scene;
                     if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnTextInput(text);
                 }
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_MOUSE_MOTION: {
-                var motion = sdlEvent->motion;
-                var scene = s->Scene;
-                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) {
-                    int x = (int)motion.x, y = (int)motion.y;
-                    ToBackbuffer(s, ref x, ref y);
-                    scene.OnMouseMove(x, y);
-                }
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_MOUSE_WHEEL: {
-                var wheel = sdlEvent->wheel;
-                var scene = s->Scene;
-                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseWheel(wheel.y > 0);
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN: {
-                var button = sdlEvent->button;
-                int b = button.button, x = (int)button.x, y = (int)button.y;
-                ToBackbuffer(s, ref x, ref y);
-                var scene = s->Scene;
-                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) {
-                    uint now = (uint)Environment.TickCount;
-                    bool dbl = b < s->_mouseDownMs.Length && s->_mouseDownMs[b] != 0 && now - s->_mouseDownMs[b] <= 400;
-                    if (b < s->_mouseDownMs.Length) s->_mouseDownMs[b] = now == 0 ? 1 : now;
-                    if (dbl) scene.OnMouseDoubleClick(b, x, y);
-                    else scene.OnMouseDown(b, x, y);
-                }
-                break;
-            }
-            case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP: {
-                var button = sdlEvent->button;
-                var scene = s->Scene;
-                int x = (int)button.x, y = (int)button.y;
-                ToBackbuffer(s, ref x, ref y);
-                if (scene != null && scene.IsLoaded && !scene.IsDestroyed) scene.OnMouseUp(button.button, x, y);
                 break;
             }
         }

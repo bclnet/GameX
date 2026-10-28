@@ -76,6 +76,9 @@ public class ServerSelectionGump : Gump {
                 if (!UOLoginNet.Started || _servers.Length == 0)
                     _scene.CurrentLoginStep = LoginSteps.CharacterSelection;
                 else {
+                    var name = _servers.Length > 0 ? _servers[0] : "";
+                    _scene.ServerName = name;
+                    UOLoginSettings.NoteServer(name, 0);
                     UOLoginNet.SelectServer(0);
                     _scene.CurrentLoginStep = LoginSteps.LoginInToServer;
                 }

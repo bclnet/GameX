@@ -154,6 +154,12 @@ public static class UIManager {
         return true;
     }
 
+    public static Control LastControlMouseDown(int button) => (uint)button < 4 ? _pressed[button] : null;
+
+    public static void OnMouseDragging() { }
+
+    public static void OnMouseWheel(bool up) { }
+
     /// <summary>SDL keycode. Escape does not close the process.</summary>
     public static bool OnKeyDown(int key, int mod) {
         if (key == 27) return false;

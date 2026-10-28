@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 
+namespace OpenX;
+
 public class ShellSize : MonoBehaviour {
     const uint SWP_NOZORDER = 0x0004;
     const uint SWP_NOACTIVATE = 0x0010;
@@ -34,11 +36,10 @@ public class ShellSize : MonoBehaviour {
         return IntPtr.Zero;
     }
 
-    // Parent client is device pixels. An outside MoveWindow does not resize the backbuffer.
+    // The host sends SZ|width|height. It does not MoveWindow this player.
     void Update() {
-        if (!GetClientRect(_parent, out var rect)) return;
-        var width = rect.right - rect.left;
-        var height = rect.bottom - rect.top;
+        var width = ShellPipe.Width;
+        var height = ShellPipe.Height;
         if (width <= 1 || height <= 1) return;
         var hwnd = PlayerWindow();
         var screenDiffers = Screen.width != width || Screen.height != height;
@@ -115,7 +116,6 @@ public class ShellSize : MonoBehaviour {
     [StructLayout(LayoutKind.Sequential)]
     struct POINT { public int x, y; }
 
-    [DllImport("User32.dll")] static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
     [DllImport("User32.dll")] static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
     [DllImport("User32.dll")] static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
     [DllImport("User32.dll")] static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);

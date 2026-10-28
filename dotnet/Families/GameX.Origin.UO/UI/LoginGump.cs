@@ -11,14 +11,15 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO LoginGump for the main login step.
-/// No settings file, no StbTextBox, no HTML links, no music slider.
-/// Next arrow reads Login.cfg and calls UOLoginNet.Begin; encryption is still not applied.
+/// No StbTextBox, no HTML links, no music slider.
+/// Next arrow reads Login.cfg and calls UOLoginNet.Begin. Autologin is uo-settings.json.
 /// </summary>
 public class LoginGump : Gump {
     readonly LoginScene _scene;
     readonly ushort _buttonNormal, _buttonOver;
     readonly TextBox _account, _password;
     readonly Checkbox _auto;
+    Checkbox _save;
     readonly Button _nextArrow0;
     uint _time;
 
@@ -60,13 +61,13 @@ public class LoginGump : Gump {
             Add(new Label($"UO Version {versionText}.", false, 0x034E, 9) { X = 286, Y = 453 });
             Add(new Label("GameX", false, 0x034E, 9) { X = 286, Y = 465 });
             Add(_auto = new Checkbox(0x00D2, 0x00D3, "Autologin", 1, HUE, false) { X = 150, Y = 417 });
-            var save = new Checkbox(0x00D2, 0x00D3, "Save Account", 1, HUE, false) {
+            _save = new Checkbox(0x00D2, 0x00D3, "Save Account", 1, HUE, false) {
                 X = _auto.X + _auto.Width + 10, Y = 417,
             };
-            Add(save);
+            Add(_save);
             font = 1;
             hue = HUE;
-            AddMusic(font, hue, save.X + save.Width + 10);
+            AddMusic(font, hue, _save.X + _save.Width + 10);
         }
         else {
             _buttonNormal = 0x5CD;
@@ -87,13 +88,13 @@ public class LoginGump : Gump {
             Add(new Label($"UO Version {versionText}.", false, 0x0481, 9) { X = 286, Y = 453 });
             Add(new Label("GameX", false, 0x0481, 9) { X = 286, Y = 465 });
             Add(_auto = new Checkbox(0x00D2, 0x00D3, "Autologin", 9, 0x0481, false) { X = 150, Y = 417 });
-            var save = new Checkbox(0x00D2, 0x00D3, "Save Account", 9, 0x0481, false) {
+            _save = new Checkbox(0x00D2, 0x00D3, "Save Account", 9, 0x0481, false) {
                 X = _auto.X + _auto.Width + 10, Y = 417,
             };
-            Add(save);
+            Add(_save);
             font = 9;
             hue = 0x0481;
-            AddMusic(font, hue, save.X + save.Width + 10);
+            AddMusic(font, hue, _save.X + _save.Width + 10);
         }
 
         offsetX += 7;
@@ -103,7 +104,13 @@ public class LoginGump : Gump {
         Add(_password = new TextBox {
             X = offsetX, Y = offsetY + offtextY + 2, Width = 190, Height = 25, Hue = 0x034F, MaxLength = 16, IsPassword = true,
         });
-        _account.SetKeyboardFocus();
+        UOLoginSettings.Load();
+        if (_auto != null) _auto.IsChecked = UOLoginSettings.AutoLogin;
+        if (_save != null) _save.IsChecked = UOLoginSettings.SaveAccount;
+        if (!string.IsNullOrEmpty(UOLoginSettings.Username)) _account.Text = UOLoginSettings.Username;
+        if (!string.IsNullOrEmpty(UOLoginSettings.Password)) _password.Text = UOLoginSettings.Password;
+        if (string.IsNullOrEmpty(_account.Text)) _account.SetKeyboardFocus();
+        else _password.SetKeyboardFocus();
     }
 
     public TextBox AccountBox => _account;
@@ -136,7 +143,14 @@ public class LoginGump : Gump {
     void Submit() {
         if (UIManager.GetGump<CreditsGump>() != null) return;
         if (_account == null || _account.IsDisposed) return;
-        _scene.RememberLogin(_account.Text, _password?.Text, _auto != null && !_auto.IsDisposed && _auto.IsChecked);
+        var auto = _auto != null && !_auto.IsDisposed && _auto.IsChecked;
+        var save = _save != null && !_save.IsDisposed && _save.IsChecked;
+        UOLoginSettings.AutoLogin = auto;
+        UOLoginSettings.SaveAccount = save;
+        UOLoginSettings.Username = _account.Text;
+        UOLoginSettings.Password = _password?.Text ?? "";
+        UOLoginSettings.Save();
+        _scene.RememberLogin(_account.Text, _password?.Text, auto);
         if (!UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) return;
         _scene.CurrentLoginStep = LoginSteps.Connecting;
         UOLoginNet.Begin(host, port, _account.Text, _password?.Text, UltimaOnline.Current?.Version ?? default, UltimaOnline.Current?.VersionText);

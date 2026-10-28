@@ -39,6 +39,7 @@ public static class UoMusic {
     public static void Attach() {
         Login();
         Poll();
+        UoMp3.Pump();
     }
 
     /// <summary>
@@ -66,11 +67,17 @@ public static class UoMusic {
             }
             path ??= stones ?? files[0];
             _tries++;
-            var song = Song.FromUri(Path.GetFileNameWithoutExtension(path), new Uri(path));
-            MediaPlayer.IsRepeating = true;
-            MediaPlayer.Volume = 0.4f;
-            MediaPlayer.Play(song);
-            _song = song;
+            if (Path.GetExtension(path).Equals(".mp3", StringComparison.OrdinalIgnoreCase))
+                UoMp3.Start(path, true, 0.4f, false);
+            else if (Path.GetExtension(path).Equals(".wav", StringComparison.OrdinalIgnoreCase))
+                PlayWav(path, true);
+            else {
+                var song = Song.FromUri(Path.GetFileNameWithoutExtension(path), new Uri(path));
+                MediaPlayer.IsRepeating = true;
+                MediaPlayer.Volume = 0.4f;
+                MediaPlayer.Play(song);
+                _song = song;
+            }
             _done = true;
             Console.WriteLine($"UO music: {Path.GetFileName(path)}");
             Console.Out.Flush();
@@ -115,9 +122,11 @@ public static class UoMusic {
             if (on) MediaPlayer.Resume();
             else MediaPlayer.Pause();
         }
-        if (_musicFx == null) return;
-        if (on) _musicFx.Resume();
-        else _musicFx.Pause();
+        if (_musicFx != null) {
+            if (on) _musicFx.Resume();
+            else _musicFx.Pause();
+        }
+        UoMp3.SetEnabled(on);
     }
 
     /// <summary>
@@ -243,7 +252,7 @@ public static class UoMusic {
     }
 
     /// <summary>
-    /// A wav track plays through SoundEffect. mp3 and ogg stay on Song.FromUri, which rejects this install's mp3.
+    /// A wav track plays through SoundEffect. An mp3 is decoded by UoMp3. ogg stays on Song.FromUri.
     /// </summary>
     static void PlayMusic(string clientPath, int index) {
         StopIndexed();
@@ -258,18 +267,21 @@ public static class UoMusic {
             Console.Out.Flush();
             return;
         }
-        if (Path.GetExtension(path).Equals(".wav", StringComparison.OrdinalIgnoreCase)) {
+        if (Path.GetExtension(path).Equals(".wav", StringComparison.OrdinalIgnoreCase))
             PlayWav(path, row.loop);
-            Console.WriteLine($"UO music: {Path.GetFileName(path)}");
-            Console.Out.Flush();
-            return;
+        else if (Path.GetExtension(path).Equals(".mp3", StringComparison.OrdinalIgnoreCase)) {
+            StopSong();
+            UoMp3.Start(path, row.loop, 0.4f, true);
+            _indexed = true;
         }
-        var song = Song.FromUri(Path.GetFileNameWithoutExtension(path), new Uri(path));
-        MediaPlayer.IsRepeating = row.loop;
-        MediaPlayer.Volume = 0.4f;
-        MediaPlayer.Play(song);
-        _song = song;
-        _indexed = true;
+        else {
+            var song = Song.FromUri(Path.GetFileNameWithoutExtension(path), new Uri(path));
+            MediaPlayer.IsRepeating = row.loop;
+            MediaPlayer.Volume = 0.4f;
+            MediaPlayer.Play(song);
+            _song = song;
+            _indexed = true;
+        }
         Console.WriteLine($"UO music: {Path.GetFileName(path)}");
         Console.Out.Flush();
     }
@@ -297,6 +309,12 @@ public static class UoMusic {
         _musicEffect = null;
         if (!_indexed) return;
         _indexed = false;
+        if (UoMp3.Indexed) UoMp3.Stop();
+        StopSong();
+    }
+
+    static void StopSong() {
+        if (_song == null) return;
         MediaPlayer.Stop();
         _song = null;
     }

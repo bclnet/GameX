@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,9 +15,13 @@ using static OpenX.Wpf.Control.WindowsNative;
 namespace OpenX.Wpf.Control;
 
 public static class WindowsNative {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT { public int left, top, right, bottom; }
+
     [DllImport("User32.dll", EntryPoint = "SetParent")] public static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
     [DllImport("User32.dll", EntryPoint = "ShowWindow")] public static extern int ShowWindow(IntPtr hwnd, int nCmdShow);
     [DllImport("User32.dll")] public static extern bool MoveWindow(IntPtr handle, int x, int y, int width, int height, bool redraw);
+    [DllImport("User32.dll")] public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 }
 
 public abstract class ShellControl : UserControl {
@@ -37,12 +43,19 @@ public abstract class ShellControl : UserControl {
     protected virtual string ExtraArguments(IntPtr parent) => "";
     protected virtual bool AttachParent => true;
     protected virtual bool KeepProcess => false;
-    protected virtual void DeliverState(string token) { }
+    // One pipe and one parked process per name. Unity and Godot must not share a slot.
+    protected virtual string PipeName => null;
 
-    // Only Unity sets KeepProcess, so one static slot is that player.
-    static Process KeptProcess;
-    static ShellControl KeptOwner;
-    static IntPtr KeptHwnd;
+    sealed class ShellLink {
+        public Process Process;
+        public ShellControl Owner;
+        public IntPtr Hwnd;
+        public NamedPipeServerStream Pipe;
+        public string Item, Size;
+        public readonly object Gate = new();
+    }
+
+    static readonly Dictionary<string, ShellLink> Links = new();
     static System.Windows.Forms.NativeWindow Parking;
 
     protected static string FindRepoFile(string relative) {
@@ -60,24 +73,34 @@ public abstract class ShellControl : UserControl {
         return "ST." + b64;
     }
 
+    ShellLink Link() {
+        var name = PipeName;
+        if (string.IsNullOrEmpty(name)) return null;
+        if (!Links.TryGetValue(name, out var link)) Links[name] = link = new ShellLink();
+        return link;
+    }
+
     static bool ProcessLive(System.Diagnostics.Process process) {
         try { return process != null && !process.HasExited; }
         catch { return false; }
     }
 
-    static int LiveKeptId() {
-        if (!ProcessLive(KeptProcess)) { KeptProcess = null; KeptHwnd = IntPtr.Zero; return -1; }
-        return KeptProcess.Id;
+    static int LiveId(ShellLink link) {
+        if (link == null || !ProcessLive(link.Process)) {
+            if (link != null) { link.Process = null; link.Hwnd = IntPtr.Zero; }
+            return -1;
+        }
+        return link.Process.Id;
     }
 
-    static IntPtr PlayerHwnd(System.Diagnostics.Process process) {
-        if (process != null)
+    static IntPtr PlayerHwnd(ShellLink link) {
+        if (link?.Process != null)
             try {
-                var hwnd = process.MainWindowHandle;
-                if (hwnd != IntPtr.Zero) KeptHwnd = hwnd;
+                var hwnd = link.Process.MainWindowHandle;
+                if (hwnd != IntPtr.Zero) link.Hwnd = hwnd;
             }
             catch { }
-        return KeptHwnd;
+        return link?.Hwnd ?? IntPtr.Zero;
     }
 
     // Hidden top-level window. Windows destroys a child when its parent HWND is destroyed.
@@ -85,7 +108,7 @@ public abstract class ShellControl : UserControl {
         if (Parking != null && Parking.Handle != IntPtr.Zero) return Parking.Handle;
         var window = new System.Windows.Forms.NativeWindow();
         window.CreateHandle(new System.Windows.Forms.CreateParams {
-            Caption = "GameX.Unity.Park",
+            Caption = "GameX.Shell.Park",
             Style = unchecked((int)0x80000000),
             ExStyle = 0x08000080,
             X = -32000,
@@ -97,23 +120,77 @@ public abstract class ShellControl : UserControl {
         return window.Handle;
     }
 
-    void Claim(System.Diagnostics.Process process) {
-        if (KeptOwner != null && !ReferenceEquals(KeptOwner, this)) KeptOwner.Process = null;
+    void Claim(ShellLink link, System.Diagnostics.Process process) {
+        if (link.Owner != null && !ReferenceEquals(link.Owner, this)) link.Owner.Process = null;
         Process = process;
-        KeptProcess = process;
-        KeptOwner = this;
+        link.Process = process;
+        link.Owner = this;
     }
 
-    void ReuseKept(IntPtr host) {
-        Claim(KeptProcess);
-        var hwnd = PlayerHwnd(Process);
-        if (hwnd != IntPtr.Zero) {
-            SetParent(hwnd, host);
-            var size = Host.RenderSize;
-            if (size.Width > 1 && size.Height > 1)
-                MoveWindow(hwnd, 0, 0, (int)size.Width, (int)size.Height, true);
+    protected void DeliverState(string token) {
+        try {
+            var link = Link();
+            if (link == null || string.IsNullOrEmpty(token)) return;
+            lock (link.Gate) {
+                link.Item = token;
+                Ensure(link);
+                Flush(link);
+            }
         }
+        catch { }
+    }
+
+    void DeliverSize() {
+        try {
+            var link = Link();
+            if (link == null) return;
+            var host = Host.Handle;
+            if (host == IntPtr.Zero || !GetClientRect(host, out var rect)) return;
+            var width = rect.right - rect.left;
+            var height = rect.bottom - rect.top;
+            if (width <= 1 || height <= 1) return;
+            lock (link.Gate) {
+                link.Size = "SZ|" + width + "|" + height;
+                Ensure(link);
+                Flush(link);
+            }
+        }
+        catch { }
+    }
+
+    void Ensure(ShellLink link) {
+        if (link.Pipe != null) return;
+        var pipe = new NamedPipeServerStream(PipeName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+        link.Pipe = pipe;
+        pipe.BeginWaitForConnection(ar => {
+            try {
+                pipe.EndWaitForConnection(ar);
+                lock (link.Gate) Flush(link);
+            }
+            catch { }
+        }, null);
+    }
+
+    static void Flush(ShellLink link) {
+        var pipe = link.Pipe;
+        if (pipe == null || !pipe.IsConnected) return;
+        Write(pipe, link.Item);
+        Write(pipe, link.Size);
+    }
+
+    static void Write(NamedPipeServerStream pipe, string line) {
+        if (string.IsNullOrEmpty(line)) return;
+        var bytes = Encoding.UTF8.GetBytes(line + "\n");
+        pipe.Write(bytes, 0, bytes.Length);
+        pipe.Flush();
+    }
+
+    void ReuseKept(ShellLink link, IntPtr host) {
+        Claim(link, link.Process);
+        var hwnd = PlayerHwnd(link);
+        if (hwnd != IntPtr.Zero) SetParent(hwnd, host);
         DeliverState(EncodeState(GetShellState()));
+        DeliverSize();
     }
 
     void OnLoaded(object sender, RoutedEventArgs e) {
@@ -124,8 +201,9 @@ public abstract class ShellControl : UserControl {
         try {
             var handle = Host.Handle;
             var processName = Path.GetFileNameWithoutExtension(processFile.Name);
-            var keptId = LiveKeptId();
-            var reuse = KeepProcess && keptId >= 0;
+            var link = KeepProcess ? Link() : null;
+            var keptId = LiveId(link);
+            var reuse = link != null && keptId >= 0;
             foreach (var p in System.Diagnostics.Process.GetProcesses()) {
                 try {
                     if (p.ProcessName != processName) continue;
@@ -135,7 +213,7 @@ public abstract class ShellControl : UserControl {
                 }
                 catch (Exception) { }
             }
-            if (reuse) { ReuseKept(handle); return; }
+            if (reuse) { ReuseKept(link, handle); return; }
             Directory.CreateDirectory(processFile.DirectoryName);
             var log = Path.Combine(processFile.DirectoryName, "Shell.log");
             var token = EncodeState(GetShellState());
@@ -149,20 +227,19 @@ public abstract class ShellControl : UserControl {
             Process.Start();
             try { Process.WaitForInputIdle(); }
             catch (InvalidOperationException) { }
-            if (KeepProcess) Claim(Process);
+            if (link != null) Claim(link, Process);
             Thread.Sleep(100); // Wait for the handle
             if (!AttachParent) {
-                // Unity parents itself from -parentHWND. Fit the child once it exists.
+                // Unity parents itself from -parentHWND. The player sizes itself from the pipe.
                 for (var i = 0; i < 20 && Process.MainWindowHandle == IntPtr.Zero; i++) Thread.Sleep(50);
-                var hwnd = PlayerHwnd(Process);
-                var size = Host.RenderSize;
-                if (hwnd != IntPtr.Zero && size.Width > 1 && size.Height > 1)
-                    MoveWindow(hwnd, 0, 0, (int)size.Width, (int)size.Height, true);
+                _ = PlayerHwnd(link);
+                if (KeepProcess) DeliverSize();
                 return;
             }
             SetParent(Process.MainWindowHandle, handle);
-            _ = PlayerHwnd(Process);
-            _ = ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
+            _ = PlayerHwnd(link);
+            if (KeepProcess) DeliverSize();
+            else _ = ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
         }
         catch (Exception ex) { Console.WriteLine(ex); }
     }
@@ -172,11 +249,11 @@ public abstract class ShellControl : UserControl {
             if (Process == null) return;
             if (KeepProcess) {
                 // Park before this host HWND is destroyed, or Windows destroys the player with it.
-                if (ReferenceEquals(KeptOwner, this) && ProcessLive(Process)) {
-                    var hwnd = PlayerHwnd(Process);
+                var link = Link();
+                if (link != null && ReferenceEquals(link.Owner, this) && ProcessLive(Process)) {
+                    var hwnd = PlayerHwnd(link);
                     if (hwnd != IntPtr.Zero) SetParent(hwnd, ParkingHwnd());
-                    KeptProcess = Process;
-                    KeptOwner = null;
+                    link.Owner = null;
                 }
                 Process = null;
                 return;
@@ -190,8 +267,8 @@ public abstract class ShellControl : UserControl {
 
     void OnSizeChanged(object sender, SizeChangedEventArgs e) {
         if (Process == null) return;
+        if (KeepProcess) { DeliverSize(); return; }
         var hwnd = Process.MainWindowHandle;
-        if (hwnd == IntPtr.Zero && KeepProcess) hwnd = KeptHwnd;
         if (hwnd == IntPtr.Zero) return;
         var size = e.NewSize;
         MoveWindow(hwnd, 0, 0, (int)size.Width, (int)size.Height, true);

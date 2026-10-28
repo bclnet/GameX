@@ -1,8 +1,5 @@
 using OpenX.Gfx;
 using System;
-using System.IO.Pipes;
-using System.Text;
-using System.Threading;
 using System.Windows;
 
 namespace OpenX.Wpf.Control;
@@ -18,46 +15,7 @@ public abstract class UnityControl(Func<object, object, object, string, object> 
     }
     protected override bool AttachParent => false;
     protected override bool KeepProcess => true;
-
-    static NamedPipeServerStream Pipe;
-    static readonly object PipeLock = new();
-
-    protected override void DeliverState(string token) {
-        if (string.IsNullOrEmpty(token)) return;
-        try {
-            var pipe = EnsurePipe();
-            if (pipe == null || !pipe.IsConnected) return;
-            var bytes = Encoding.UTF8.GetBytes(token + "\n");
-            ThreadPool.QueueUserWorkItem(_ => {
-                try {
-                    lock (PipeLock) {
-                        if (pipe == null || !pipe.IsConnected) return;
-                        pipe.Write(bytes, 0, bytes.Length);
-                        pipe.Flush();
-                    }
-                }
-                catch { }
-            });
-        }
-        catch { }
-    }
-
-    static NamedPipeServerStream EnsurePipe() {
-        if (Pipe != null) return Pipe;
-        lock (PipeLock) {
-            if (Pipe != null) return Pipe;
-            NamedPipeServerStream pipe = null;
-            try {
-                pipe = new NamedPipeServerStream("GameX.Unity.Shell", PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-                pipe.BeginWaitForConnection(ar => { try { pipe.EndWaitForConnection(ar); } catch { } }, null);
-                return Pipe = pipe;
-            }
-            catch {
-                try { pipe?.Dispose(); } catch { }
-                return null;
-            }
-        }
-    }
+    protected override string PipeName => "GameX.Unity.Shell";
 
     #region Binding
 

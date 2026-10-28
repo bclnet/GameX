@@ -45,4 +45,10 @@
     <ProjectReference Include="..\..\Engines\GameX.Engine.Unreal\GameX.Engine.Unreal.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="GodotSharp">
+      <HintPath>$(ProgramFiles)\Godot\Godot_v4.8\GodotSharp\Api\Debug\GodotSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+	
 </Project>

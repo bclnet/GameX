@@ -6,11 +6,6 @@ using OpenX;
 using OpenX.Gfx;
 using OpenX.Gfx.Unity;
 using System;
-using System.Collections.Concurrent;
-using System.IO;
-using System.IO.Pipes;
-using System.Text;
-using System.Threading;
 #pragma warning disable CS9113
 
 namespace GameX.Engines.Unity;
@@ -54,43 +49,16 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     protected Archive Source;
     Renderer Renderer;
     bool _opened;
-    readonly ConcurrentQueue<string> _pipeLines = new();
-    int _pipe;
 
     public void Awake() {
         var s = ShellState.FromArgs(Environment.GetCommandLineArgs());
         if (s != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
         UnityEngine.Object.DontDestroyOnLoad(gameObject);
-        TryConnectPipe();
     }
 
     public void Start() => OpenCurrent();
 
-    void TryConnectPipe() {
-        if (Interlocked.CompareExchange(ref _pipe, 1, 0) != 0) return;
-        var thread = new Thread(ReadPipe) { IsBackground = true };
-        thread.Start();
-    }
-
-    void ReadPipe() {
-        NamedPipeClientStream client = null;
-        try {
-            client = new NamedPipeClientStream(".", "GameX.Unity.Shell", PipeDirection.In);
-            client.Connect(200);
-            Interlocked.Exchange(ref _pipe, 2);
-            using var reader = new StreamReader(client, Encoding.UTF8, false, 256, true);
-            string line;
-            while ((line = reader.ReadLine()) != null) _pipeLines.Enqueue(line);
-        }
-        catch { }
-        finally {
-            try { client?.Dispose(); } catch { }
-            Interlocked.Exchange(ref _pipe, 0);
-        }
-    }
-
-    void ApplyLine(string line) {
-        var next = ShellState.FromArgument(line);
+    public void Show(ShellState next) {
         if (next == null) return;
         if (next.FamilyId == FamilyId && next.ArcUri == ArcUri && next.Type == Type && next.Path == Path) return;
         Renderer?.Dispose();
@@ -146,9 +114,5 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
         Source?.Dispose();
     }
 
-    public void Update() {
-        if (_pipe == 0) TryConnectPipe();
-        while (_pipeLines.TryDequeue(out var line)) ApplyLine(line);
-        Renderer?.Update(0);
-    }
+    public void Update() => Renderer?.Update(0);
 }

@@ -20,6 +20,9 @@
 	  <Reference Include="UnityEngine.CoreModule">
 	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
 	  </Reference>
+	  <Reference Include="UnityEngine.ScriptingModule">
+	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.ScriptingModule.dll</HintPath>
+	  </Reference>
 	  <Reference Include="UnityEngine.ManagedKernelModule">
 	    <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.ManagedKernelModule.dll</HintPath>
 	  </Reference>

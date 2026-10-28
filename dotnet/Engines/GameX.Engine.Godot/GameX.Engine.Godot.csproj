@@ -27,14 +27,8 @@
 
   <ItemGroup>
     <Reference Include="GodotSharp">
-      <HintPath>..\..\..\OpenX\dotnet\Engines\Godot\4.8\Debug\GodotSharp.dll</HintPath>
+      <HintPath>$(ProgramFiles)\Godot\Godot_v4.8\GodotSharp\Api\Debug\GodotSharp.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Assets\Game2.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">

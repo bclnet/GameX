@@ -44,6 +44,7 @@ public sealed class LoginScene : SceneBase {
     public string[] Characters { get; private set; }
     public string PopupMessage { get; set; }
     public byte ServerIndex { get; private set; }
+    public string ServerName { get; internal set; }
     public static string Account { get; internal set; }
     public string Password { get; private set; }
     public bool CanAutologin => _autoLogin || Reconnect;
@@ -53,9 +54,19 @@ public sealed class LoginScene : SceneBase {
         base.Load();
         // Login music and SetWindowSize(640, 480) stay on the host. This project has no MonoGame device.
         UIManager.Clear();
-        _autoLogin = false;
+        UOLoginSettings.Load();
+        _autoLogin = UOLoginSettings.AutoLogin;
         UIManager.Add(new LoginBackground(_world));
         UIManager.Add(_currentGump = new LoginGump(_world, this));
+        if (CanAutologin && !string.IsNullOrEmpty(UOLoginSettings.Username)) {
+            Account = UOLoginSettings.Username;
+            Password = UOLoginSettings.Password;
+            var version = UltimaOnline.Current?.Version ?? default;
+            if (UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) {
+                CurrentLoginStep = LoginSteps.Connecting;
+                UOLoginNet.Begin(host, port, Account, Password, version, UltimaOnline.Current?.VersionText);
+            }
+        }
     }
 
     public override void Unload() {
@@ -66,16 +77,35 @@ public sealed class LoginScene : SceneBase {
     }
 
     public override void Update() {
+        GameController.Update(this);
         base.Update();
         if (UOLoginNet.Take(out var servers, out var characters, out var message, out var phase)) {
             switch (phase) {
                 case UOLoginPhase.ServersReady:
                     Servers = servers;
                     CurrentLoginStep = LoginSteps.ServerSelection;
+                    if (CanAutologin && servers != null && servers.Length > 0) {
+                        var index = UOLoginSettings.ServerIndex(servers);
+                        ServerIndex = (byte)index;
+                        ServerName = servers[index];
+                        UOLoginSettings.NoteServer(ServerName, index);
+                        UOLoginNet.SelectServer(index);
+                        CurrentLoginStep = LoginSteps.LoginInToServer;
+                    }
                     break;
                 case UOLoginPhase.CharactersReady:
                     Characters = characters;
                     CurrentLoginStep = LoginSteps.CharacterSelection;
+                    if (CanAutologin) {
+                        _autoLogin = false;
+                        var slot = UOLoginSettings.CharacterSlot(characters, Account, ServerName);
+                        if (slot >= 0) {
+                            UOLoginSettings.NoteCharacter(Account, ServerName, characters[slot]);
+                            UOLoginNet.SelectCharacter(slot, characters[slot]);
+                            CurrentLoginStep = LoginSteps.EnteringBritania;
+                        }
+                        else CurrentLoginStep = LoginSteps.CharacterCreation;
+                    }
                     break;
                 case UOLoginPhase.Failed:
                     PopupMessage = message;

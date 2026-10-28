@@ -7,6 +7,8 @@ namespace OpenX.Wpf.Control;
 public abstract class GodotControl(Func<object, object, object, string, object> shellState) : ShellControl {
     protected override string GetShellFile() => FindRepoFile(@"engines\Godot\Shell\_build\Shell.exe");
     protected override string LogArgument(string log) => $"--log-file \"{log}\"";
+    protected override bool KeepProcess => true;
+    protected override string PipeName => "GameX.Godot.Shell";
 
     #region Binding
 
@@ -49,6 +51,7 @@ public abstract class GodotControl(Func<object, object, object, string, object> 
         if (Source == null || Path == null || Value == null || Type == null) return;
         Renderer = CreateRenderer();
         Renderer?.Start();
+        DeliverState(EncodeState(GetShellState()));
     }
 
     #endregion

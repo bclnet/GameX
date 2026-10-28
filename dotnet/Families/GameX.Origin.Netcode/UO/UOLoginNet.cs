@@ -165,12 +165,13 @@ public static class UOLoginNet {
     /// <summary>Connect or protocol failure.</summary>
     public static string LastError { get; private set; }
 
-    /// <summary>True after the seed and the encrypted 0x80 have been written.</summary>
+    /// <summary>True after the seed and the 0x80 have been written.</summary>
     public static bool Started => _started;
     static volatile bool _started;
 
     /// <summary>
-    /// Opens the login server on a background thread and writes the seed and encrypted account packet.
+    /// Opens the login server on a background thread and writes the seed and the account packet.
+    /// ClassicUO encryption 0: the 0x80 is clear, and the game stream stays Huffman only.
     /// A null or empty host returns without throwing.
     /// </summary>
     public static void Begin(string host, int port, string account, string password, ClientVersion version, string versionText = null) {
@@ -842,61 +843,42 @@ public static class UOLoginNet {
         _seq = 0;
         _huff = new UOHuffman();
         lock (Gate) _fastWalk.Clear();
-        var plain = true;
         try {
-            for (var attempt = 0; attempt < 2; attempt++) {
-                client = null;
-                try {
-                    client = new TcpClient { NoDelay = true };
-                    client.Connect(host, port);
-                    if (id != Volatile.Read(ref _runId)) return;
-                    SetClient(client, id);
-                    var stream = client.GetStream();
-                    stream.ReadTimeout = ReadWaitMs;
-                    var seed = Seed(client);
-                    var seedUint = ReadU32(seed, 0);
-                    var crypt = new UOLoginCrypt(version) { Plain = plain };
-                    crypt.Initialize(seedUint);
-                    if (((uint)version >> 24) >= 6) {
-                        var ef = LoginSeed(seedUint, version);
-                        stream.Write(ef, 0, ef.Length);
-                    }
-                    else stream.Write(seed, 0, seed.Length);
-                    var login = AccountLogin(account, password);
-                    crypt.Encrypt(login);
-                    stream.Write(login, 0, login.Length);
-                    stream.Flush();
-                    _started = true;
-                    var retry = false;
-                    Pump(ref client, ref stream, crypt, account, id, ref retry);
-                    if (retry && attempt == 0) {
-                        plain = !plain;
-                        continue;
-                    }
-                    return;
-                }
-                catch (Exception) when (attempt == 0 && id == Volatile.Read(ref _runId)) {
-                    plain = !plain;
-                    continue;
-                }
-                finally {
-                    try { client?.Close(); } catch { }
-                    lock (Gate) {
-                        if (_client == client) _client = null;
-                    }
-                }
+            client = new TcpClient { NoDelay = true };
+            client.Connect(host, port);
+            if (id != Volatile.Read(ref _runId)) return;
+            SetClient(client, id);
+            var stream = client.GetStream();
+            stream.ReadTimeout = ReadWaitMs;
+            var seed = Seed(client);
+            var seedUint = ReadU32(seed, 0);
+            var crypt = new UOLoginCrypt(version) { Plain = true };
+            crypt.Initialize(seedUint);
+            if (((uint)version >> 24) >= 6) {
+                var ef = LoginSeed(seedUint, version);
+                stream.Write(ef, 0, ef.Length);
             }
+            else stream.Write(seed, 0, seed.Length);
+            var login = AccountLogin(account, password);
+            stream.Write(login, 0, login.Length);
+            stream.Flush();
+            _started = true;
+            Pump(ref client, ref stream, crypt, account, id);
         }
         catch (Exception ex) {
             if (id != Volatile.Read(ref _runId)) return;
             Fail(ex.Message, id);
         }
         finally {
+            try { client?.Close(); } catch { }
+            lock (Gate) {
+                if (_client == client) _client = null;
+            }
             if (id == Volatile.Read(ref _runId)) _password = null;
         }
     }
 
-    static void Pump(ref TcpClient client, ref NetworkStream stream, UOLoginCrypt crypt, string account, int id, ref bool retryPlain) {
+    static void Pump(ref TcpClient client, ref NetworkStream stream, UOLoginCrypt crypt, string account, int id) {
         var acc = new byte[8192];
         var tmp = new byte[4096];
         var accLen = 0;
@@ -914,13 +896,7 @@ public static class UOLoginNet {
             try { n = stream.Read(tmp, 0, tmp.Length); }
             catch (Exception ex) when (TimedOut(ex)) { continue; }
             if (n <= 0) {
-                if (!_sawCharacters && !_inWorld) {
-                    if (accLen == 0 && !_gameStream && !crypt.Plain) {
-                        retryPlain = true;
-                        return;
-                    }
-                    Fail("disconnected", id);
-                }
+                if (!_sawCharacters && !_inWorld) Fail("disconnected", id);
                 return;
             }
             if (_gameStream) {
@@ -1042,11 +1018,15 @@ public static class UOLoginNet {
     }
 
     static string RejectReason(byte reason) => reason switch {
-        0 => "invalid",
-        1 => "already in use",
-        2 => "blocked",
-        3 => "bad password",
-        _ => "login rejected"
+        0 => "Incorrect name/password.",
+        1 => "Someone is already using this account.",
+        2 => "Your account has been blocked.",
+        3 => "Your account credentials are invalid.",
+        4 => "Communication problem.",
+        5 => "The IGR concurrency limit has been met.",
+        6 => "The IGR time limit has been met.",
+        7 => "General IGR authentication failure.",
+        _ => "Couldn't connect to Ultima Online.  Please try again in a few moments.",
     };
 
     static void WriteSelect(NetworkStream stream, UOLoginCrypt crypt) {

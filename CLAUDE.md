@@ -86,6 +86,7 @@ Don't fix or report these:
 
 - **Archive paths aren't sanitized.** `ExportManager`/`ImportManager` (C#) and `exportManager.py` combine archive entry names with the output folder unchecked, so a `../` or rooted entry name can write (or, on import, read) outside that folder. This is deliberate: GameX trusts the archives it opens.
 - **Ultima Online is C# until it is merged.** The client port (`dotnet/Families/GameX.Origin.UO`, `dotnet/Families/GameX.Origin.Netcode`, `dotnet/Families/GameX.Origin.Mg`, `dotnet/Families/GameX.Origin/Clients/UO`, and MonoGame host changes that exist only to run that client) does not get a Python or Rust twin yet. Do not add `gamex-origin-uo` to the Rust workspace or keep `GameX_Origin_UO.py` in step. ADR 0001 applies again when the owner says the client is merged. Origin resource parsers that already have twins stay in all three languages.
+- **ClassicUO's plugin system is not ported.** Do not bring over `PluginHost`, `Network/Plugin`, the bootstrap plugin loader, or assistant DLLs (Razor, ClassicAssist, UOS). The empty `Plugin` / `IPluginHost` stubs in `OpenX.Client` stay no-ops. `engines/Plugins` is the engine-player folder and is unrelated. The rule is `.grok/rules/uo-no-plugins.md`.
 
 ## Git
 

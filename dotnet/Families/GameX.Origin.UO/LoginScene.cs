@@ -61,10 +61,10 @@ public sealed class LoginScene : SceneBase {
         if (CanAutologin && !string.IsNullOrEmpty(UOLoginSettings.Username)) {
             Account = UOLoginSettings.Username;
             Password = UOLoginSettings.Password;
-            var version = UltimaOnline.Current?.Version ?? default;
-            if (UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) {
+            var uo = UltimaOnline.Current;
+            if (uo != null && !string.IsNullOrEmpty(uo.Host) && uo.Port > 0) {
                 CurrentLoginStep = LoginSteps.Connecting;
-                UOLoginNet.Begin(host, port, Account, Password, version, UltimaOnline.Current?.VersionText);
+                UOLoginNet.Begin(uo.Host, uo.Port, Account, Password, uo.Version, uo.VersionText, uo.Plain);
             }
         }
     }

@@ -171,10 +171,10 @@ public static class UOLoginNet {
 
     /// <summary>
     /// Opens the login server on a background thread and writes the seed and the account packet.
-    /// ClassicUO encryption 0: the 0x80 is clear, and the game stream stays Huffman only.
+    /// plain is Options encryption 0: the 0x80 stays clear and the game stream stays Huffman only.
     /// A null or empty host returns without throwing.
     /// </summary>
-    public static void Begin(string host, int port, string account, string password, ClientVersion version, string versionText = null) {
+    public static void Begin(string host, int port, string account, string password, ClientVersion version, string versionText = null, bool plain = true) {
         if (string.IsNullOrEmpty(host)) return;
         if (version == 0) {
             _started = false;
@@ -249,7 +249,7 @@ public static class UOLoginNet {
         }
         previous?.Close();
         FacetSwitch?.Invoke(0);
-        Task.Run(() => Connect(host, port, account, password, version, id));
+        Task.Run(() => Connect(host, port, account, password, version, id, plain));
     }
 
     /// <summary>
@@ -832,7 +832,7 @@ public static class UOLoginNet {
         }
     }
 
-    static void Connect(string host, int port, string account, string password, ClientVersion version, int id) {
+    static void Connect(string host, int port, string account, string password, ClientVersion version, int id, bool plain) {
         TcpClient client = null;
         _password = password;
         _inWorld = false;
@@ -852,7 +852,7 @@ public static class UOLoginNet {
             stream.ReadTimeout = ReadWaitMs;
             var seed = Seed(client);
             var seedUint = ReadU32(seed, 0);
-            var crypt = new UOLoginCrypt(version) { Plain = true };
+            var crypt = new UOLoginCrypt(version) { Plain = plain };
             crypt.Initialize(seedUint);
             if (((uint)version >> 24) >= 6) {
                 var ef = LoginSeed(seedUint, version);
@@ -860,6 +860,7 @@ public static class UOLoginNet {
             }
             else stream.Write(seed, 0, seed.Length);
             var login = AccountLogin(account, password);
+            crypt.Encrypt(login);
             stream.Write(login, 0, login.Length);
             stream.Flush();
             _started = true;

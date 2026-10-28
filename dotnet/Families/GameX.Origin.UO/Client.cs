@@ -32,7 +32,7 @@ public class UltimaOnline {
     public ClientVersion Version { get; set; }
 
     /// <summary>
-    /// Version string from the game options or client.exe. Null when neither has one.
+    /// Version string from FamilyGame.Options clientVersion, then version, then client.exe.
     /// </summary>
     public string VersionText { get; set; }
 
@@ -40,6 +40,15 @@ public class UltimaOnline {
     /// Install directory. Set from FamilyGame.Found.Root, which is public.
     /// </summary>
     public string ClientPath { get; set; }
+
+    /// <summary>Login host from FamilyGame.Options ip.</summary>
+    public string Host { get; set; }
+
+    /// <summary>Login port from FamilyGame.Options port.</summary>
+    public int Port { get; set; }
+
+    /// <summary>True when FamilyGame.Options encryption is 0. The 0x80 stays clear.</summary>
+    public bool Plain { get; set; }
 
     /// <summary>
     /// ClassicUO folders and the GameX home for each. Not a port of those trees.

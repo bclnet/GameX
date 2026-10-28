@@ -12,7 +12,7 @@ namespace GameX.Origin.UO;
 /// <summary>
 /// ClassicUO LoginGump for the main login step.
 /// No StbTextBox, no HTML links, no music slider.
-/// Next arrow reads Login.cfg and calls UOLoginNet.Begin. Autologin is uo-settings.json.
+/// Next arrow reads FamilyGame.Options and calls UOLoginNet.Begin. Autologin is uo-settings.json.
 /// </summary>
 public class LoginGump : Gump {
     readonly LoginScene _scene;
@@ -151,9 +151,10 @@ public class LoginGump : Gump {
         UOLoginSettings.Password = _password?.Text ?? "";
         UOLoginSettings.Save();
         _scene.RememberLogin(_account.Text, _password?.Text, auto);
-        if (!UOLoginServers.TryFirst(UltimaOnline.Current?.ClientPath, out var host, out var port)) return;
+        var uo = UltimaOnline.Current;
+        if (uo == null || string.IsNullOrEmpty(uo.Host) || uo.Port <= 0) return;
         _scene.CurrentLoginStep = LoginSteps.Connecting;
-        UOLoginNet.Begin(host, port, _account.Text, _password?.Text, UltimaOnline.Current?.Version ?? default, UltimaOnline.Current?.VersionText);
+        UOLoginNet.Begin(uo.Host, uo.Port, _account.Text, _password?.Text, uo.Version, uo.VersionText, uo.Plain);
     }
 
     static void FocusHue(TextBox box) {

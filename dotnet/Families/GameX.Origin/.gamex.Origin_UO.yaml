@@ -4,8 +4,8 @@ ip: play.pandorauo.com
 port: 2593
 ignoreRelayIp: false
 profilespath: 
-clientVersion: 7.0.113.0
-lang: IVL
+clientVersion:
+lang:
 lastserverNum: 1
 lastserverName: Lost Lands
 fps: 60

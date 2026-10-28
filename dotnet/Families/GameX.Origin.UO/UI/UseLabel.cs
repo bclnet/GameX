@@ -13,7 +13,9 @@ public sealed class UseLabel : Label {
     public uint Serial { get; set; }
 
     public override void OnMouseClick(int x, int y) {
-        if (Serial != 0 && UOLoginNet.HasTarget) UOLoginNet.TargetSerial(Serial);
+        if (Serial == 0) return;
+        if (UOLoginNet.HasTarget) UOLoginNet.TargetSerial(Serial);
+        else UOLoginNet.RequestPopup(Serial);
     }
 
     public override bool OnMouseDoubleClick(int x, int y) {

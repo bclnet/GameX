@@ -210,18 +210,19 @@ public sealed class SpellbookGump : Gump {
                 else page1++;
             }
             placed++;
-            var pic = new GumpPic(iconX, 40, IconOf(info, i), 0);
+            var spellId = SpellId(info.Kind, i);
+            var pic = new SpellIcon(iconX, 40, IconOf(info, i), spellId);
             if (!pic.IsDisposed) Place(pic, page1);
             if (info.Kind == BookKind.Magery) {
                 var circle = i >> 3;
                 if ((uint)circle < (uint)Circles.Length) Text(Circles[circle], topX, 10, 6, page1);
-                Text(NameOf(names, i), nameX, 34, 6, page1);
+                CastText(NameOf(names, i), nameX, 34, 6, page1, spellId);
             }
             else if (info.Kind == BookKind.Mastery) {
                 Text(MasteryGroup(i + 1), topX, 10, 6, page1);
                 Text(NameOf(names, i), nameX, 34, 6, page1);
             }
-            else Text(NameOf(names, i), topX, 6, 6, page1);
+            else CastText(NameOf(names, i), topX, 6, 6, page1, spellId);
         }
     }
 
@@ -244,6 +245,20 @@ public sealed class SpellbookGump : Gump {
     }
 
     void Text(string text, int x, int y, byte font, int page) => Place(new Label(text, false, 0x0288, font) { X = x, Y = y }, page);
+
+    void CastText(string text, int x, int y, byte font, int page, int spellId) => Place(new SpellName(text, font, spellId) { X = x, Y = y }, page);
+
+    /// <summary>ClassicUO SpellDefinition.ID. Magery starts at 1, necromancy at 101, chivalry at 201, bushido at 401, ninjitsu at 501, spellweaving at 601, mysticism at 678.</summary>
+    static int SpellId(BookKind kind, int index) => kind switch {
+        BookKind.Necromancy => 101 + index,
+        BookKind.Chivalry => 201 + index,
+        BookKind.Bushido => 401 + index,
+        BookKind.Ninjitsu => 501 + index,
+        BookKind.Spellweaving => 601 + index,
+        BookKind.Mysticism => 678 + index,
+        BookKind.Magery => 1 + index,
+        _ => 0,
+    };
 
     void Link(string text, int x, int y, int page, int to) => Place(new IndexName(this, text, to) { X = x, Y = y }, page);
 
@@ -327,6 +342,31 @@ public sealed class SpellbookGump : Gump {
         public BookKind Kind;
         public ushort Book, Min, Icon;
         public int Max, OnPage, Pages;
+    }
+
+    sealed class SpellIcon : GumpPic {
+        readonly int _id;
+
+        public SpellIcon(int x, int y, ushort graphic, int id) : base(x, y, graphic, 0) => _id = id;
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            if (_id > 0) UOLoginNet.CastSpell(_id);
+            return true;
+        }
+    }
+
+    sealed class SpellName : Label {
+        readonly int _id;
+
+        public SpellName(string text, byte font, int id) : base(text, false, 0x0288, font) {
+            _id = id;
+            AcceptMouseInput = true;
+        }
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            if (_id > 0) UOLoginNet.CastSpell(_id);
+            return true;
+        }
     }
 
     sealed class BookPic : GumpPic {

@@ -9,6 +9,7 @@ namespace GameX.Origin.UO;
 /// Opened by 0x88. ClassicUO 7.0.113 paperdoll: background 0x07D0 or 0x07D1, the six side slots, and worn art.
 /// Client 7.0 uses the quests button, not journal. Flag 0x02 is the lift bit and is shown in the title line.
 /// Double-click sends 0x06. Right-click closes.
+/// A drag is a UseLabel, the same hit a container uses, so mouse up calls Lift. Hair, beard, and the backpack are not one.
 /// </summary>
 public sealed class PaperdollGump : Gump {
     // PaperDollInteractable._layerOrder. A container cloak uses LayerOrderQuiver.
@@ -66,7 +67,7 @@ public sealed class PaperdollGump : Gump {
         Add(_doll);
         _slots = new EquipSlot[SlotLayers.Length];
         for (var i = 0; i < SlotLayers.Length; i++) {
-            _slots[i] = new EquipSlot(SlotLayers[i], 75 + 21 * i);
+            _slots[i] = new EquipSlot(this, SlotLayers[i], 75 + 21 * i);
             Add(_slots[i]);
         }
         var books = _player && (UOLoginNet.Features & 0x20) != 0;
@@ -118,6 +119,12 @@ public sealed class PaperdollGump : Gump {
     }
 
     public bool CanLift => (_flags & 0x02) != 0;
+
+    // ClassicUO does not pick up hair, beard, or the backpack. The backpack still opens on 0x06.
+    bool AllowsDrag(byte layer) {
+        if (layer == 0x0B || layer == 0x10 || layer == 0x15) return false;
+        return _player || CanLift;
+    }
 
     public bool IsMinimized {
         get => _minimized;
@@ -201,12 +208,12 @@ public sealed class PaperdollGump : Gump {
             var item = Find(_equip, layer);
             if (item.Serial == 0 || IsCovered(_equip, layer) || IsSlot(layer)) continue;
             if (!TryArt(item.Graphic, out var key, out var px, out var w, out var h)) continue;
-            _doll.Add(new Worn(item.Serial, 0, 0, key, px, w, h));
+            _doll.Add(new Worn(item.Serial, 0, 0, key, px, w, h, AllowsDrag(layer)));
         }
         var pack = Find(_equip, 0x15);
         if (pack.Serial != 0 && TryArt(pack.Graphic, out var pkey, out var ppx, out var pw, out var ph)) {
             var bx = (UOLoginNet.Features & 0x20) != 0 ? -6 : 0;
-            _doll.Add(new Worn(pack.Serial, bx, 0, pkey, ppx, pw, ph));
+            _doll.Add(new Worn(pack.Serial, bx, 0, pkey, ppx, pw, ph, false));
         }
     }
 
@@ -393,10 +400,13 @@ public sealed class PaperdollGump : Gump {
     }
 
     sealed class EquipSlot : Control {
+        readonly PaperdollGump _owner;
+        readonly UseLabel _lift;
         int _key, _w, _h;
         byte[] _px;
 
-        public EquipSlot(byte layer, int y) {
+        public EquipSlot(PaperdollGump owner, byte layer, int y) {
+            _owner = owner;
             Layer = layer;
             X = 2;
             Y = y;
@@ -407,12 +417,17 @@ public sealed class PaperdollGump : Gump {
             AcceptMouseInput = true;
             Add(new GumpPicTiled(0, 0, 19, 20, 0x243A) { AcceptMouseInput = false, CanMove = false });
             Add(new GumpPic(0, 0, 0x2344, 0) { AcceptMouseInput = false, CanMove = false });
+            _lift = new UseLabel("", 0) { Width = 19, Height = 20, IsVisible = false };
+            Add(_lift);
         }
 
         public byte Layer { get; }
 
         public void Show(UOEquipState item) {
             LocalSerial = item.Serial;
+            var drag = item.Serial != 0 && _owner.AllowsDrag(Layer);
+            _lift.Serial = drag ? item.Serial : 0;
+            _lift.IsVisible = drag;
             _px = null;
             if (item.Serial != 0 && TryArt(item.Graphic, out _key, out _px, out _w, out _h)) return;
             _px = null;
@@ -438,7 +453,7 @@ public sealed class PaperdollGump : Gump {
         readonly int _key, _w, _h;
         readonly byte[] _px;
 
-        public Worn(uint serial, int x, int y, int key, byte[] px, int w, int h) {
+        public Worn(uint serial, int x, int y, int key, byte[] px, int w, int h, bool drag) {
             LocalSerial = serial;
             X = x;
             Y = y;
@@ -451,6 +466,7 @@ public sealed class PaperdollGump : Gump {
             AcceptMouseInput = true;
             CanMove = false;
             WantUpdateSize = false;
+            if (drag) Add(new UseLabel("", 0) { Serial = serial, Width = w, Height = h });
         }
 
         public override bool Draw(int x, int y) {

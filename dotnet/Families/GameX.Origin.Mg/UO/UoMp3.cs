@@ -35,16 +35,18 @@ static class UoMp3 {
     }
 
     sealed class Play : IDisposable {
-        readonly MpegFile _mpeg;
+        readonly string _path;
         readonly DynamicSoundEffectInstance _inst;
         readonly bool _loop;
         readonly object _gate = new();
         readonly float[] _samples;
         readonly byte[] _pcm = new byte[Chunk];
+        MpegFile _mpeg;
         bool _playing = true;
         bool _dead;
 
         public Play(string path, bool loop, float volume) {
+            _path = path;
             _mpeg = new MpegFile(path);
             _loop = loop;
             var channels = _mpeg.Channels <= 1 ? AudioChannels.Mono : AudioChannels.Stereo;
@@ -69,7 +71,11 @@ static class UoMp3 {
             else _inst.Pause();
         }
 
-        void OnNeeded(object sender, EventArgs e) => Fill();
+        void OnNeeded(object sender, EventArgs e) {
+            // BufferNeeded is on the audio thread. An exception here ends the process.
+            try { Fill(); }
+            catch (Exception) { _dead = true; }
+        }
 
         void Fill() {
             lock (_gate) {
@@ -90,7 +96,9 @@ static class UoMp3 {
         int Read() {
             var got = _mpeg.ReadSamples(_samples, 0, _samples.Length);
             if (got == 0 && _loop) {
-                _mpeg.Time = TimeSpan.Zero;
+                // NLayer's Time/Position seek throws NullReferenceException at end of file.
+                _mpeg.Dispose();
+                _mpeg = new MpegFile(_path);
                 got = _mpeg.ReadSamples(_samples, 0, _samples.Length);
             }
             if (got <= 0) return 0;

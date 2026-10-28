@@ -943,16 +943,29 @@ public class Assets(UOGame game) {
         var cache = ((long)file << 32) | (uint)index;
         if (_animGroups.TryGetValue(cache, out group)) return group != null && group.Length >= 516;
         if (Animations.Anims[file] is not BinaryArchive bin) return false;
+        var name = $"file{index:x5}.anim";
+        // A miss is normal: a body lives in one of the five anim files. Remember it.
+        // GetSource logs every failed lookup, and TryFrameCount asks again each frame.
+        if (!bin.Contains(name)) {
+            _animGroups[cache] = null;
+            return false;
+        }
         try {
-            var s = bin.GetData($"file{index:x5}.anim", default, false).GetAwaiter().GetResult();
-            if (s == null) return false;
+            var s = bin.GetData(name, default, false).GetAwaiter().GetResult();
+            if (s == null) {
+                _animGroups[cache] = null;
+                return false;
+            }
             using var ms = new MemoryStream();
             s.CopyTo(ms);
             group = ms.ToArray();
             _animGroups[cache] = group;
             return group.Length >= 516;
         }
-        catch (Exception) { return false; }
+        catch (Exception) {
+            _animGroups[cache] = null;
+            return false;
+        }
     }
 
     static bool DecodeFrame(byte[] group, int frame, bool flip, out byte[] pixels, out int width, out int height, out int centerX, out int centerY) {

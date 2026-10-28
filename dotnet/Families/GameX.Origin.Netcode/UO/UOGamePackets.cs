@@ -225,6 +225,34 @@ public sealed class UOMenu {
     public UOMenuEntry[] Entries { get; }
 }
 
+/// <summary>One row of a 0xBF subcommand 0x0014 menu. Flag 0x01 is hue 0x0386. Otherwise the hue is 0xFFFF.</summary>
+public readonly struct UOPopupEntry {
+    public UOPopupEntry(int cliloc, ushort index, ushort hue, ushort replacedHue, ushort flags) {
+        Cliloc = cliloc;
+        Index = index;
+        Hue = hue;
+        ReplacedHue = replacedHue;
+        Flags = flags;
+    }
+
+    public int Cliloc { get; }
+    public ushort Index { get; }
+    public ushort Hue { get; }
+    public ushort ReplacedHue { get; }
+    public ushort Flags { get; }
+}
+
+/// <summary>0xBF subcommand 0x0014. The reply is 0x0015 and sends Index.</summary>
+public sealed class UOPopupMenu {
+    public UOPopupMenu(uint serial, UOPopupEntry[] entries) {
+        Serial = serial;
+        Entries = entries ?? Array.Empty<UOPopupEntry>();
+    }
+
+    public uint Serial { get; }
+    public UOPopupEntry[] Entries { get; }
+}
+
 /// <summary>0xAB. The reply is 0xAC and uses Parent and Button as the server sent them.</summary>
 public sealed class UOTextEntry {
     public UOTextEntry(uint serial, byte parent, byte button, string text, string description, bool cancel, int maxLength) {
@@ -309,6 +337,19 @@ public readonly struct UODye {
 
     public uint Serial { get; }
     public ushort Graphic { get; }
+}
+
+/// <summary>One 0x38 point. Z is the ushort on the packet.</summary>
+public readonly struct UOPathPoint {
+    public UOPathPoint(ushort x, ushort y, ushort z) {
+        X = x;
+        Y = y;
+        Z = z;
+    }
+
+    public ushort X { get; }
+    public ushort Y { get; }
+    public ushort Z { get; }
 }
 
 /// <summary>
@@ -993,6 +1034,61 @@ public static class UOGamePackets {
         return p;
     }
 
+    /// <summary>0xBF subcommand 0x0013. Nine bytes.</summary>
+    public static byte[] RequestPopup(uint serial) {
+        var p = new byte[9];
+        p[0] = 0xBF;
+        WriteU16(p, 1, 9);
+        WriteU16(p, 3, 0x0013);
+        WriteU32(p, 5, serial);
+        return p;
+    }
+
+    /// <summary>0xBF subcommand 0x0015. Eleven bytes.</summary>
+    public static byte[] ReplyPopup(uint serial, ushort index) {
+        var p = new byte[11];
+        p[0] = 0xBF;
+        WriteU16(p, 1, 11);
+        WriteU16(p, 3, 0x0015);
+        WriteU32(p, 5, serial);
+        WriteU16(p, 9, index);
+        return p;
+    }
+
+    /// <summary>0x12 command 0x24. The body is the index, a space, 0, and a null. The length includes that null.</summary>
+    public static byte[] UseSkill(int index) {
+        var body = Encoding.ASCII.GetBytes(index.ToString() + " 0");
+        var p = new byte[5 + body.Length];
+        p[0] = 0x12;
+        p[3] = 0x24;
+        Buffer.BlockCopy(body, 0, p, 4, body.Length);
+        WriteU16(p, 1, (ushort)p.Length);
+        return p;
+    }
+
+    /// <summary>
+    /// 0xBF subcommand 0x001C from client 6.0.14.2. Nine bytes: sub, 0x0002, and the spell index.
+    /// Older clients send 0x12 command 0x56 and the index as ASCII with a null.
+    /// </summary>
+    public static byte[] CastSpell(int index) {
+        if (_version >= ClientVersion.CV_60142) {
+            var p = new byte[9];
+            p[0] = 0xBF;
+            WriteU16(p, 1, 9);
+            WriteU16(p, 3, 0x001C);
+            WriteU16(p, 5, 0x0002);
+            WriteU16(p, 7, (ushort)index);
+            return p;
+        }
+        var body = Encoding.ASCII.GetBytes(index.ToString());
+        var old = new byte[5 + body.Length];
+        old[0] = 0x12;
+        old[3] = 0x56;
+        Buffer.BlockCopy(body, 0, old, 4, body.Length);
+        WriteU16(old, 1, (ushort)old.Length);
+        return old;
+    }
+
     /// <summary>
     /// 0x00 is 104 bytes. Client 7.0.16 and newer sends 0xF8, 106 bytes, with a fourth skill.
     /// The layout is ServUO's reader: pattern, 30-byte name, 2 unknown, flags, 8 unknown, profession, 15 unknown, sex.
@@ -1032,6 +1128,18 @@ public static class UOGamePackets {
         var p = new byte[2];
         p[0] = 0x73;
         p[1] = index;
+        return p;
+    }
+
+    /// <summary>0xD6 from client 5.0.9.0. Length word, then up to 15 serials. No count. Removes the serials it sends.</summary>
+    public static byte[] MegaClilocRequest(List<uint> serials) {
+        var count = Math.Min(15, serials.Count);
+        var size = 3 + count * 4;
+        var p = new byte[size];
+        p[0] = 0xD6;
+        WriteU16(p, 1, (ushort)size);
+        for (var i = 0; i < count; i++) WriteU32(p, 3 + i * 4, serials[i]);
+        serials.RemoveRange(0, count);
         return p;
     }
 
@@ -1599,6 +1707,68 @@ public static class UOGamePackets {
         return true;
     }
 
+    /// <summary>
+    /// 0xBF subcommand 0x0014. The subcommand is still in the packet.
+    /// Mode at least 2 is a uint cliloc. The older row is a ushort cliloc plus 3000000.
+    /// Flag 0x84 and flag 0x40 each skip a ushort. Flag 0x20 is the replaced graphic. Flag 0x01 sets hue 0x0386.
+    /// </summary>
+    public static bool TryPopupMenu(byte[] p, int o, int len, out UOPopupMenu menu) {
+        menu = null;
+        if (p == null || len < 12 || o < 0 || o + len > p.Length) return false;
+        var sub = (p[o + 3] << 8) | p[o + 4];
+        if (sub != 0x0014) return false;
+        var end = o + len;
+        var i = o + 5;
+        if (i + 7 > end) return false;
+        var mode = ReadU16(p, i);
+        i += 2;
+        var serial = ReadU32(p, i);
+        i += 4;
+        var count = p[i++];
+        var modern = mode >= 2;
+        var entries = new UOPopupEntry[count];
+        for (var n = 0; n < count; n++) {
+            ushort hue = 0xFFFF, replaced = 0;
+            int cliloc;
+            ushort index, flags;
+            if (modern) {
+                if (i + 8 > end) return false;
+                cliloc = (int)ReadU32(p, i);
+                i += 4;
+                index = ReadU16(p, i);
+                i += 2;
+                flags = ReadU16(p, i);
+                i += 2;
+            }
+            else {
+                if (i + 6 > end) return false;
+                index = ReadU16(p, i);
+                i += 2;
+                cliloc = ReadU16(p, i) + 3000000;
+                i += 2;
+                flags = ReadU16(p, i);
+                i += 2;
+                if ((flags & 0x84) != 0) {
+                    if (i + 2 > end) return false;
+                    i += 2;
+                }
+                if ((flags & 0x40) != 0) {
+                    if (i + 2 > end) return false;
+                    i += 2;
+                }
+                if ((flags & 0x20) != 0) {
+                    if (i + 2 > end) return false;
+                    replaced = ReadU16(p, i);
+                    i += 2;
+                }
+            }
+            if ((flags & 0x01) != 0) hue = 0x0386;
+            entries[n] = new UOPopupEntry(cliloc, index, hue, replaced, flags);
+        }
+        menu = new UOPopupMenu(serial, entries);
+        return true;
+    }
+
     static string[] ReadLines(byte[] p, ref int i, int end, int count) {
         if (count < 0) count = 0;
         if (count > 4096) count = 4096;
@@ -1857,6 +2027,54 @@ public static class UOGamePackets {
             if (i >= end) break;
             layer = p[i++];
         }
+        return true;
+    }
+
+    /// <summary>0x2D. Seventeen bytes. Hits, then mana, then stamina. Each pair is max, then current.</summary>
+    public static bool MobileAttributes(byte[] p, int o, int len, out uint serial, out ushort hits, out ushort hitsMax, out ushort mana, out ushort manaMax, out ushort stam, out ushort stamMax) {
+        serial = 0;
+        hits = hitsMax = mana = manaMax = stam = stamMax = 0;
+        if (len < 17 || o + 17 > p.Length) return false;
+        serial = ReadU32(p, o + 1);
+        hitsMax = ReadU16(p, o + 5);
+        hits = ReadU16(p, o + 7);
+        manaMax = ReadU16(p, o + 9);
+        mana = ReadU16(p, o + 11);
+        stamMax = ReadU16(p, o + 13);
+        stam = ReadU16(p, o + 15);
+        return true;
+    }
+
+    /// <summary>0xDE. Serial, then a status byte. Status 1 is followed by the attacker serial.</summary>
+    public static bool UpdateMobileStatus(byte[] p, int o, int len, out uint serial, out byte status, out uint attacker) {
+        serial = attacker = 0;
+        status = 0;
+        if (len < 8 || o + 8 > p.Length) return false;
+        serial = ReadU32(p, o + 3);
+        status = p[o + 7];
+        if (status == 1) {
+            if (len < 12 || o + 12 > p.Length) return false;
+            attacker = ReadU32(p, o + 8);
+        }
+        return true;
+    }
+
+    /// <summary>0xDC. Nine bytes. Serial, then the revision compared with the last 0xD6.</summary>
+    public static bool OplInfo(byte[] p, int o, int len, out uint serial, out uint revision) {
+        serial = revision = 0;
+        if (len < 9 || o + 9 > p.Length) return false;
+        serial = ReadU32(p, o + 1);
+        revision = ReadU32(p, o + 5);
+        return true;
+    }
+
+    /// <summary>0x38. Seven bytes. One point: x, y, then z.</summary>
+    public static bool Pathfinding(byte[] p, int o, int len, out ushort x, out ushort y, out ushort z) {
+        x = y = z = 0;
+        if (len < 7 || o + 7 > p.Length) return false;
+        x = ReadU16(p, o + 1);
+        y = ReadU16(p, o + 3);
+        z = ReadU16(p, o + 5);
         return true;
     }
 

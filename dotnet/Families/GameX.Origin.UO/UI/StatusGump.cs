@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using GameX.Origin.Netcode.UO;
+using System.Collections.Generic;
 
 namespace GameX.Origin.UO;
 
@@ -13,7 +14,8 @@ namespace GameX.Origin.UO;
 public sealed class StatusGump : Gump {
     const ushort StatHue = 0x0386;
     const int BuffIcon = 0;
-    readonly Label _name, _hits, _hitsMax, _str, _dex, _intel, _stam, _stamMax, _mana, _manaMax;
+    readonly Label _name, _hits, _hitsMax, _str, _dex, _intel, _stam, _stamMax, _mana, _manaMax, _buffs;
+    readonly List<UOBuffState> _buffRows = [];
     int _rev = -1;
 
     public StatusGump(World world) : base(world, 0, 0) {
@@ -33,6 +35,7 @@ public sealed class StatusGump : Gump {
         _stamMax = Add(Slot(valueX, 111));
         _mana = Add(Slot(valueX, 126));
         _manaMax = Add(Slot(valueX, 139));
+        _buffs = Add(new Label("", false, StatHue, 1) { X = 40, Y = 170, IsVisible = false });
     }
 
     static Label Slot(int x, int y) => new Label("", false, StatHue, 1) { X = x, Y = y, IsVisible = false };
@@ -76,6 +79,19 @@ public sealed class StatusGump : Gump {
             _stamMax.IsVisible = false;
             _mana.IsVisible = false;
             _manaMax.IsVisible = false;
+        }
+        _buffRows.Clear();
+        UOLoginNet.CopyBuffs(_buffRows);
+        if (_buffRows.Count == 0) _buffs.IsVisible = false;
+        else {
+            var text = "";
+            foreach (var buff in _buffRows) {
+                var bit = string.IsNullOrEmpty(buff.Text) ? buff.Graphic.ToString() : buff.Text;
+                text = text.Length == 0 ? bit : text + "  " + bit;
+                if (text.Length > 80) break;
+            }
+            _buffs.Text = text;
+            _buffs.IsVisible = true;
         }
     }
 

@@ -99,6 +99,7 @@ public static class UOLoginNet {
     static readonly Queue<(uint serial, ushort gump)> _containers = new();
     static readonly Queue<UOGumpEvent> _gumps = new();
     static readonly Queue<UOMenu> _menus = new();
+    static readonly Queue<UOPopupMenu> _popups = new();
     static readonly Queue<UOTextEntry> _entries = new();
     static readonly Queue<UOShop> _shops = new();
     static readonly Queue<UOTrade> _trades = new();
@@ -112,6 +113,10 @@ public static class UOLoginNet {
     static readonly Dictionary<ushort, string> _skillNames = new();
     static readonly Dictionary<uint, (byte flags, bool sa)> _health = new();
     static readonly Dictionary<uint, (string name, string data)> _props = new();
+    static readonly Dictionary<uint, uint> _oplRev = new();
+    static readonly List<uint> _cliloc = new();
+    static readonly Dictionary<uint, (byte status, uint attacker)> _mobileStatus = new();
+    static readonly List<UOPathPoint> _path = new();
     static readonly Dictionary<ushort, UOBuffState> _buffs = new();
     static readonly Dictionary<uint, (ushort x, ushort y)> _arrows = new();
     static readonly Dictionary<uint, UOCorpseEquip> _corpse = new();
@@ -206,6 +211,7 @@ public static class UOLoginNet {
             _containers.Clear();
             _gumps.Clear();
             _menus.Clear();
+            _popups.Clear();
             _entries.Clear();
             _shops.Clear();
             _trades.Clear();
@@ -226,6 +232,10 @@ public static class UOLoginNet {
             _skillNames.Clear();
             _health.Clear();
             _props.Clear();
+            _oplRev.Clear();
+            _cliloc.Clear();
+            _mobileStatus.Clear();
+            _path.Clear();
             _buffs.Clear();
             _arrows.Clear();
             _corpse.Clear();
@@ -318,6 +328,30 @@ public static class UOLoginNet {
             if (_uses.Count >= 8) return;
             _uses.Enqueue(serial);
         }
+    }
+
+    /// <summary>0xBF subcommand 0x0013. Nine bytes. Ignored until the game stream is up.</summary>
+    public static void RequestPopup(uint serial) {
+        if (!_gameReady) return;
+        lock (Gate) _out.Enqueue(UOGamePackets.RequestPopup(serial));
+    }
+
+    /// <summary>0xBF subcommand 0x0015. Eleven bytes. Ignored until the game stream is up.</summary>
+    public static void ReplyPopup(uint serial, ushort index) {
+        if (!_gameReady) return;
+        lock (Gate) _out.Enqueue(UOGamePackets.ReplyPopup(serial, index));
+    }
+
+    /// <summary>0x12 command 0x24. Ignored until the game stream is up.</summary>
+    public static void UseSkill(int index) {
+        if (!_gameReady) return;
+        lock (Gate) _out.Enqueue(UOGamePackets.UseSkill(index));
+    }
+
+    /// <summary>0xBF 0x001C from client 6.0.14.2, otherwise 0x12 command 0x56. Ignored until the game stream is up.</summary>
+    public static void CastSpell(int index) {
+        if (!_gameReady) return;
+        lock (Gate) _out.Enqueue(UOGamePackets.CastSpell(index));
     }
 
     /// <summary>Queues 0x02 once the game stream is up. Ignored before 0x5D.</summary>
@@ -461,6 +495,31 @@ public static class UOLoginNet {
         lock (Gate) return _status.TryGetValue(serial, out status);
     }
 
+    /// <summary>0xDE. Status 1 stores the attacker. Any other status stores 0.</summary>
+    public static bool TryMobileStatus(uint serial, out byte status, out uint attacker) {
+        lock (Gate) {
+            if (_mobileStatus.TryGetValue(serial, out var row)) {
+                status = row.status;
+                attacker = row.attacker;
+                return true;
+            }
+        }
+        status = 0;
+        attacker = 0;
+        return false;
+    }
+
+    /// <summary>0x38 points since the last take, in arrival order. Empty when none arrived.</summary>
+    public static bool TryTakePath(List<UOPathPoint> dest) {
+        lock (Gate) {
+            dest.Clear();
+            if (_path.Count == 0) return false;
+            dest.AddRange(_path);
+            _path.Clear();
+            return true;
+        }
+    }
+
     /// <summary>0x16 and 0x17. Poison is the SA bool from 7.0, otherwise the poisoned flag. Yellow is the yellow-bar flag.</summary>
     public static bool TryHealthBar(uint serial, out bool poisoned, out bool yellow) {
         lock (Gate) {
@@ -472,6 +531,12 @@ public static class UOLoginNet {
         }
         poisoned = yellow = false;
         return false;
+    }
+
+    /// <summary>0xD6 request. ClassicUO asks when the pointer is on an object that has no list yet.</summary>
+    public static void RequestProperties(uint serial) {
+        if (!_gameReady || serial == 0) return;
+        lock (Gate) QueueCliloc(serial);
     }
 
     /// <summary>0xD6. Name is the first cliloc line. Data is the rest, one line each.</summary>
@@ -746,6 +811,18 @@ public static class UOLoginNet {
                 return false;
             }
             menu = _menus.Dequeue();
+            return true;
+        }
+    }
+
+    /// <summary>0xBF subcommand 0x0014. The gump polls this. Netcode does not open the gump.</summary>
+    public static bool TryTakePopup(out UOPopupMenu menu) {
+        lock (Gate) {
+            if (_popups.Count == 0) {
+                menu = null;
+                return false;
+            }
+            menu = _popups.Dequeue();
             return true;
         }
     }
@@ -1229,8 +1306,13 @@ public static class UOLoginNet {
         if (unchecked(now - _nextPing) < 0) return;
         _nextPing = unchecked(now + 1000);
         var pkt = UOGamePackets.Ping(_pingIdx++);
+        var mega = TakeMegaCliloc();
         crypt.EncryptGame(pkt);
         stream.Write(pkt, 0, pkt.Length);
+        if (mega != null) {
+            crypt.EncryptGame(mega);
+            stream.Write(mega, 0, mega.Length);
+        }
         stream.Flush();
     }
 
@@ -1501,7 +1583,7 @@ public static class UOLoginNet {
                 return HandleResult.Continue;
             }
             case 0xBF:
-                // Subcommand 0x0001 is the fast-walk stack. 0x0002 adds a key. 0x0008 is the facet. 0x0004 closes a gump.
+                // Subcommand 0x0001 is the fast-walk stack. 0x0002 adds a key. 0x0008 is the facet. 0x0004 closes a gump. 0x0014 is the popup.
                 UOGamePackets.FastWalk(p, o, len, _fastWalk);
                 if (UOGamePackets.TryFacet(p, o, len, out var facet)) {
                     lock (Gate) _mapIndex = facet;
@@ -1509,6 +1591,8 @@ public static class UOLoginNet {
                 }
                 if (UOGamePackets.TryCloseGump(p, o, len, out var gser, out var gbutton))
                     lock (Gate) _gumps.Enqueue(new UOGumpEvent(gser, gbutton));
+                if (UOGamePackets.TryPopupMenu(p, o, len, out var popup))
+                    lock (Gate) _popups.Enqueue(popup);
                 return HandleResult.Continue;
             case 0x73:
                 return HandleResult.Continue;
@@ -1614,6 +1698,14 @@ public static class UOLoginNet {
                     Note("You are dead.");
                 }
                 return HandleResult.Continue;
+            case 0x2D:
+                if (UOGamePackets.MobileAttributes(p, o, len, out serial, out var ahits, out var ahitsMax, out var amana, out var amanaMax, out var astam, out var astamMax))
+                    SetAttributes(serial, ahits, ahitsMax, amana, amanaMax, astam, astamMax);
+                return HandleResult.Continue;
+            case 0x38:
+                if (_inWorld && UOGamePackets.Pathfinding(p, o, len, out var pathX, out var pathY, out var pathZ))
+                    lock (Gate) _path.Add(new UOPathPoint(pathX, pathY, pathZ));
+                return HandleResult.Continue;
             case 0x74: {
                 var prices = new List<uint>();
                 if (UOGamePackets.BuyList(p, o, len, out var bag, prices)) {
@@ -1672,9 +1764,21 @@ public static class UOLoginNet {
                     if (_status.TryGetValue(_player, out var st) && st.HasStats) strength = st.Str;
                 }
                 if (UOGamePackets.MegaCliloc(p, o, len, strength, out serial, out var pname, out var pdata))
-                    lock (Gate) { _props[serial] = (pname ?? "", pdata ?? ""); _revision++; }
+                    lock (Gate) {
+                        _props[serial] = (pname ?? "", pdata ?? "");
+                        _oplRev[serial] = ReadU32(p, o + 11);
+                        _revision++;
+                    }
                 return HandleResult.Continue;
             }
+            case 0xDC:
+                if (UOGamePackets.OplInfo(p, o, len, out serial, out var oplRevision))
+                    NoteOpl(serial, oplRevision);
+                return HandleResult.Continue;
+            case 0xDE:
+                if (UOGamePackets.UpdateMobileStatus(p, o, len, out serial, out var mstatus, out var attacker))
+                    lock (Gate) { _mobileStatus[serial] = (mstatus, attacker); _revision++; }
+                return HandleResult.Continue;
             case 0xDF: {
                 if (_player == 0) return HandleResult.Continue;
                 var buffs = new List<UOBuffState>();
@@ -1763,9 +1867,11 @@ public static class UOLoginNet {
     static void SetMobile(uint serial, ushort body, int x, int y, int z, byte dir, List<UOEquipState> equip = null) {
         if (serial == _player) SetPlayer(serial, body, x, y, z, dir, post: false);
         else lock (Gate) {
+            var added = !_mobiles.ContainsKey(serial);
             var moved = _mobiles.TryGetValue(serial, out var old) && (old.X != x || old.Y != y);
             _mobiles[serial] = new UOMobileState(serial, body, x, y, z, (byte)(dir & 7));
             if (moved) _moves[serial] = (unchecked(Environment.TickCount + ((dir & 0x80) != 0 ? 200 : 400)), (dir & 0x80) != 0);
+            if (added && serial > 0 && serial < 0x80000000) _out.Enqueue(UOGamePackets.StatusRequest(serial));
             _revision++;
         }
         if (equip != null) ReplaceEquip(serial, equip);
@@ -1784,6 +1890,8 @@ public static class UOLoginNet {
             if (_status.Remove(serial)) changed = true;
             if (_health.Remove(serial)) changed = true;
             if (_props.Remove(serial)) changed = true;
+            if (_oplRev.Remove(serial)) changed = true;
+            if (_mobileStatus.Remove(serial)) changed = true;
             if (_corpse.Remove(serial)) changed = true;
             List<uint> drop = null;
             foreach (var kv in _equip)
@@ -1845,6 +1953,16 @@ public static class UOLoginNet {
                 _ => s.WithHits(cur, max),
             };
             _status[serial] = s;
+            _revision++;
+        }
+    }
+
+    /// <summary>0x2D. The same hits, mana, and stamina TryStatus already returns.</summary>
+    static void SetAttributes(uint serial, ushort hits, ushort hitsMax, ushort mana, ushort manaMax, ushort stam, ushort stamMax) {
+        lock (Gate) {
+            if (!_status.TryGetValue(serial, out var s))
+                s = new UOStatusState(serial, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, false);
+            _status[serial] = s.WithHits(hits, hitsMax).WithMana(mana, manaMax).WithStam(stam, stamMax);
             _revision++;
         }
     }
@@ -2061,6 +2179,32 @@ public static class UOLoginNet {
     static void NoteContent(uint serial) => _order[serial] = _orderNext++;
 
     static void DropOrder(uint serial) => _order.Remove(serial);
+
+    /// <summary>Flag 0x20 is CLF_PALADIN_NECROMANCER_TOOLTIPS. 5.0.9.0 selects 0xD6, not 0xBF 0x0010.</summary>
+    static bool TooltipsOn() => (_features & 0x20) != 0 && _clientVersion >= ClientVersion.CV_5090;
+
+    static void QueueCliloc(uint serial) {
+        if (!TooltipsOn()) return;
+        for (var i = 0; i < _cliloc.Count; i++)
+            if (_cliloc[i] == serial) return;
+        _cliloc.Add(serial);
+    }
+
+    static void NoteOpl(uint serial, uint revision) {
+        lock (Gate) {
+            if (!TooltipsOn()) return;
+            if (_oplRev.TryGetValue(serial, out var have) && ((revision & ~0x40000000) == have || revision == have))
+                return;
+            QueueCliloc(serial);
+        }
+    }
+
+    static byte[] TakeMegaCliloc() {
+        lock (Gate) {
+            if (!TooltipsOn() || _cliloc.Count == 0) return null;
+            return UOGamePackets.MegaClilocRequest(_cliloc);
+        }
+    }
 
     static void SortByX(List<UOContainedState> rows) {
         for (var i = 1; i < rows.Count; i++) {

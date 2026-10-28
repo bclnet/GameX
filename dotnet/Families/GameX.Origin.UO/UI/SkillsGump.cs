@@ -239,6 +239,7 @@ public sealed class SkillsGump : Gump {
             Width = 255;
             Height = Row;
             CanMove = false;
+            AcceptMouseInput = true;
             Add(new Label(SkillName(skill), false, 0x0288, 9) { X = 22 });
             _value = new Label("", false, 0x0288, 9);
             Add(_value);
@@ -250,6 +251,11 @@ public sealed class SkillsGump : Gump {
                 Add(b);
             }
             Apply();
+        }
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            UOLoginNet.UseSkill(_skill.Id);
+            return true;
         }
 
         public void Apply() {

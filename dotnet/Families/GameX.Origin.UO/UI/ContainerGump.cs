@@ -9,7 +9,8 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// Opened by 0x24. Each 0x3C or 0x25 row is drawn at its stored X,Y on the ClassicUO container gump.
-/// Double-click sends 0x06. Spellbook 0xFFFF and vendor 0x0030 are not opened here.
+/// Double-click sends 0x06. A drag is the UseLabel hit, so mouse up calls Lift.
+/// Spellbook 0xFFFF and vendor 0x0030 are not opened here.
 /// </summary>
 public sealed class ContainerGump : Gump {
     const ushort CorpseGump = 0x0009;
@@ -17,11 +18,13 @@ public sealed class ContainerGump : Gump {
     const ushort BackgammonGump = 0x092E;
     const int ItemGumpOffset = 11369;
     const int ArtKeyBase = 0x52000000;
+    const int MinPickupDrag = 5;
 
     readonly ushort _gump;
     readonly GumpPic _back;
     readonly GumpPic _eye;
     readonly List<UOContainedState> _items = [];
+    readonly List<UOCorpseEquip> _worn = [];
     readonly List<Control> _added = [];
     readonly List<Stamp> _art = [];
     int _rev = -1;
@@ -104,11 +107,12 @@ public sealed class ContainerGump : Gump {
         _added.Clear();
         _art.Clear();
         UOLoginNet.CopyContents(ServerSerial, _items);
+        UOLoginNet.CopyCorpseEquip(ServerSerial, _worn);
         var chess = _gump == ChessGump;
         var board = chess || _gump == BackgammonGump;
         var assets = UltimaOnline.Current?.Assets;
         foreach (var it in _items) {
-            if (it.Amount <= 0) continue;
+            if (it.Amount <= 0 || WornHidden(it.Serial)) continue;
             var shown = Shown(it.Graphic, it.Amount);
             var x = (int)(short)it.X;
             var y = (int)(short)it.Y;
@@ -134,6 +138,30 @@ public sealed class ContainerGump : Gump {
         Add(hit);
         _added.Add(hit);
     }
+
+    /// <summary>
+    /// 0x89. The stored layer is the packet byte minus one. Tiledata layer is not on Assets, so the packet byte indexes ClassicUO BAD_CONTAINER_LAYERS.
+    /// False there is hair, face, beard, backpack, mount, and the shop layers. Those stay off the gump. Anything else keeps its content X,Y.
+    /// </summary>
+    bool WornHidden(uint serial) {
+        for (var i = 0; i < _worn.Count; i++) {
+            if (_worn[i].Serial != serial) continue;
+            var layer = _worn[i].Layer + 1;
+            if ((uint)layer >= BadContainerLayers.Length) return false;
+            return !BadContainerLayers[layer];
+        }
+        return false;
+    }
+
+    /// <summary>ClassicUO Constants.BAD_CONTAINER_LAYERS. True still draws on a corpse.</summary>
+    static readonly bool[] BadContainerLayers = [
+        false,
+        true, true, true, true, true, true, true, true,
+        true, true, false, true, true, true, false, false,
+        true, true, true, true,
+        false,
+        true, true, true, false, false, false, false, false,
+    ];
 
     static ushort Shown(ushort graphic, ushort amount) {
         if (graphic != 0x0EEA && graphic != 0x0EED && graphic != 0x0EF0) return graphic;
@@ -219,7 +247,10 @@ public sealed class ContainerGump : Gump {
         }
 
         public override void OnMouseClick(int x, int y) {
-            if (!_owner.Minimized && !UOLoginNet.Holding) _owner.Minimized = true;
+            if (_owner.Minimized || UOLoginNet.Holding) return;
+            var off = Mouse.LDragOffset;
+            if (Math.Abs(off.X) >= MinPickupDrag || Math.Abs(off.Y) >= MinPickupDrag) return;
+            _owner.Minimized = true;
         }
     }
 

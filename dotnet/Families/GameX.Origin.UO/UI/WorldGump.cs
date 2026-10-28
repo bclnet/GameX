@@ -12,14 +12,19 @@ namespace GameX.Origin.UO;
 /// Overhead view after 0x1B. The player is a body frame plus the center label. Arrows are handled by LoginScene.
 /// Felucca land and static art are drawn through GumpArt.Sink when the map is open.
 /// A body uses ClassicUO's group: people stand on 4, walk on 0 or 1, run on 2 or 3. 0x6E replaces that group.
+/// While a step is in flight the body and its name sit back on the previous tile. Run is 200 ms, walk is 400.
 /// Enter sends 0xAD, or answers a prompt. Double-click sends 0x06, or 0x05 on another mobile while at war.
 /// A drag lifts with 0x07. Tab sends 0x72. Hits sit on the coordinate line.
 /// Stamps are multiplied by IsometricLight when personal is below overall. Weather.Draw paints the stored packet.
+/// The player name uses ClassicUO Notoriety.GetHue. Other names stay 0x0481.
 /// </summary>
 public class WorldGump : Gump {
     const int Slots = 48;
     const int Radius = 10;
     const int Journal = 6;
+    const int OverCount = 8;
+    /// <summary>ClassicUO CalculateTimeToLive. SpeechDelay 100 and ScaleSpeechDelay: 4000 ms for one line.</summary>
+    const int SpeechMs = 4000;
     const int ViewW = 640;
     const int ViewH = 480;
     const int MaxWeather = 70;
@@ -29,6 +34,10 @@ public class WorldGump : Gump {
     readonly UseLabel _pack;
     readonly UseLabel[] _rows;
     readonly Label[] _journal;
+    readonly Label[] _over;
+    readonly uint[] _overSerial;
+    readonly int[] _overUntil;
+    readonly List<UOSpeechState> _prevSpeech = [];
     readonly TextBox _say;
     readonly List<Stamp> _stamps = [];
     readonly List<(ushort graphic, sbyte z)> _statics = [];
@@ -37,6 +46,7 @@ public class WorldGump : Gump {
     readonly Dictionary<long, byte[]> _shadePx = [];
     readonly Dictionary<long, int> _shadeId = [];
     readonly Dictionary<int, byte[]> _dots = [];
+    readonly Dictionary<uint, Slide> _slide = [];
     readonly Drop[] _drops = new Drop[MaxWeather];
     readonly Random _rng = new();
     int _rev = -1;
@@ -54,6 +64,12 @@ public class WorldGump : Gump {
     struct Drop {
         public float SpeedX, SpeedY, X, Y, ScaleRatio, SpeedAngle, SpeedMagnitude;
         public uint ID;
+    }
+
+    struct Slide {
+        public int Start, X, Y;
+        public byte Dir;
+        public bool Run;
     }
 
     public WorldGump(World world, LoginScene scene) : base(world, 0, 0) {
@@ -74,6 +90,13 @@ public class WorldGump : Gump {
             _journal[i] = new Label("", false, 0x03B2, 3) { X = 16, Y = 360 + i * 14, IsVisible = false };
             Add(_journal[i]);
         }
+        _over = new Label[OverCount];
+        _overSerial = new uint[OverCount];
+        _overUntil = new int[OverCount];
+        for (var i = 0; i < OverCount; i++) {
+            _over[i] = new Label("", false, 0x03B2, 3) { X = 0, Y = 0, IsVisible = false };
+            Add(_over[i]);
+        }
         Add(new ResizePic(0x0BB8) { X = 16, Y = 448, Width = 420, Height = 24 });
         Add(_say = new TextBox { X = 22, Y = 450, Width = 400, Height = 20, Hue = 0x02B2, MaxLength = 100 });
         _say.SetKeyboardFocus();
@@ -81,6 +104,7 @@ public class WorldGump : Gump {
     }
 
     public override void Update() {
+        PopupMenuGump.Show(World);
         while (UOLoginNet.TakeNewAnim(out var serial, out var body, out var type, out var action, out var mode)) {
             var assets = UltimaOnline.Current?.Assets;
             if (assets == null) continue;
@@ -175,6 +199,8 @@ public class WorldGump : Gump {
 
     public override bool Draw(int x, int y) {
         PaintGround(x, y);
+        SlideLabels();
+        PlaceSpeech();
         return base.Draw(x, y);
     }
 
@@ -241,7 +267,7 @@ public class WorldGump : Gump {
     void AddBody(Assets assets, int ox, int oy, uint serial, int body, int direction, int dx, int dy, int z) {
         if (body <= 0 || assets == null) return;
         var dir = direction & 7;
-        var moving = UOLoginNet.MobileMoving(serial, out var run);
+        var moving = StepSlide(serial, dir, UOLoginNet.PlayerX + dx, UOLoginNet.PlayerY + dy, out var run, out var sox, out var soy);
         var war = serial == UOLoginNet.PlayerSerial && UOLoginNet.InWarMode;
         UOLoginNet.TryServerAnim(serial, out var fromServer, out var raw, out var frame);
         var action = assets.GroupFor((ushort)body, moving, run, war, TwoHanded(serial), fromServer, raw);
@@ -253,8 +279,8 @@ public class WorldGump : Gump {
         frame = (byte)(frame % count);
         if (!assets.TryBodyFrame(body, action, dir, frame, out var pix, out var w, out var h, out var cx, out var cy)) return;
         UOLoginNet.StepAnim(serial, count);
-        var sx = 320 + (dx - dy) * 22;
-        var sy = 220 + (dx + dy) * 22 - (z - UOLoginNet.PlayerZ) * 4;
+        var sx = 320 + (dx - dy) * 22 + sox;
+        var sy = 220 + (dx + dy) * 22 - (z - UOLoginNet.PlayerZ) * 4 + soy;
         var key = 0x30000 + (body << 16) + ((action & 0x7F) << 9) + ((dir & 7) << 6) + (frame & 0x3F);
         _stamps.Add(new Stamp { Key = key, X = ox + sx - cx, Y = oy + sy - cy - h, W = w, H = h, Px = pix, Ord = (dx + dy + 32) * 1000 + z + 2 });
     }
@@ -292,11 +318,12 @@ public class WorldGump : Gump {
         _pack.IsVisible = pack != 0;
         var n = 0;
         var you = UOLoginNet.NameOf(UOLoginNet.PlayerSerial);
-        Place(ref n, string.IsNullOrEmpty(you) ? "You" : you, 0x0035, 0, 0, 0, UOLoginNet.PlayerSerial);
+        Place(ref n, string.IsNullOrEmpty(you) ? "You" : you, NotorietyHue(UOLoginNet.Notoriety), 0, 0, 0, UOLoginNet.PlayerSerial);
         foreach (var m in mobiles) {
             World.Mobiles[m.Serial] = new Mobile(m.Serial, m.Body, m.X, m.Y, m.Z, m.Direction);
             if (m.Serial == UOLoginNet.PlayerSerial) continue;
             var name = UOLoginNet.NameOf(m.Serial);
+            // UOMobileState has no notoriety. 0x22 stores only the player.
             Place(ref n, string.IsNullOrEmpty(name) ? $"M {m.Body:X4}" : name, 0x0481, m.X - px, m.Y - py, m.Z - pz, m.Serial);
         }
         foreach (var it in items) {
@@ -315,6 +342,196 @@ public class WorldGump : Gump {
             _journal[j].IsVisible = true;
         }
         for (; j < Journal; j++) _journal[j].IsVisible = false;
+        NoteSpeech();
+    }
+
+    /// <summary>New 0x1C and 0xAE lines. The list drops from the front once it holds 12.</summary>
+    void NoteSpeech() {
+        var overlap = 0;
+        for (var shift = 0; shift <= _prevSpeech.Count; shift++) {
+            var n = _prevSpeech.Count - shift;
+            if (n > _lines.Count) n = _lines.Count;
+            var ok = true;
+            for (var i = 0; i < n; i++) {
+                var a = _prevSpeech[shift + i];
+                var b = _lines[i];
+                if (a.Serial != b.Serial || a.Text != b.Text || a.Hue != b.Hue) { ok = false; break; }
+            }
+            if (!ok) continue;
+            overlap = n;
+            break;
+        }
+        for (var i = overlap; i < _lines.Count; i++) {
+            var line = _lines[i];
+            if (line.Serial == 0 || string.IsNullOrEmpty(line.Text)) continue;
+            ShowOver(line);
+        }
+        _prevSpeech.Clear();
+        foreach (var line in _lines) _prevSpeech.Add(line);
+    }
+
+    void ShowOver(UOSpeechState line) {
+        var slot = -1;
+        var oldest = 0;
+        var oldestAt = int.MaxValue;
+        var now = Environment.TickCount;
+        for (var i = 0; i < OverCount; i++) {
+            if (_overSerial[i] == 0 || unchecked(now - _overUntil[i]) >= 0) { slot = i; break; }
+            if (_overUntil[i] < oldestAt) { oldestAt = _overUntil[i]; oldest = i; }
+        }
+        if (slot < 0) slot = oldest;
+        _overSerial[slot] = line.Serial;
+        _overUntil[slot] = unchecked(now + SpeechMs);
+        _over[slot].Text = line.Text;
+        _over[slot].Hue = line.Hue == 0 ? (ushort)0x03B2 : line.Hue;
+        _over[slot].IsVisible = true;
+    }
+
+    void PlaceSpeech() {
+        var now = Environment.TickCount;
+        var px = UOLoginNet.PlayerX;
+        var py = UOLoginNet.PlayerY;
+        var pz = UOLoginNet.PlayerZ;
+        var you = UOLoginNet.PlayerSerial;
+        for (var i = 0; i < OverCount; i++) {
+            var row = _over[i];
+            if (_overSerial[i] == 0 || unchecked(now - _overUntil[i]) >= 0) {
+                _overSerial[i] = 0;
+                row.IsVisible = false;
+                continue;
+            }
+            int dx, dy, dz, dir, tileX, tileY;
+            if (_overSerial[i] == you) {
+                dx = dy = dz = 0;
+                dir = UOLoginNet.PlayerDirection;
+                tileX = px;
+                tileY = py;
+            }
+            else if (World.Mobiles.TryGetValue(_overSerial[i], out var obj) && obj is Mobile m) {
+                dx = m.X - px;
+                dy = m.Y - py;
+                dz = m.Z - pz;
+                dir = m.Direction;
+                tileX = m.X;
+                tileY = m.Y;
+            }
+            else if (World.Items.TryGetValue(_overSerial[i], out var iobj) && iobj is Item it) {
+                dx = it.X - px;
+                dy = it.Y - py;
+                dz = it.Z - pz;
+                dir = 0;
+                tileX = it.X;
+                tileY = it.Y;
+            }
+            else {
+                row.IsVisible = false;
+                continue;
+            }
+            StepSlide(_overSerial[i], dir, tileX, tileY, out _, out var ox, out var oy);
+            var stack = 0;
+            for (var k = 0; k < i; k++)
+                if (_overSerial[k] == _overSerial[i] && _over[k].IsVisible) stack++;
+            row.X = 320 + (dx - dy) * 22 - 20 + ox;
+            row.Y = 220 + (dx + dy) * 22 - dz * 4 + oy - 16 - stack * 14;
+            row.IsVisible = true;
+        }
+    }
+
+    /// <summary>
+    /// ClassicUO keeps the old tile and grows Offset toward the new one (Mobile.ProcessSteps).
+    /// Predict already stored the destination, so this is the remaining fraction of one tile back.
+    /// The clock starts here: MobileMoving has no step-start time. Z is the tile already stored.
+    /// </summary>
+    bool StepSlide(uint serial, int direction, int tileX, int tileY, out bool run, out int ox, out int oy) {
+        ox = oy = 0;
+        if (!UOLoginNet.MobileMoving(serial, out run)) {
+            _slide.Remove(serial);
+            return false;
+        }
+        if (!_slide.TryGetValue(serial, out var step) || step.X != tileX || step.Y != tileY) {
+            step.Start = Environment.TickCount;
+            step.Dir = (byte)(direction & 7);
+            step.Run = run;
+            step.X = tileX;
+            step.Y = tileY;
+            _slide[serial] = step;
+        }
+        var duration = step.Run ? 200 : 400;
+        var elapsed = unchecked(Environment.TickCount - step.Start);
+        if (elapsed < 0) elapsed = 0;
+        if (elapsed >= duration) return true;
+        BackStep(step.Dir, out var sx, out var sy);
+        var left = duration - elapsed;
+        ox = sx * left / duration;
+        oy = sy * left / duration;
+        return true;
+    }
+
+    /// <summary>Screen delta of the tile opposite dir. Same 22-pixel axes as the land stamps.</summary>
+    static void BackStep(int dir, out int sx, out int sy) {
+        int fx = 0, fy = 0;
+        switch (dir & 7) {
+            case 0: fy = -1; break;
+            case 1: fx = 1; fy = -1; break;
+            case 2: fx = 1; break;
+            case 3: fx = 1; fy = 1; break;
+            case 4: fy = 1; break;
+            case 5: fx = -1; fy = 1; break;
+            case 6: fx = -1; break;
+            default: fx = -1; fy = -1; break;
+        }
+        var dx = -fx;
+        var dy = -fy;
+        sx = (dx - dy) * 22;
+        sy = (dx + dy) * 22;
+    }
+
+    void SlideLabels() {
+        var px = UOLoginNet.PlayerX;
+        var py = UOLoginNet.PlayerY;
+        var pz = UOLoginNet.PlayerZ;
+        var you = UOLoginNet.PlayerSerial;
+        for (var i = 0; i < Slots; i++) {
+            var row = _rows[i];
+            if (!row.IsVisible || row.Serial == 0) continue;
+            int dx, dy, dz, dir;
+            int tileX, tileY;
+            if (row.Serial == you) {
+                dx = dy = dz = 0;
+                dir = UOLoginNet.PlayerDirection;
+                tileX = px;
+                tileY = py;
+            }
+            else if (World.Mobiles.TryGetValue(row.Serial, out var obj) && obj is Mobile m) {
+                dx = m.X - px;
+                dy = m.Y - py;
+                dz = m.Z - pz;
+                dir = m.Direction;
+                tileX = m.X;
+                tileY = m.Y;
+            }
+            else continue;
+            StepSlide(row.Serial, dir, tileX, tileY, out _, out var ox, out var oy);
+            row.X = 320 + (dx - dy) * 22 - 20 + ox;
+            row.Y = 220 + (dx + dy) * 22 - dz * 4 + oy;
+        }
+    }
+
+    /// <summary>
+    /// ClassicUO Notoriety.GetHue. Values are the Profile defaults.
+    /// Invulnerable is 0x0034 inside GetHue, not Profile.InvulnerableHue.
+    /// </summary>
+    static ushort NotorietyHue(byte flag) {
+        switch (flag) {
+            case 1: return 0x005A;
+            case 2: return 0x0044;
+            case 3: return 0x03B2;
+            case 4: return 0x03B2;
+            case 5: return 0x0031;
+            case 6: return 0x0023;
+            case 7: return 0x0034;
+            default: return 0;
+        }
     }
 
     void Place(ref int n, string text, ushort hue, int dx, int dy, int dz, uint serial) {

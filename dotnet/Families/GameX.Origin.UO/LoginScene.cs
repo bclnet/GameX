@@ -32,6 +32,11 @@ public sealed class LoginScene : SceneBase {
     Gump _currentGump;
     LoginSteps _lastLoginStep;
     bool _autoLogin;
+    bool _rightWalk;
+    bool _continueRun;
+    bool _hasGoal;
+    int _goalX, _goalY;
+    int _stuckX, _stuckY, _stuckPx, _stuckPy, _stuckAt;
 
     public LoginScene(World world) => _world = world;
 
@@ -133,7 +138,88 @@ public sealed class LoginScene : SceneBase {
             _lastLoginStep = CurrentLoginStep;
         }
         UIManager.Update();
+        if (CurrentLoginStep == LoginSteps.InWorld) PropTip.Poll(_world);
+        DriveMouse();
     }
+
+    /// <summary>
+    /// ClassicUO right-button walk. Direction is GetMouseDirection minus one, and North wraps through 8.
+    /// The run bit is set at 190 pixels from the player anchor. Left-up while right is held keeps walking.
+    /// A left-up on empty ground steps toward that tile until the player arrives.
+    /// </summary>
+    void DriveMouse() {
+        if (CurrentLoginStep != LoginSteps.InWorld) {
+            _rightWalk = false;
+            _continueRun = false;
+            _hasGoal = false;
+            return;
+        }
+        if (Mouse.RButtonPressed) {
+            if (_rightWalk || _continueRun) {
+                _hasGoal = false;
+                WalkFacing();
+            }
+            return;
+        }
+        _rightWalk = false;
+        if (_continueRun) {
+            _hasGoal = false;
+            WalkFacing();
+            return;
+        }
+        if (!_hasGoal) return;
+        var px = UOLoginNet.PlayerX;
+        var py = UOLoginNet.PlayerY;
+        if (_stuckX != _goalX || _stuckY != _goalY || _stuckPx != px || _stuckPy != py) {
+            _stuckX = _goalX;
+            _stuckY = _goalY;
+            _stuckPx = px;
+            _stuckPy = py;
+            _stuckAt = System.Environment.TickCount;
+        }
+        else if (unchecked(System.Environment.TickCount - _stuckAt) > 1000) {
+            _hasGoal = false;
+            return;
+        }
+        var gx = _goalX - px;
+        var gy = _goalY - py;
+        if (gx == 0 && gy == 0) {
+            _hasGoal = false;
+            return;
+        }
+        var step = StepDir(Sign(gx), Sign(gy));
+        if (Abs(gx) + Abs(gy) > 2) step |= 0x80;
+        UOLoginNet.Walk(step);
+    }
+
+    static void WalkFacing() {
+        var facing = GameCursor.GetMouseDirection(320, 220, Mouse.Position.X, Mouse.Position.Y, 1);
+        if (facing == 0) facing = 8;
+        var walk = (byte)((facing - 1) & 7);
+        var dx = Mouse.Position.X - 320;
+        var dy = Mouse.Position.Y - 220;
+        if ((long)dx * dx + (long)dy * dy >= 190L * 190L) walk |= 0x80;
+        UOLoginNet.Walk(walk);
+    }
+
+    static bool OverWorld() {
+        var over = UIManager.MouseOverControl;
+        return over == null || over is WorldGump || over is UseLabel;
+    }
+
+    static int Sign(int n) => n < 0 ? -1 : n > 0 ? 1 : 0;
+    static int Abs(int n) => n < 0 ? -n : n;
+
+    static byte StepDir(int sx, int sy) => (sx, sy) switch {
+        (0, -1) => 0,
+        (1, -1) => 1,
+        (1, 0) => 2,
+        (1, 1) => 3,
+        (0, 1) => 4,
+        (-1, 1) => 5,
+        (-1, 0) => 6,
+        _ => 7,
+    };
 
     public override bool Draw() {
         var sink = GumpArt.Sink;
@@ -151,26 +237,61 @@ public sealed class LoginScene : SceneBase {
         base.OnMouseMove(x, y);
     }
 
-    public override bool OnMouseDown(int button, int x, int y)
-        => UIManager.OnMouseDown(button, x, y) || base.OnMouseDown(button, x, y);
+    public override bool OnMouseDown(int button, int x, int y) {
+        if (CurrentLoginStep == LoginSteps.InWorld && button == (int)MouseButtonType.Right) {
+            _continueRun = false;
+            if (OverWorld()) _rightWalk = true;
+        }
+        return UIManager.OnMouseDown(button, x, y) || base.OnMouseDown(button, x, y);
+    }
 
     public override bool OnMouseUp(int button, int x, int y) {
-        if (UIManager.OnMouseUp(button, x, y)) return true;
-        if (CurrentLoginStep != LoginSteps.InWorld || button != 1) return base.OnMouseUp(button, x, y);
-        WorldGump.GroundTile(x, y, out var wx, out var wy, out var wz);
-        if (UOLoginNet.HasTarget) {
-            UOLoginNet.TargetGround(wx, wy, wz);
-            return true;
+        if (CurrentLoginStep == LoginSteps.InWorld && button == (int)MouseButtonType.Left && Mouse.RButtonPressed && _rightWalk)
+            _continueRun = true;
+        var over = UIManager.MouseOverControl;
+        var ui = UIManager.OnMouseUp(button, x, y);
+        if (CurrentLoginStep == LoginSteps.InWorld && button == (int)MouseButtonType.Left) {
+            WorldGump.GroundTile(x, y, out var wx, out var wy, out var wz);
+            if (UOLoginNet.HasTarget) {
+                if (WorldPick.TryActor(_world, x, y, out var serial)) UOLoginNet.TargetSerial(serial);
+                else UOLoginNet.TargetGround(wx, wy, wz);
+                return true;
+            }
+            if (UOLoginNet.Holding) {
+                var drop = WorldPick.TryActor(_world, x, y, out var onto) ? onto : 0xFFFFFFFFu;
+                UOLoginNet.DropHeld(wx, wy, wz, drop);
+                return true;
+            }
+            if (!ui && (over is WorldGump || over == null)) {
+                _continueRun = false;
+                if (WorldPick.TryActor(_world, x, y, out var picked)) {
+                    _hasGoal = false;
+                    UOLoginNet.RequestPopup(picked);
+                }
+                else {
+                    _goalX = wx;
+                    _goalY = wy;
+                    _hasGoal = true;
+                }
+                return true;
+            }
         }
-        if (UOLoginNet.Holding) {
-            UOLoginNet.DropHeld(wx, wy, wz, 0xFFFFFFFF);
-            return true;
-        }
+        if (ui) return true;
         return base.OnMouseUp(button, x, y);
     }
 
-    public override bool OnMouseDoubleClick(int button, int x, int y)
-        => UIManager.OnMouseDoubleClick(button, x, y) || base.OnMouseDoubleClick(button, x, y);
+    public override bool OnMouseDoubleClick(int button, int x, int y) {
+        if (UIManager.OnMouseDoubleClick(button, x, y)) return true;
+        if (CurrentLoginStep == LoginSteps.InWorld && button == (int)MouseButtonType.Left
+            && WorldPick.TryActor(_world, x, y, out var serial)) {
+            _hasGoal = false;
+            if (serial != UOLoginNet.PlayerSerial && UOLoginNet.IsMobile(serial) && UOLoginNet.InWarMode)
+                UOLoginNet.Attack(serial);
+            else UOLoginNet.Use(serial);
+            return true;
+        }
+        return base.OnMouseDoubleClick(button, x, y);
+    }
 
     public override bool OnKeyDown(int key, int mod) {
         if (CurrentLoginStep == LoginSteps.InWorld && TryWalk(key, mod)) return true;
@@ -189,8 +310,36 @@ public sealed class LoginScene : SceneBase {
                     return true;
                 }
             }
+            if (TryWorldKey(key, mod)) return true;
         }
         return UIManager.OnKeyDown(key, mod) || base.OnKeyDown(key, mod);
+    }
+
+    /// <summary>
+    /// ClassicUO CreateDefaultMacros. Alt is SDL_KMOD_ALT (0x0300). Shift and Ctrl stay up.
+    /// UoKeys.Map leaves letters as XNA Keys, which are uppercase ASCII, not SDLK.
+    /// Paperdoll and backpack call Use. Journal and the radar map are the gumps TopBar opens.
+    /// </summary>
+    bool TryWorldKey(int key, int mod) {
+        if ((mod & 0x0300) == 0 || (mod & 0x00C3) != 0) return false;
+        switch (key) {
+            case 80: // Keys.P, GameActions.OpenPaperdoll
+                var player = UOLoginNet.PlayerSerial;
+                if (player != 0) UOLoginNet.Use(player);
+                return true;
+            case 73: // Keys.I, GameActions.OpenBackpack
+                var pack = UOLoginNet.PlayerBackpack;
+                if (pack != 0) UOLoginNet.Use(pack);
+                return true;
+            case 74: // Keys.J, GameActions.OpenJournal
+                if (UIManager.GetGump<JournalGump>() == null) UIManager.Add(new JournalGump(_world));
+                return true;
+            case 82: // Keys.R, GameActions.OpenMiniMap
+                if (UIManager.GetGump<MiniMapGump>() == null) UIManager.Add(new MiniMapGump(_world));
+                return true;
+            default:
+                return false;
+        }
     }
 
     /// <summary>SDL keycodes. Shift (KMOD_SHIFT, bits 0 and 1) sets the run bit.</summary>

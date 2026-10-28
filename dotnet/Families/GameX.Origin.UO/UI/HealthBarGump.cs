@@ -6,14 +6,17 @@ using System.Collections.Generic;
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO HealthBarGump hits line. Red is 0x0805 at its own size. Blue is 0x0806,
-/// tiled to CalculatePercents(HitsMax, Hits, 109), the same clip as GumpPicWithWidth.
+/// ClassicUO HealthBarGump hits line. Red is 0x0805 at its own size. The overlay is
+/// poison 0x0808, else yellow 0x0809, else blue 0x0806, tiled to CalculatePercents(HitsMax, Hits, 109),
+/// the same clip as GumpPicWithWidth. Update checks IsPoisoned before IsYellowHits.
 /// A percent of 0 or 1 is not scaled. HitsMax 0 hides the line. No status is skipped.
-/// Poison 0x0808 and yellow 0x0809 are not read. Screen position is WorldGump's player anchor.
+/// Screen position is WorldGump's player anchor.
 /// </summary>
 public static class HealthBarGump {
     const ushort LineRed = 0x0805;
     const ushort LineBlue = 0x0806;
+    const ushort LinePoison = 0x0808;
+    const ushort LineYellow = 0x0809;
     const int BarWidth = 109;
 
     static readonly List<UOMobileState> Mobiles = [];
@@ -34,7 +37,13 @@ public static class HealthBarGump {
             var y = originY + 220 + (dx + dy) * 22 - (m.Z - pz) * 4;
             var hits = CalculatePercents(st.HitsMax, st.Hits, BarWidth);
             GumpArtDraw.Pic(LineRed, x, y, 0, 0, false);
-            if (hits > 0) GumpArtDraw.Pic(LineBlue, x, y, hits, 0, true);
+            if (hits > 0) {
+                UOLoginNet.TryHealthBar(m.Serial, out var poisoned, out var yellow);
+                var line = LineBlue;
+                if (poisoned) line = LinePoison;
+                else if (yellow) line = LineYellow;
+                GumpArtDraw.Pic(line, x, y, hits, 0, true);
+            }
         }
     }
 

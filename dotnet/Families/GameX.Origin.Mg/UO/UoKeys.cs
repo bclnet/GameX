@@ -38,8 +38,15 @@ static class UoKeys {
         _ => (int)key,
     };
 
+    /// <summary>
+    /// SDL modifier bits LoginScene already tests. Shift is 0x0003, ctrl is 0x00C0, alt is 0x0300.
+    /// </summary>
     static int Mod() {
         var keys = XnaKeys.GetState();
-        return keys.IsKeyDown(Keys.LeftShift) || keys.IsKeyDown(Keys.RightShift) ? 3 : 0;
+        var mod = 0;
+        if (keys.IsKeyDown(Keys.LeftShift) || keys.IsKeyDown(Keys.RightShift)) mod |= 3;
+        if (keys.IsKeyDown(Keys.LeftControl) || keys.IsKeyDown(Keys.RightControl)) mod |= 0x00C0;
+        if (keys.IsKeyDown(Keys.LeftAlt) || keys.IsKeyDown(Keys.RightAlt)) mod |= 0x0300;
+        return mod;
     }
 }

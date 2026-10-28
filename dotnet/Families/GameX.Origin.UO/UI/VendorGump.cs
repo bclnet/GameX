@@ -9,7 +9,7 @@ namespace GameX.Origin.UO;
 /// <summary>
 /// Container graphic 0x0030. Rows are layers 0x1A then 0x1B.
 /// A container whose graphic is not 0x2AF8 is walked last to first.
-/// ClassicUO prints "{name} at {price}gp" from Item.Price. 0x74 leaves that field unread, so the row names it.
+/// ClassicUO prints "{name} at {price}gp". The price is the 0x74 value stored on the item.
 /// A row click calls ReplyShop, the empty 0x3B.
 /// </summary>
 public sealed class VendorGump : Gump {
@@ -75,7 +75,7 @@ public sealed class VendorGump : Gump {
                 var name = UOLoginNet.NameOf(it.Serial);
                 if (string.IsNullOrEmpty(name)) name = it.Graphic.ToString("X4");
                 var row = _rows[n];
-                row.Text = $"{Words(name)} at (Item.Price)gp  x{it.Amount}";
+                row.Text = $"{Words(name)} at {it.Price}gp  x{it.Amount}";
                 row.IsVisible = true;
                 var id = (it.Graphic & 0x7FFF) + 0x4000;
                 var assets = UltimaOnline.Current?.Assets;

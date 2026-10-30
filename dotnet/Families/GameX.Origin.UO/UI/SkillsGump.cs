@@ -10,10 +10,13 @@ namespace GameX.Origin.UO;
 /// ClassicUO StandardSkillsGump. The printed number is the stored ushort divided by 10, format F1:
 /// that is Skill.ValueFixed / 10.0f. Show Real prints BaseValue, Show Caps prints Cap, and the total
 /// uses BaseValue only while Show Real is on. An empty Name prints the id, the same stand-in SetSkills
-/// uses when the 0xFE block did not supply one. Lock art follows the stored byte. The click does not
-/// send 0x3A: UOGamePackets has no skill-lock writer. The 0xFE action flag is not stored and there is
-/// no 0x12 UseSkill writer, so the use button is not shown. skillgrp groups are not in this client.
+/// uses when the 0xFE block did not supply one. Lock art follows the stored byte. A lock click
+/// cycles 0 up, 1 down, 2 locked, then 0, stores that byte, and sends 0x3A. The 0xFE action flag is not stored.
+/// The row has no use button. skillgrp groups are not in this client.
 /// Right-click closes.
+/// Shift-click on a skill row opens one SkillButtonGump at the mouse for that index.
+/// A second Shift-click shows that button. Double-click still calls UseSkill.
+/// Abilities opens one CombatBookGump. It does not send a skill packet.
 /// </summary>
 public sealed class SkillsGump : Gump {
     const int DiffY = 22;
@@ -23,9 +26,12 @@ public sealed class SkillsGump : Gump {
     readonly List<UOSkillState> _src = [];
     readonly List<UOSkillState> _skills = [];
     readonly List<SkillRow> _rows = [];
+    // Fill copies the server list. Keep a click until that copy has the same lock.
+    readonly Dictionary<ushort, byte> _heldLock = new();
     readonly GumpPic _icon, _top, _bottomPic, _title, _lineTop, _lineBot, _comment;
     readonly GumpPicTiled _mid, _right;
     readonly Button _expander, _newGroup;
+    readonly AbilitiesButton _abilities;
     readonly Checkbox _real, _caps;
     readonly Label _sum;
     int _rev = -1;
@@ -71,6 +77,8 @@ public sealed class SkillsGump : Gump {
             Add(_caps);
             _caps.ValueChanged += OnCheck;
         }
+        _abilities = new AbilitiesButton(this);
+        Add(_abilities);
         Add(new MinBox(this));
         Fill();
         _rev = UOLoginNet.WorldRevision;
@@ -85,7 +93,7 @@ public sealed class SkillsGump : Gump {
         base.Update();
     }
 
-    /// <summary>Lock, new-group, and the expander do not send. There is no 0x3A skill-lock writer.</summary>
+    /// <summary>New-group and the expander do not send. The lock click is SkillRow.OnButtonClick.</summary>
     public override void OnButtonClick(int buttonID) { }
 
     void OnCheck(object sender, EventArgs e) {
@@ -100,6 +108,7 @@ public sealed class SkillsGump : Gump {
     void Fill() {
         UOLoginNet.CopySkills(_src);
         Merge();
+        ApplyHeldLocks();
         foreach (var c in _rows) {
             c.Parent = null;
             c.Dispose();
@@ -132,6 +141,29 @@ public sealed class SkillsGump : Gump {
         _skills.Clear();
         foreach (var row in map.Values) _skills.Add(row);
         _skills.Sort((a, b) => a.Id.CompareTo(b.Id));
+    }
+
+    void HoldLock(ushort id, byte next) {
+        _heldLock[id] = next;
+        for (var i = 0; i < _skills.Count; i++) {
+            if (_skills[i].Id != id) continue;
+            var s = _skills[i];
+            _skills[i] = new UOSkillState(s.Id, s.Value, s.BaseValue, next, s.Cap, s.Name);
+            break;
+        }
+    }
+
+    void ApplyHeldLocks() {
+        if (_heldLock.Count == 0) return;
+        for (var i = 0; i < _skills.Count; i++) {
+            var s = _skills[i];
+            if (!_heldLock.TryGetValue(s.Id, out var next)) continue;
+            if (s.Lock == next) {
+                _heldLock.Remove(s.Id);
+                continue;
+            }
+            _skills[i] = new UOSkillState(s.Id, s.Value, s.BaseValue, next, s.Cap, s.Name);
+        }
     }
 
     void Layout() {
@@ -174,6 +206,17 @@ public sealed class SkillsGump : Gump {
         if (_caps != null && !_caps.IsDisposed) {
             _caps.X = checks;
             _caps.Y = groupY + 7;
+        }
+        if (_abilities != null && !_abilities.IsDisposed) {
+            var ax = 60;
+            if (_newGroup != null && !_newGroup.IsDisposed && _newGroup.X + _newGroup.Width + 8 > ax)
+                ax = _newGroup.X + _newGroup.Width + 8;
+            if (_real != null && !_real.IsDisposed && _real.X + _real.Width + 8 > ax)
+                ax = _real.X + _real.Width + 8;
+            if (_caps != null && !_caps.IsDisposed && _caps.X + _caps.Width + 8 > ax)
+                ax = _caps.X + _caps.Width + 8;
+            _abilities.X = ax;
+            _abilities.Y = groupY - 6;
         }
     }
 
@@ -228,7 +271,7 @@ public sealed class SkillsGump : Gump {
 
     sealed class SkillRow : Control {
         readonly SkillsGump _owner;
-        readonly UOSkillState _skill;
+        UOSkillState _skill;
         readonly Label _value;
         readonly Button _lock;
 
@@ -251,6 +294,28 @@ public sealed class SkillsGump : Gump {
                 Add(b);
             }
             Apply();
+        }
+
+        /// <summary>StandardSkillsGump lock click. Below 2 advances, otherwise the byte returns to 0.</summary>
+        public override void OnButtonClick(int buttonID) {
+            if (buttonID != _skill.Id) return;
+            var next = _skill.Lock < 2 ? (byte)(_skill.Lock + 1) : (byte)0;
+            UOLoginNet.Send(OutgoingPackets.Send_SkillStatusChangeRequest(_skill.Id, next));
+            _skill = new UOSkillState(_skill.Id, _skill.Value, _skill.BaseValue, next, _skill.Cap, _skill.Name);
+            _owner.HoldLock(_skill.Id, next);
+            Apply();
+        }
+
+        public override void OnMouseClick(int x, int y) {
+            if (!GameController.Shift) return;
+            var index = _skill.Id;
+            var open = SkillButtonGump.Find(index);
+            if (open != null) {
+                open.Show();
+                return;
+            }
+            // Half of the 88 by 44 button, the offset StandardSkillsGump uses.
+            UIManager.Add(new SkillButtonGump(_owner.World, index, SkillName(_skill), Mouse.Position.X - 44, Mouse.Position.Y - 22));
         }
 
         public override bool OnMouseDoubleClick(int x, int y) {
@@ -292,5 +357,16 @@ public sealed class SkillsGump : Gump {
         public override void OnMouseClick(int x, int y) {
             if (!_owner.Minimized) _owner.Minimized = true;
         }
+    }
+
+    sealed class AbilitiesButton : Label {
+        readonly SkillsGump _owner;
+
+        public AbilitiesButton(SkillsGump owner) : base("Abilities", false, 0x0386, 1) {
+            _owner = owner;
+            AcceptMouseInput = true;
+        }
+
+        public override void OnMouseClick(int x, int y) => CombatBookGump.Open(_owner.World);
     }
 }

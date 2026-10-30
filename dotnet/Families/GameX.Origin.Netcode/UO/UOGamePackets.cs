@@ -10,13 +10,15 @@ using System.Text;
 namespace GameX.Origin.Netcode.UO;
 
 public readonly struct UOMobileState {
-    public UOMobileState(uint serial, ushort body, int x, int y, int z, byte direction) {
+    public UOMobileState(uint serial, ushort body, int x, int y, int z, byte direction, byte notoriety = 0, byte flags = 0) {
         Serial = serial;
         Body = body;
         X = x;
         Y = y;
         Z = z;
         Direction = direction;
+        Notoriety = notoriety;
+        Flags = flags;
     }
 
     public uint Serial { get; }
@@ -25,6 +27,8 @@ public readonly struct UOMobileState {
     public int Y { get; }
     public int Z { get; }
     public byte Direction { get; }
+    public byte Notoriety { get; }
+    public byte Flags { get; }
 }
 
 public readonly struct UOItemState {
@@ -353,7 +357,8 @@ public readonly struct UOPathPoint {
 }
 
 /// <summary>
-/// Game-stream framing. Lengths match Origin's PacketsTable. 0xFF is variable; that row is missing there.
+/// Game-stream framing. Lengths is the ClassicUO initializer, plus a trailing 0xFF row.
+/// FrameLength uses PacketsTable after UseVersion.
 /// </summary>
 public static class UOGamePackets {
     public static readonly short[] Lengths = {
@@ -392,47 +397,18 @@ public static class UOGamePackets {
     };
 
     static ClientVersion _version;
+    static PacketsTable _table = new(default);
 
-    /// <summary>
-    /// Same length patches as Origin's PacketsTable constructor. The static table is the unpatched list.
-    /// </summary>
-    public static void UseVersion(ClientVersion version) => _version = version;
-
-    static short Adjusted(byte id) {
-        var n = Lengths[id];
-        var version = _version;
-        if (version >= ClientVersion.CV_500A) {
-            if (id == 0x0B) n = 0x07;
-            else if (id == 0x16 || id == 0x31) n = -1;
-        }
-        if (version >= ClientVersion.CV_6017) {
-            if (id == 0x08) n = 0x0F;
-            else if (id == 0x25) n = 0x15;
-        }
-        if (version >= ClientVersion.CV_60142 && id == 0xB9) n = 0x05;
-        if (version >= ClientVersion.CV_7090) {
-            if (id == 0x24) n = 0x09;
-            else if (id == 0x99) n = 0x1E;
-            else if (id == 0xBA) n = 0x0A;
-            else if (id == 0xF1) n = 0x09;
-            else if (id == 0xF2) n = 0x19;
-            else if (id == 0xF3) n = 0x1A;
-        }
-        if (version >= ClientVersion.CV_70180 && id == 0x00) n = 0x6A;
-        if (version >= ClientVersion.CV_706400) {
-            if (id == 0xFA) n = 0x01;
-            else if (id == 0xFB) n = 0x02;
-        }
-        if (version >= ClientVersion.CV_7010400) {
-            if (id == 0xD5) n = 0x09;
-            else if (id == 0xFD) n = 2;
-        }
-        return n;
+    /// <summary>Builds the ClassicUO PacketsTable for this client. Framing reads that table.</summary>
+    public static void UseVersion(ClientVersion version) {
+        _version = version;
+        _table = new PacketsTable(version);
+        PacketHandlers.UseVersion(version);
     }
 
     public static int FrameLength(ReadOnlySpan<byte> s) {
         if (s.Length < 1) return 0;
-        var n = Adjusted(s[0]);
+        var n = _table.GetPacketLength(s[0]);
         if (n < 0) {
             if (s.Length < 3) return 0;
             var size = (s[1] << 8) | s[2];
@@ -457,17 +433,18 @@ public static class UOGamePackets {
         return p;
     }
 
+    /// <summary>0x1B. Z is the low byte of the big-endian ushort at +15. Direction is the next byte, masked with 7.</summary>
     public static bool LoginConfirm(byte[] p, int o, out uint serial, out ushort body, out int x, out int y, out int z, out byte dir) {
         serial = body = 0;
         x = y = z = 0;
         dir = 0;
-        if (o + 17 > p.Length) return false;
+        if (o + 18 > p.Length) return false;
         serial = ReadU32(p, o + 1);
         body = ReadU16(p, o + 9);
         x = ReadU16(p, o + 11);
         y = ReadU16(p, o + 13);
-        z = (sbyte)p[o + 15];
-        dir = p[o + 16];
+        z = (sbyte)ReadU16(p, o + 15);
+        dir = (byte)(p[o + 17] & 7);
         return true;
     }
 
@@ -512,12 +489,14 @@ public static class UOGamePackets {
 
     /// <summary>
     /// 0x78. The mobile is the same fields as before. Equipment starts after hue, flags, and notoriety.
+    /// When the packet is at least 19 bytes, hue is the big-endian ushort at o+15, flags are o+17, and notoriety is o+18.
     /// From client 7.0.33.1 every item has a hue. Older clients send the hue only when the graphic has 0x8000.
     /// </summary>
-    public static bool Incoming(byte[] p, int o, int len, out uint serial, out ushort body, out int x, out int y, out int z, out byte dir, List<UOEquipState> equip) {
+    public static bool Incoming(byte[] p, int o, int len, out uint serial, out ushort body, out int x, out int y, out int z, out byte dir, List<UOEquipState> equip, out byte notoriety, out byte flags) {
         serial = body = 0;
         x = y = z = 0;
         dir = 0;
+        notoriety = flags = 0;
         equip?.Clear();
         if (len < 15) return false;
         serial = ReadU32(p, o + 3);
@@ -526,6 +505,11 @@ public static class UOGamePackets {
         y = ReadU16(p, o + 11);
         z = (sbyte)p[o + 13];
         dir = p[o + 14];
+        if (len >= 19) {
+            _ = ReadU16(p, o + 15);
+            flags = p[o + 17];
+            notoriety = p[o + 18];
+        }
         if (len < 19 || equip == null) return true;
         var i = o + 19;
         var end = o + len;
@@ -628,17 +612,41 @@ public static class UOGamePackets {
         return true;
     }
 
-    /// <summary>0xBF subcommand 0x0001 is the key stack. 0x0002 adds keys. Both are big-endian uints after the subcommand.</summary>
-    public static void FastWalk(byte[] p, int o, int len, Queue<uint> keys) {
-        if (len < 5) return;
+    /// <summary>
+    /// 0xBF subcommand 0x0001 writes six big-endian keys. ClassicUO stores five (index 5 is dropped).
+    /// 0x0002 writes one key into the first zero slot.
+    /// </summary>
+    public static void FastWalk(byte[] p, int o, int len, uint[] keys) {
+        if (len < 5 || keys == null || keys.Length == 0) return;
         var sub = (p[o + 3] << 8) | p[o + 4];
-        if (sub != 0x0001 && sub != 0x0002) return;
-        var i = o + 5;
-        var end = o + len;
-        while (i + 4 <= end) {
-            keys.Enqueue(ReadU32(p, i));
-            i += 4;
+        if (sub == 0x0001) {
+            for (var i = 0; i < 6; i++) {
+                var at = o + 5 + (i * 4);
+                if (at + 4 > o + len) return;
+                if (i < keys.Length) keys[i] = ReadU32(p, at);
+            }
+            return;
         }
+        if (sub != 0x0002 || o + 9 > o + len) return;
+        var value = ReadU32(p, o + 5);
+        if (value == 0) return;
+        for (var i = 0; i < keys.Length; i++) {
+            if (keys[i] != 0) continue;
+            keys[i] = value;
+            return;
+        }
+    }
+
+    /// <summary>ClassicUO FastWalkStack.GetValue. The first nonzero key is returned and cleared. An empty stack is 0.</summary>
+    public static uint TakeFastWalk(uint[] keys) {
+        if (keys == null) return 0;
+        for (var i = 0; i < keys.Length; i++) {
+            var key = keys[i];
+            if (key == 0) continue;
+            keys[i] = 0;
+            return key;
+        }
+        return 0;
     }
 
     /// <summary>0x1C. Name is 30 bytes at offset 14. Text is ASCII after offset 44.</summary>

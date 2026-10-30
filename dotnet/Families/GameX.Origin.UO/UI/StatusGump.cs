@@ -9,13 +9,17 @@ namespace GameX.Origin.UO;
 /// ClassicUO StatusGumpModern. Client 7.0.113 is past 3.0.8z, so this is not StatusGumpOld (gump 0x0802).
 /// Background 0x2A6C. The gumpartLegacyMUL.uop layout: name 90,50, stats 80, values 150 minus 5.
 /// Hits stay. Str, dex, int, stamina, and mana stay hidden when HasStats is false.
-/// Not stored: stat locks, gold, weight, resists, luck, damage, followers, the buff window, and separator lines.
+/// Locks sit beside those three at x 28: up, down, or locked. A click sends Send_StatLockStateRequest and cycles 0, 1, 2.
+/// Not stored: gold, weight, resists, luck, damage, followers, the buff window, and separator lines.
 /// </summary>
 public sealed class StatusGump : Gump {
     const ushort StatHue = 0x0386;
     const int BuffIcon = 0;
     readonly Label _name, _hits, _hitsMax, _str, _dex, _intel, _stam, _stamMax, _mana, _manaMax, _buffs;
     readonly List<UOBuffState> _buffRows = [];
+    readonly StatLock _strLock, _dexLock, _intLock;
+    byte _strL, _dexL, _intL, _seenStr, _seenDex, _seenInt;
+    bool _seenLocks, _showStats;
     int _rev = -1;
 
     public StatusGump(World world) : base(world, 0, 0) {
@@ -28,6 +32,9 @@ public sealed class StatusGump : Gump {
         _str = Add(Slot(80, 77));
         _dex = Add(Slot(80, 105));
         _intel = Add(Slot(80, 133));
+        _strLock = Add(new StatLock(this, 0, 28, 77));
+        _dexLock = Add(new StatLock(this, 1, 28, 105));
+        _intLock = Add(new StatLock(this, 2, 28, 133));
         var valueX = 150 - 5;
         _hits = Add(Slot(valueX, 70));
         _hitsMax = Add(Slot(valueX, 83));
@@ -46,6 +53,7 @@ public sealed class StatusGump : Gump {
             _rev = rev;
             Apply();
         }
+        ShowLocks();
         base.Update();
     }
 
@@ -62,6 +70,7 @@ public sealed class StatusGump : Gump {
             _hitsMax.IsVisible = false;
         }
         var extra = found && status.HasStats;
+        _showStats = extra;
         if (extra) {
             Show(_str, status.Str);
             Show(_dex, status.Dex);
@@ -98,5 +107,61 @@ public sealed class StatusGump : Gump {
     static void Show(Label label, ushort value) {
         label.Text = value.ToString();
         label.IsVisible = true;
+    }
+
+    void ShowLocks() {
+        UOLoginNet.StatLocks(out var str, out var dex, out var intel);
+        if (!_seenLocks || str != _seenStr || dex != _seenDex || intel != _seenInt) {
+            _strL = _seenStr = str;
+            _dexL = _seenDex = dex;
+            _intL = _seenInt = intel;
+            _seenLocks = true;
+        }
+        if (_showStats) {
+            _strLock.ShowState(_strL);
+            _dexLock.ShowState(_dexL);
+            _intLock.ShowState(_intL);
+        }
+        else {
+            _strLock.IsVisible = false;
+            _dexLock.IsVisible = false;
+            _intLock.IsVisible = false;
+        }
+    }
+
+    void CycleLock(byte stat) {
+        var cur = stat == 0 ? _strL : stat == 1 ? _dexL : _intL;
+        var next = (byte)((cur + 1) % 3);
+        if (stat == 0) _strL = next;
+        else if (stat == 1) _dexL = next;
+        else _intL = next;
+        UOLoginNet.Send(OutgoingPackets.Send_StatLockStateRequest(stat, next));
+        if (!_showStats) return;
+        if (stat == 0) _strLock.ShowState(next);
+        else if (stat == 1) _dexLock.ShowState(next);
+        else _intLock.ShowState(next);
+    }
+
+    static string LockWord(byte state) => state == 1 ? "down" : state == 2 ? "locked" : "up";
+
+    sealed class StatLock : Label {
+        readonly StatusGump _owner;
+        readonly byte _stat;
+
+        public StatLock(StatusGump owner, byte stat, int x, int y) : base("", false, StatHue, 1) {
+            _owner = owner;
+            _stat = stat;
+            X = x;
+            Y = y;
+            AcceptMouseInput = true;
+            IsVisible = false;
+        }
+
+        public void ShowState(byte state) {
+            Text = LockWord(state);
+            IsVisible = true;
+        }
+
+        public override void OnMouseClick(int x, int y) => _owner.CycleLock(_stat);
     }
 }

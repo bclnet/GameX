@@ -1,7 +1,10 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Formats.UO;
 using GameX.Origin.Netcode.UO;
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace GameX.Origin.UO;
 
@@ -9,16 +12,25 @@ namespace GameX.Origin.UO;
 /// Opened by 0x88. ClassicUO 7.0.113 paperdoll: background 0x07D0 or 0x07D1, the six side slots, and worn art.
 /// Client 7.0 uses the quests button, not journal. Flag 0x02 is the lift bit and is shown in the title line.
 /// Double-click sends 0x06. Right-click closes.
+/// Feature 0x20 draws the combat book 0x2B34 and the racial book 0x2B28. Double-click opens one of each.
 /// A drag is a UseLabel, the same hit a container uses, so mouse up calls Lift. Hair, beard, and the backpack are not one.
 /// </summary>
 public sealed class PaperdollGump : Gump {
-    // PaperDollInteractable._layerOrder. A container cloak uses LayerOrderQuiver.
-    static readonly byte[] WearOrder = [
-        0x14, 0x05, 0x04, 0x03, 0x18, 0x13, 0x0D, 0x11, 0x08, 0x0E, 0x0F, 0x07, 0x17, 0x16, 0x0C, 0x0A, 0x0B, 0x10, 0x12, 0x06, 0x01, 0x02, 0x09,
+    // PaperdollOrder base tables. Index 0 is the sentinel. T2 is the default. Later index paints on top.
+    const int MaleGump = 50000;
+    const int FemaleGump = 60000;
+    static readonly byte[] OrderT1 = [
+        0x00, 0x14, 0x05, 0x04, 0x03, 0x18, 0x0D, 0x11, 0x08, 0x0E, 0x0F, 0x13, 0x07, 0x17, 0x16, 0x0C, 0x0A, 0x0B, 0x10, 0x12, 0x06, 0x01, 0x02, 0x15, 0x09,
     ];
-    static readonly byte[] LayerOrderQuiver = [
-        0x05, 0x04, 0x03, 0x18, 0x13, 0x0D, 0x11, 0x08, 0x0E, 0x0F, 0x07, 0x17, 0x16, 0x14, 0x0C, 0x0A, 0x0B, 0x10, 0x12, 0x06, 0x01, 0x02, 0x09,
+    static readonly byte[] OrderT2 = [
+        0x00, 0x14, 0x05, 0x04, 0x03, 0x18, 0x13, 0x0D, 0x11, 0x08, 0x0E, 0x0F, 0x07, 0x17, 0x16, 0x0C, 0x0A, 0x0B, 0x10, 0x12, 0x06, 0x01, 0x02, 0x15, 0x09,
     ];
+    static readonly byte[] OrderT3 = [
+        0x00, 0x14, 0x0D, 0x05, 0x04, 0x03, 0x18, 0x11, 0x08, 0x0E, 0x0F, 0x13, 0x07, 0x17, 0x16, 0x0C, 0x0A, 0x0B, 0x10, 0x12, 0x06, 0x01, 0x02, 0x15, 0x09,
+    ];
+    static Binary_TileData.ItemData[] _items;
+    static Dictionary<ushort, Dictionary<ushort, ushort>> _conv;
+    static bool _tables;
     // EquipmentSlot order: helmet, earrings, necklace, ring, bracelet, tunic. Y is 75 + 21 * index.
     static readonly byte[] SlotLayers = [0x06, 0x12, 0x0A, 0x08, 0x0E, 0x11];
     static readonly ushort[] PeaceMode = [0x07E5, 0x07E6, 0x07E7];
@@ -84,17 +96,17 @@ public sealed class PaperdollGump : Gump {
             _warBtn = AddButton(Buttons.PeaceWarToggle, war[0], war[1], war[2], 6);
             var profileX = 25;
             if (books) profileX += 14;
-            Add(new GumpPic(profileX, 196, 0x07D2, 0));
+            Add(new ProfilePic(profileX, serial));
             profileX += 14;
-            Add(new GumpPic(profileX, 196, 0x07D2, 0));
+            Add(new PartyPic(this, profileX));
             Add(new MinBox(this));
         }
-        else Add(new GumpPic(25, 196, 0x07D2, 0));
+        else Add(new ProfilePic(25, serial));
         AddButton(Buttons.Status, 0x07EB, 0x07EC, 0x07ED, 7);
         Add(new VirtuePic(serial));
         if (books) {
-            Add(new GumpPic(156, 200, 0x2B34, 0));
-            Add(new GumpPic(23, 200, 0x2B28, 0));
+            Add(new CombatBookPic(this));
+            Add(new RacialBookPic(this));
         }
         _title = new Label(Line(_titleText, _flags), false, 0x0386, 1) { X = 39, Y = 262 };
         Add(_title);
@@ -156,14 +168,33 @@ public sealed class PaperdollGump : Gump {
 
     public override void OnButtonClick(int buttonID) {
         switch ((Buttons)buttonID) {
+            case Buttons.Help:
+                UOLoginNet.Send(OutgoingPackets.Send_HelpRequest());
+                break;
+            case Buttons.Options:
+                // OpenSettings is not ported.
+                break;
+            case Buttons.LogOut:
+                if (UIManager.GetGump<QuestionGump>() == null)
+                    UIManager.Add(new QuestionGump(World, "Quit\nUltima Online?", yes => {
+                        if (!yes) return;
+                        UOLoginNet.RequestQuit();
+                    }));
+                break;
+            case Buttons.Quests:
+                UOLoginNet.Send(OutgoingPackets.Send_QuestMenuRequest(UOLoginNet.PlayerSerial));
+                break;
             case Buttons.Skills:
                 if (UIManager.GetGump<SkillsGump>() == null) UIManager.Add(new SkillsGump(World));
                 break;
-            case Buttons.Status:
-                if (UIManager.GetGump<StatusGump>() == null) UIManager.Add(new StatusGump(World));
+            case Buttons.Guild:
+                UOLoginNet.Send(OutgoingPackets.Send_GuildMenuRequest(UOLoginNet.PlayerSerial));
                 break;
             case Buttons.PeaceWarToggle:
                 UOLoginNet.ToggleWar();
+                break;
+            case Buttons.Status:
+                if (UIManager.GetGump<StatusGump>() == null) UIManager.Add(new StatusGump(World));
                 break;
         }
     }
@@ -194,26 +225,26 @@ public sealed class PaperdollGump : Gump {
             // Mobile hue is not stored. The 0x03DB overlay stays unhued; the body uses 0x03EA.
             _doll.Add(new GumpPic(0, 0, extra, 0) { IsPartialHue = true, AcceptMouseInput = true, CanMove = false });
         }
-        var swap = false;
-        var arms = Find(_equip, 0x13);
-        if (arms.Serial != 0 && (arms.Graphic == 0x1410 || arms.Graphic == 0x1417)) swap = true;
-        // A container cloak uses LayerOrderQuiver. Tiledata IsContainer is not on Assets.
-        var layers = DrawOrder(false);
-        for (var i = 0; i < layers.Length; i++) {
-            var layer = layers[i];
-            if (swap) {
-                if (layer == 0x13) layer = 0x0D;
-                else if (layer == 0x0D) layer = 0x13;
-            }
+        // Action 4 stand, under the worn gumps. Each gump is drawn at (0, 0); the art is already placed on the body.
+        _doll.Add(new BodyArt(mobile, body));
+        var female = Female(mobile);
+        var gfx = LayerGfx(_equip);
+        var order = new byte[25];
+        var count = PaintOrder(gfx, female || Gargoyle(mobile), order);
+        for (var i = 0; i < count; i++) {
+            var layer = order[i];
             var item = Find(_equip, layer);
-            if (item.Serial == 0 || IsCovered(_equip, layer) || IsSlot(layer)) continue;
-            if (!TryArt(item.Graphic, out var key, out var px, out var w, out var h)) continue;
-            _doll.Add(new Worn(item.Serial, 0, 0, key, px, w, h, AllowsDrag(layer)));
+            if (item.Serial == 0 || IsCovered(_equip, layer)) continue;
+            if (!TryWearGump(mobile, female, item.Graphic, out var gump)) continue;
+            var worn = new Worn(item.Serial, 0, 0, gump, (ushort)(item.Hue & 0x3FFF), AllowsDrag(layer));
+            if (!worn.IsDisposed) _doll.Add(worn);
         }
         var pack = Find(_equip, 0x15);
-        if (pack.Serial != 0 && TryArt(pack.Graphic, out var pkey, out var ppx, out var pw, out var ph)) {
+        if (pack.Serial != 0 && TryPackGump(_player, pack.Graphic, out var pg)) {
+            // PaperdollBooks (feature 0x20) shifts the backpack six pixels left.
             var bx = (UOLoginNet.Features & 0x20) != 0 ? -6 : 0;
-            _doll.Add(new Worn(pack.Serial, bx, 0, pkey, ppx, pw, ph, false));
+            var worn = new Worn(pack.Serial, bx, 0, pg, (ushort)(pack.Hue & 0x3FFF), false);
+            if (!worn.IsDisposed) _doll.Add(worn);
         }
     }
 
@@ -241,12 +272,208 @@ public sealed class PaperdollGump : Gump {
         return 0x000C;
     }
 
-    static byte[] DrawOrder(bool quiver) => quiver ? LayerOrderQuiver : WearOrder;
+    // CheckGraphicChange. An unlisted body, including a dead gargoyle, is not female.
+    static bool Female(ushort body) => body == 0x0191 || body == 0x0193 || body == 0x025E || body == 0x029B;
 
-    static bool IsSlot(byte layer) {
-        for (var i = 0; i < SlotLayers.Length; i++)
-            if (SlotLayers[i] == layer) return true;
-        return false;
+    static bool Gargoyle(ushort body) => body == 0x029A || body == 0x029B || body == 0x02B6 || body == 0x02B7;
+
+    // PaperdollOrder.Build. graphic[] is AnimID per layer, not the world tile.
+    static int PaintOrder(ushort[] graphic, bool altTorso, byte[] dest) {
+        var table = OrderT2;
+        var arms = graphic[0x13];
+        var armsAlt = arms < 0x3D0 ? arms == 0x3CF || arms == 0x210 || arms == 0x3B3 : arms == 0x3DD;
+        if (armsAlt) table = OrderT1;
+        else {
+            var torso = graphic[0x0D];
+            if (torso == 0x21A) table = OrderT1;
+            else if (torso >= 0x399 && torso - 0x399 < 5 && altTorso) table = OrderT3;
+        }
+        var order = (byte[])table.Clone();
+        if (graphic[0x05] != 0 && graphic[0x04] == 0x398) MoveTo(order, 0x04, 0x05);
+        var pants = graphic[0x04];
+        var skipFinal = false;
+        if (pants < 0x201) {
+            if (pants == 0x200 || pants == 0x1EB || pants == 0x1FA) {
+                var iShoes = IndexOf(order, 0x03);
+                var iPants = IndexOf(order, 0x04);
+                if (iShoes >= 0 && iPants >= 0 && iPants < iShoes) {
+                    order[iShoes] = 0x04;
+                    order[iPants] = 0x03;
+                }
+            }
+        }
+        else if ((uint)(pants - 0x513) < 2) {
+            if (graphic[0x03] != 0) MoveTo(order, 0x04, 0x03);
+            skipFinal = true;
+        }
+        if (!skipFinal && graphic[0x03] != 0 && pants == 0x3E4) MoveTo(order, 0x04, 0x03);
+        if (graphic[0x11] == 0x238) {
+            MoveAfter(order, 0x11, 0x0C);
+            var robe = graphic[0x16];
+            if (robe == 0x4E8 || robe == 0x4E9 || robe == 0x4EA || robe == 0x4EB || robe == 0x5E2 || robe == 0x5E3 || robe == 0x5E4 || robe == 0x5E5)
+                MoveTo(order, 0x16, 0x0A);
+        }
+        if (graphic[0x14] == 0x380 || graphic[0x14] == 0x5F3) MoveAfter(order, 0x14, 0x16);
+        var helm = graphic[0x06];
+        if (helm < 0x202) {
+            var neck = graphic[0x0A];
+            if ((helm == 0x201 || helm == 0x1A9) && (neck == 0x1C8 || (neck > 0x1D6 && neck < 0x1D9))) {
+                MoveAfter(order, 0x0A, 0x06);
+                return Filter(order, dest);
+            }
+        }
+        else if ((uint)(helm - 0x5E9) < 2 && graphic[0x16] != 0 && (uint)(graphic[0x16] - 0x5E2) < 4)
+            MoveTo(order, 0x16, 0x06);
+        return Filter(order, dest);
+    }
+
+    static int Filter(byte[] order, byte[] dest) {
+        var c = 0;
+        for (var i = 0; i < order.Length; i++) {
+            var layer = order[i];
+            if (layer == 0x00 || layer == 0x15 || layer == 0x19) continue;
+            dest[c++] = layer;
+        }
+        return c;
+    }
+
+    static int IndexOf(byte[] a, byte v) {
+        for (var i = 0; i < a.Length; i++)
+            if (a[i] == v) return i;
+        return -1;
+    }
+
+    static void MoveTo(byte[] a, byte from, byte onto) {
+        var i1 = IndexOf(a, from);
+        if (i1 < 0) return;
+        var i2 = IndexOf(a, onto);
+        if (i2 < 0 || i2 == i1) return;
+        if (i2 < i1) { for (var k = i1; k > i2; k--) a[k] = a[k - 1]; a[i2] = from; }
+        else { for (var k = i1; k < i2; k++) a[k] = a[k + 1]; a[i2] = from; }
+    }
+
+    static void MoveAfter(byte[] a, byte from, byte after) {
+        var i1 = IndexOf(a, from);
+        if (i1 < 0) return;
+        var i2 = IndexOf(a, after);
+        if (i2 < 0 || i2 == i1) return;
+        if (i2 < i1) { for (var k = i1; k > i2 + 1; k--) a[k] = a[k - 1]; a[i2 + 1] = from; }
+        else { for (var k = i1; k < i2; k++) a[k] = a[k + 1]; a[i2] = from; }
+    }
+
+    static ushort[] LayerGfx(List<UOEquipState> equip) {
+        var gfx = new ushort[25];
+        for (var i = 0; i < equip.Count; i++) {
+            var layer = equip[i].Layer;
+            if (layer == 0 || layer >= gfx.Length) continue;
+            gfx[layer] = AnimOf(equip[i].Graphic);
+        }
+        return gfx;
+    }
+
+    // GetAnimID. Tileart and ConvertBodyIfNeeded are not on Assets, so those steps are skipped.
+    // A gump that is not in the file is skipped. The item graphic is not used as a gump id.
+    static bool TryWearGump(ushort body, bool female, ushort graphic, out ushort gump) {
+        gump = 0;
+        var anim = AnimOf(graphic);
+        if (anim == 0) return false;
+        var ver = UltimaOnline.Current?.Version ?? default;
+        if (ver >= ClientVersion.CV_7000 && anim == 0x03CA && (body == 0x02B7 || body == 0x02B6)) anim = 0x0223;
+        var conv = Conv();
+        if (conv != null && conv.TryGetValue(body, out var dict) && dict.TryGetValue(anim, out var mapped)) {
+            if (mapped > MaleGump) anim = (ushort)(mapped >= FemaleGump ? mapped - FemaleGump : mapped - MaleGump);
+            else anim = mapped;
+        }
+        var offset = female ? FemaleGump : MaleGump;
+        if (!GumpAt(anim, offset)) offset = female ? MaleGump : FemaleGump;
+        if (!GumpAt(anim, offset)) return false;
+        gump = (ushort)(anim + offset);
+        return true;
+    }
+
+    // Backpack is always the male offset. The player's default skin is 0xC4F6 when that gump exists.
+    static bool TryPackGump(bool player, ushort graphic, out ushort gump) {
+        gump = 0;
+        var anim = AnimOf(graphic);
+        if (anim == 0) return false;
+        var assets = UltimaOnline.Current?.Assets;
+        if (player && assets != null && assets.TryGumpPixels(0xC4F6, out _, out var sw, out var sh) && sw > 0 && sh > 0) {
+            gump = 0xC4F6;
+            return true;
+        }
+        if (!GumpAt(anim, MaleGump)) return false;
+        gump = (ushort)(anim + MaleGump);
+        return true;
+    }
+
+    static bool GumpAt(int anim, int offset) {
+        var id = anim + offset;
+        if (id <= 0 || id > 0xFFFF) return false;
+        var assets = UltimaOnline.Current?.Assets;
+        return assets != null && assets.TryGumpPixels(id, out _, out var w, out var h) && w > 0 && h > 0;
+    }
+
+    static ushort AnimOf(ushort graphic) {
+        var items = Items();
+        if (items == null || graphic >= items.Length) return 0;
+        var anim = items[graphic].AnimID;
+        return anim == 0 ? (ushort)0 : (ushort)anim;
+    }
+
+    static Binary_TileData.ItemData[] Items() {
+        EnsureTables();
+        return _items;
+    }
+
+    static Dictionary<ushort, Dictionary<ushort, ushort>> Conv() {
+        EnsureTables();
+        return _conv;
+    }
+
+    // ItemData.AnimID is not a method on Assets. tiledata.mul is the public parser. Equipconv.def is the gump override.
+    static void EnsureTables() {
+        if (_tables) return;
+        var root = UltimaOnline.Current?.ClientPath;
+        if (string.IsNullOrEmpty(root)) return;
+        _tables = true;
+        var tile = Path.Combine(root, "tiledata.mul");
+        if (File.Exists(tile)) {
+            using var fs = File.OpenRead(tile);
+            using var br = new BinaryReader(fs);
+            _items = new Binary_TileData(br).ItemDatas;
+        }
+        var ver = UltimaOnline.Current?.Version ?? default;
+        if (ver < ClientVersion.CV_300) return;
+        var def = Path.Combine(root, "Equipconv.def");
+        if (!File.Exists(def)) return;
+        _conv = [];
+        foreach (var raw in File.ReadLines(def)) {
+            var line = raw.Trim();
+            if (line.Length == 0 || line[0] == '#' || !char.IsDigit(line[0])) continue;
+            var hash = line.IndexOf('#');
+            if (hash >= 0) line = line.Substring(0, hash);
+            var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 5) continue;
+            var body = Tok(parts[0]);
+            var graphic = Tok(parts[1]);
+            var gump = Tok(parts[3]);
+            if (gump > ushort.MaxValue) continue;
+            if (gump == 0) gump = graphic;
+            else if (gump == 0xFFFF || gump == -1) gump = Tok(parts[2]);
+            if (body < 0 || graphic < 0 || gump < 0 || gump > ushort.MaxValue) continue;
+            var key = (ushort)body;
+            if (!_conv.TryGetValue(key, out var dict)) _conv[key] = dict = [];
+            dict[(ushort)graphic] = (ushort)gump;
+        }
+    }
+
+    static int Tok(string s) {
+        if (string.IsNullOrEmpty(s)) return -1;
+        if (s.Length > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
+            return int.TryParse(s.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out var h) ? h : -1;
+        var end = s[0] == '-' || s[0] == '+' ? 1 : 0;
+        while (end < s.Length && s[end] >= '0' && s[end] <= '9') end++;
+        return int.TryParse(s.Substring(0, end), out var n) ? n : -1;
     }
 
     static UOEquipState Find(List<UOEquipState> equip, byte layer) {
@@ -348,6 +575,44 @@ public sealed class PaperdollGump : Gump {
         return graphic == 0x2FB9 || graphic == 0x3173;
     }
 
+    /// <summary>
+    /// Standing body on the doll. ClassicUO's character picture is PaperDollInteractable (8, 19) plus the body gump at (0, 0).
+    /// This host is that point. The frame anchor is the bottom center of that picture, then WorldGump's X = anchor - centerX, Y = anchor - centerY - height.
+    /// </summary>
+    sealed class BodyArt : Control {
+        readonly ushort _body, _gump;
+
+        public BodyArt(ushort body, ushort gump) {
+            _body = body;
+            _gump = gump;
+            AcceptMouseInput = false;
+            CanMove = false;
+            WantUpdateSize = false;
+        }
+
+        public override bool Draw(int x, int y) {
+            if (IsDisposed || !IsVisible) return false;
+            var assets = UltimaOnline.Current?.Assets;
+            var sink = GumpArt.Sink;
+            if (assets == null || sink == null || _body == 0) return false;
+            var dir = UOLoginNet.PlayerDirection & 7;
+            if (!assets.TryBodyFrame(_body, 4, dir, 0, out var px, out var w, out var h, out var cx, out var cy)) return false;
+            int ax, ay;
+            if (assets.TryGumpSize(_gump, out var gw, out var gh) && gw > 0 && gh > 0) {
+                ax = gw >> 1;
+                ay = gh;
+            }
+            else {
+                // Slots at x=2 (width 19) and x=162, name at y=262. Host is (8, 19).
+                ax = ((2 + 19 + 162) >> 1) - 8;
+                ay = 262 - 19;
+            }
+            var key = unchecked((int)(0x53000000u | ((uint)_body << 8) | ((uint)dir << 4)));
+            sink.DrawRaw(key, x + ax - cx, y + ay - cy - h, w, h, px, w, h);
+            return true;
+        }
+    }
+
     sealed class DollHost : Control {
         public DollHost() {
             X = 8;
@@ -376,6 +641,28 @@ public sealed class PaperdollGump : Gump {
 
         public override bool OnMouseDoubleClick(int x, int y) {
             UOLoginNet.ReplyGump(UOLoginNet.PlayerSerial, 0x000001CD, 0x00000001, new[] { _serial }, EmptyEntries);
+            return true;
+        }
+    }
+
+    sealed class ProfilePic : GumpPic {
+        readonly uint _serial;
+
+        public ProfilePic(int x, uint serial) : base(x, 196, 0x07D2, 0) => _serial = serial;
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            UOLoginNet.Send(OutgoingPackets.Send_ProfileRequest(_serial));
+            return true;
+        }
+    }
+
+    sealed class PartyPic : GumpPic {
+        readonly PaperdollGump _owner;
+
+        public PartyPic(PaperdollGump owner, int x) : base(x, 196, 0x07D2, 0) => _owner = owner;
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            if (UIManager.GetGump<PartyGump>() == null) UIManager.Add(new PartyGump(_owner.World));
             return true;
         }
     }
@@ -450,33 +737,57 @@ public sealed class PaperdollGump : Gump {
     }
 
     sealed class Worn : Control {
-        readonly int _key, _w, _h;
-        readonly byte[] _px;
+        readonly ushort _graphic, _hue;
 
-        public Worn(uint serial, int x, int y, int key, byte[] px, int w, int h, bool drag) {
+        public Worn(uint serial, int x, int y, ushort graphic, ushort hue, bool drag) {
             LocalSerial = serial;
             X = x;
             Y = y;
-            Width = w;
-            Height = h;
-            _key = key;
-            _px = px;
-            _w = w;
-            _h = h;
+            _graphic = graphic;
+            _hue = hue;
             AcceptMouseInput = true;
             CanMove = false;
             WantUpdateSize = false;
+            if (!GumpMetrics.TrySize(graphic, out var w, out var h) || w <= 0 || h <= 0) {
+                Dispose();
+                return;
+            }
+            Width = w;
+            Height = h;
             if (drag) Add(new UseLabel("", 0) { Serial = serial, Width = w, Height = h });
         }
 
         public override bool Draw(int x, int y) {
             if (IsDisposed || !IsVisible) return false;
-            GumpArt.Sink?.DrawRaw(_key, x, y, _w, _h, _px, _w, _h);
-            return true;
+            GumpArtDraw.Pic(_graphic, x, y, Width, Height, false, _hue);
+            return base.Draw(x, y);
         }
 
         public override void OnMouseClick(int x, int y) => ClickItem(LocalSerial);
 
         public override bool OnMouseDoubleClick(int x, int y) => DoubleItem(LocalSerial);
+    }
+
+    sealed class CombatBookPic : GumpPic {
+        readonly PaperdollGump _owner;
+
+        public CombatBookPic(PaperdollGump owner) : base(156, 200, 0x2B34, 0) => _owner = owner;
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            CombatBookGump.Open(_owner.World);
+            return true;
+        }
+    }
+
+    sealed class RacialBookPic : GumpPic {
+        readonly PaperdollGump _owner;
+
+        public RacialBookPic(PaperdollGump owner) : base(23, 200, 0x2B28, 0) => _owner = owner;
+
+        public override bool OnMouseDoubleClick(int x, int y) {
+            if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
+                UIManager.Add(new RacialAbilitiesBookGump(_owner.World, 100, 100));
+            return true;
+        }
     }
 }

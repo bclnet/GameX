@@ -19,7 +19,8 @@ public enum UOLoginPhase {
     CharactersReady,
     Failed,
     RelayInProgress,
-    WorldEntered
+    WorldEntered,
+    LoggedOut
 }
 
 /// <summary>One graphic effect from 0x23, 0x70, 0xC0, or 0xC7. The view drains it.</summary>
@@ -81,7 +82,12 @@ public static class UOLoginNet {
     static int? _playIndex;
     static string _playName;
     static readonly Queue<byte> _walks = new();
-    static readonly Queue<uint> _fastWalk = new();
+    static readonly uint[] _fastKeys = new uint[5];
+    static readonly byte[] _sent = new byte[5];
+    static int _sentCount;
+    static int _unaccepted;
+    static volatile bool _walkFailed;
+    static bool _resyncSent;
     static readonly Dictionary<uint, UOMobileState> _mobiles = new();
     static readonly Dictionary<uint, UOItemState> _items = new();
     static readonly Dictionary<uint, UOEquipState> _equip = new();
@@ -120,6 +126,14 @@ public static class UOLoginNet {
     static readonly Dictionary<ushort, UOBuffState> _buffs = new();
     static readonly Dictionary<uint, (ushort x, ushort y)> _arrows = new();
     static readonly Dictionary<uint, UOCorpseEquip> _corpse = new();
+    static readonly List<(uint corpse, uint mobile, byte direction, bool running)> _deaths = new();
+    static readonly Queue<(uint kind, uint serial)> _windowClose = new();
+    static readonly Queue<(uint serial, byte type)> _houseWindow = new();
+    static readonly Dictionary<uint, (ushort graphic, ulong bits)> _bookBits = new();
+    static readonly HashSet<ushort> _activeSpells = new();
+    static readonly HashSet<uint> _dead = new();
+    static bool _clearAbilities;
+    static byte _strLock, _dexLock, _intLock, _speedMode;
     static readonly Dictionary<uint, int> _order = new();
     static int _orderNext;
     static int _revision;
@@ -147,6 +161,7 @@ public static class UOLoginNet {
     static ClientVersion _clientVersion;
     static byte _overall, _personal, _season, _music, _viewRange;
     static uint _features;
+    static bool _disconnectRequested;
     static bool _target, _prompt, _promptUnicode, _war;
     static byte _targetKind, _targetType, _noto = 1, _weather, _wcount, _wtemp, _song, _pingIdx;
     static uint _targetId, _hold, _lastAttack;
@@ -197,7 +212,8 @@ public static class UOLoginNet {
             _playIndex = null;
             _playName = null;
             _walks.Clear();
-            _fastWalk.Clear();
+            ResetWalker();
+            Array.Clear(_fastKeys, 0, _fastKeys.Length);
             _mobiles.Clear();
             _items.Clear();
             _equip.Clear();
@@ -239,6 +255,16 @@ public static class UOLoginNet {
             _buffs.Clear();
             _arrows.Clear();
             _corpse.Clear();
+            _deaths.Clear();
+            _windowClose.Clear();
+            _houseWindow.Clear();
+            _bookBits.Clear();
+            PacketHandlers.ClearCustomRevision();
+            _activeSpells.Clear();
+            _dead.Clear();
+            _clearAbilities = false;
+            _strLock = _dexLock = _intLock = _speedMode = 0;
+            foreach (var anim in _anims.Values) anim.Hold = false;
             _order.Clear();
             _create = false;
             _ack = null;
@@ -247,6 +273,7 @@ public static class UOLoginNet {
             _clientVersion = version;
             _overall = _personal = _season = _music = _viewRange = 0;
             _features = 0;
+            _disconnectRequested = false;
             _player = 0;
             _pbody = 0;
             _px = _py = _pz = 0;
@@ -354,9 +381,9 @@ public static class UOLoginNet {
         lock (Gate) _out.Enqueue(UOGamePackets.CastSpell(index));
     }
 
-    /// <summary>Queues 0x02 once the game stream is up. Ignored before 0x5D.</summary>
+    /// <summary>Queues 0x02 once the game stream is up. Ignored before 0x5D. A bad confirm stops the queue until 0x20 or 0x21.</summary>
     public static void Walk(byte direction) {
-        if (!_gameReady) return;
+        if (!_gameReady || _walkFailed) return;
         lock (Gate) {
             if (_walks.Count >= 4) return;
             _walks.Enqueue(direction);
@@ -375,6 +402,17 @@ public static class UOLoginNet {
     public static byte SeasonMusic { get { lock (Gate) return _music; } }
     public static byte ViewRange { get { lock (Gate) return _viewRange; } }
     public static uint Features { get { lock (Gate) return _features; } }
+
+    /// <summary>ClassicUO RequestQuitGame. 0x02 is CLF_OWERWRITE_CONFIGURATION_BUTTON: send 0xD1 and wait. Otherwise leave locally.</summary>
+    public static void RequestQuit() {
+        if ((Features & 0x02) != 0) {
+            lock (Gate) _disconnectRequested = true;
+            Send(OutgoingPackets.Send_LogoutNotification());
+            return;
+        }
+        LeaveLocal();
+    }
+
     public static byte PlayerDirection { get { lock (Gate) return _pdir; } }
 
     /// <summary>True while a step is in flight. run is ClassicUO's direction bit 0x80.</summary>
@@ -417,6 +455,7 @@ public static class UOLoginNet {
                 _anims[serial] = new Anim { Next = unchecked(now + 80) };
                 return;
             }
+            if (anim.Hold) return;
             if (unchecked(now - anim.Next) < 0) return;
             var delay = anim.FromServer ? 80 + 80 * (anim.Delay + 1) : 80;
             if (anim.FromServer) {
@@ -677,6 +716,17 @@ public static class UOLoginNet {
     public static bool Holding { get { lock (Gate) return _hold != 0; } }
     public static uint HeldSerial { get { lock (Gate) return _hold; } }
     public static byte Notoriety { get { lock (Gate) return _noto; } }
+
+    /// <summary>Notoriety stored on that mobile. 0 when the serial is missing.</summary>
+    public static byte MobileNotoriety(uint serial) {
+        lock (Gate) return _mobiles.TryGetValue(serial, out var m) ? m.Notoriety : (byte)0;
+    }
+
+    /// <summary>Flags stored on that mobile. 0 when the serial is missing.</summary>
+    public static byte MobileFlags(uint serial) {
+        lock (Gate) return _mobiles.TryGetValue(serial, out var m) ? m.Flags : (byte)0;
+    }
+
     public static ushort SoundIndex { get { lock (Gate) return _sound; } }
     public static byte MusicIndex { get { lock (Gate) return _song; } }
     public static byte WeatherType { get { lock (Gate) return _weather; } }
@@ -744,17 +794,28 @@ public static class UOLoginNet {
         }
     }
 
-    /// <summary>0x07. The count is the container amount, or 1. A second lift is ignored.</summary>
-    public static void Lift(uint serial) {
+    /// <summary>0x07. A negative amount is the container amount, or 1. A positive amount is that count, capped by the row when it exists. A second lift is ignored.</summary>
+    public static void Lift(uint serial, int amount = -1) {
         if (!_gameReady || serial == 0) return;
         lock (Gate) {
             if (_hold != 0 || _target) return;
             ushort count = 1;
-            if (_contents.TryGetValue(serial, out var row) && row.Amount > 0) count = row.Amount;
+            var have = _contents.TryGetValue(serial, out var row);
+            if (have && row.Amount > 0) count = row.Amount;
+            if (amount > 0) {
+                var want = amount > ushort.MaxValue ? ushort.MaxValue : (ushort)amount;
+                if (have && want > row.Amount) want = row.Amount;
+                count = want;
+            }
             _hold = serial;
             _out.Enqueue(UOGamePackets.Pickup(serial, count));
             _revision++;
         }
+    }
+
+    /// <summary>The contained row's amount, or 0 when that serial is not in the contents.</summary>
+    public static ushort AmountOf(uint serial) {
+        lock (Gate) return _contents.TryGetValue(serial, out var row) ? row.Amount : (ushort)0;
     }
 
     /// <summary>0x08. Container 0xFFFFFFFF is the ground. The hold clears when the packet is queued.</summary>
@@ -802,6 +863,11 @@ public static class UOLoginNet {
     /// <summary>0x95. The hue is the one the dye box confirmed.</summary>
     public static void ReplyDye(uint serial, ushort hue) {
         lock (Gate) _out.Enqueue(UOGamePackets.Dye(serial, hue));
+    }
+
+    public static void Send(byte[] packet) {
+        if (packet == null || packet.Length == 0) return;
+        lock (Gate) _out.Enqueue(packet);
     }
 
     public static bool TakeMenu(out UOMenu menu) {
@@ -871,6 +937,78 @@ public static class UOLoginNet {
         }
     }
 
+    /// <summary>0xBF 0x001B. False until that packet. A graphic of 0 is still a stored book.</summary>
+    public static bool TrySpellbook(uint serial, out ushort graphic, out ulong bits) {
+        lock (Gate) {
+            if (_bookBits.TryGetValue(serial, out var row)) {
+                graphic = row.graphic;
+                bits = row.bits;
+                return true;
+            }
+        }
+        graphic = 0;
+        bits = 0;
+        return false;
+    }
+
+    /// <summary>0xBF 0x000C enqueues kind 2. 0x0016 enqueues the packet kind and serial. One entry per call.</summary>
+    public static bool TakeWindowClose(out uint kind, out uint serial) {
+        lock (Gate) {
+            if (_windowClose.Count == 0) {
+                kind = 0;
+                serial = 0;
+                return false;
+            }
+            (kind, serial) = _windowClose.Dequeue();
+            return true;
+        }
+    }
+
+    /// <summary>0xBF 0x0020. Type 4 is an open and type 5 is a close. Types 1, 2, and 3 are not queued.</summary>
+    public static bool TakeHouseWindow(out uint serial, out byte type) {
+        lock (Gate) {
+            if (_houseWindow.Count == 0) {
+                serial = 0;
+                type = 0;
+                return false;
+            }
+            (serial, type) = _houseWindow.Dequeue();
+            return true;
+        }
+    }
+
+    /// <summary>0xBF 0x0025. A non-zero byte is active. Hue is not stored.</summary>
+    public static bool IsSpellActive(int spellId) {
+        if ((uint)spellId > ushort.MaxValue) return false;
+        lock (Gate) return _activeSpells.Contains((ushort)spellId);
+    }
+
+    /// <summary>0xBF 0x0021. The next call returns true once.</summary>
+    public static bool TakeClearAbilities() {
+        lock (Gate) {
+            if (!_clearAbilities) return false;
+            _clearAbilities = false;
+            return true;
+        }
+    }
+
+    /// <summary>0xBF 0x0019 version 2. 0 is up, 1 is down, and 2 is locked.</summary>
+    public static void StatLocks(out byte str, out byte dex, out byte intel) {
+        lock (Gate) {
+            str = _strLock;
+            dex = _dexLock;
+            intel = _intLock;
+        }
+    }
+
+    /// <summary>0xBF 0x0026. A byte above 3 is stored as 0. Walk delay is not changed.</summary>
+    public static byte SpeedMode { get { lock (Gate) return _speedMode; } }
+
+    /// <summary>0xBF 0x0019 version 0. False until that mobile is marked dead.</summary>
+    public static bool IsDead(uint serial) {
+        lock (Gate) return _dead.Contains(serial);
+    }
+
     static void Place(uint serial, out ushort graphic, out int x, out int y, out int z) {
         lock (Gate) {
             if (_mobiles.TryGetValue(serial, out var m)) {
@@ -919,7 +1057,8 @@ public static class UOLoginNet {
         _postedWorld = false;
         _seq = 0;
         _huff = new UOHuffman();
-        lock (Gate) _fastWalk.Clear();
+        ResetWalker();
+        Array.Clear(_fastKeys, 0, _fastKeys.Length);
         try {
             client = new TcpClient { NoDelay = true };
             client.Connect(host, port);
@@ -1035,7 +1174,13 @@ public static class UOLoginNet {
                 Post(UOLoginPhase.CharactersReady, characters: names);
                 return HandleResult.Continue;
             }
+            case 0x53:
+            case 0x85:
+                PacketHandlers.ReceiveLoginRejection(p, o, len);
+                Fail(RejectReason(len > 1 ? p[o + 1] : (byte)0xFF), id);
+                return HandleResult.Stop;
             default:
+                PacketHandlers.Incoming(p, o, len);
                 return HandleResult.Continue;
         }
     }
@@ -1120,6 +1265,20 @@ public static class UOLoginNet {
         stream.Flush();
     }
 
+    static void LeaveLocal() {
+        Interlocked.Increment(ref _runId);
+        TcpClient client;
+        lock (Gate) {
+            client = _client;
+            _client = null;
+            _inWorld = false;
+            _gameReady = false;
+            _disconnectRequested = false;
+        }
+        try { client?.Close(); } catch { }
+        Post(UOLoginPhase.LoggedOut);
+    }
+
     static void Post(UOLoginPhase phase, string[] servers = null, string[] characters = null, string message = null) {
         lock (Gate) {
             _have = true;
@@ -1196,29 +1355,85 @@ public static class UOLoginNet {
         return SeedWhenNotIpv4;
     }
 
+    static bool Mounted() {
+        lock (Gate) {
+            foreach (var e in _equip.Values)
+                if (e.Parent == _player && e.Layer == 0x19) return true;
+        }
+        return false;
+    }
+
     static void WriteWalk(NetworkStream stream, UOLoginCrypt crypt) {
-        if (!_inWorld) return;
+        if (!_inWorld || _walkFailed) return;
         var now = Environment.TickCount;
         if (unchecked(now - _nextWalk) < 0) return;
         byte dir;
-        uint key;
         lock (Gate) {
-            if (_walks.Count == 0 || _fastWalk.Count == 0) return;
+            if (_walks.Count == 0 || _unaccepted >= 5) return;
             dir = _walks.Dequeue();
-            key = _fastWalk.Dequeue();
         }
-        var pkt = new byte[7];
-        pkt[0] = 0x02;
-        pkt[1] = dir;
-        pkt[2] = _seq++;
-        WriteU32(pkt, 3, key);
+        var key = UOGamePackets.TakeFastWalk(_fastKeys);
+        var seq = _seq;
+        if (_seq == 0xFF) _seq = 1;
+        else _seq++;
+        var pkt = OutgoingPackets.Send_WalkRequest(dir, seq, false, key);
         crypt.EncryptGame(pkt);
         stream.Write(pkt, 0, pkt.Length);
         stream.Flush();
-        _nextWalk = unchecked(now + ((dir & 0x80) != 0 ? 200 : 400));
-        _stepRun = (dir & 0x80) != 0;
-        _stepUntil = _nextWalk;
-        Predict(dir);
+        var facing = (byte)(dir & 7);
+        var turn = facing != (_pdir & 7);
+        var run = (dir & 0x80) != 0;
+        var delay = turn ? 80 : Mounted() ? (run ? 100 : 200) : (run ? 200 : 400);
+        _nextWalk = unchecked(now + delay);
+        _stepRun = !turn && (dir & 0x80) != 0;
+        _stepUntil = turn ? now : _nextWalk;
+        if (_sentCount < _sent.Length) _sent[_sentCount++] = seq;
+        _unaccepted++;
+        if (turn) Face(facing);
+        else Predict(dir);
+    }
+
+    /// <summary>0x22. A known sequence leaves the outstanding list. An unknown one queues one 3-byte 0x22 and stops walking until 0x20 or 0x21.</summary>
+    static void ConfirmWalk(byte sequence) {
+        var found = -1;
+        for (var i = 0; i < _sentCount; i++) {
+            if (_sent[i] != sequence) continue;
+            found = i;
+            break;
+        }
+        if (found < 0) {
+            if (!_resyncSent) {
+                lock (Gate) _out.Enqueue(OutgoingPackets.Send_Resync());
+                _resyncSent = true;
+            }
+            _walkFailed = true;
+            _sentCount = 0;
+            _unaccepted = 0;
+            return;
+        }
+        for (var i = found + 1; i < _sentCount; i++) _sent[i - 1] = _sent[i];
+        _sentCount--;
+        if (_unaccepted > 0) _unaccepted--;
+    }
+
+    static void ResetWalker() {
+        _seq = 0;
+        _nextWalk = 0;
+        _sentCount = 0;
+        _unaccepted = 0;
+        _walkFailed = false;
+        _resyncSent = false;
+        _stepUntil = 0;
+        lock (Gate) _walks.Clear();
+    }
+
+    static void Face(byte facing) {
+        lock (Gate) {
+            _pdir = facing;
+            if (_player != 0 && _mobiles.TryGetValue(_player, out var m))
+                _mobiles[_player] = new UOMobileState(_player, m.Body, _px, _py, _pz, _pdir, m.Notoriety, m.Flags);
+            _revision++;
+        }
     }
 
     static void WriteCreate(NetworkStream stream, UOLoginCrypt crypt, TcpClient client) {
@@ -1388,7 +1603,7 @@ public static class UOLoginNet {
             if (step != null) _pz = step(_px, _py, _pz);
             _pdir = (byte)(dir & 7);
             if (_player != 0 && _mobiles.TryGetValue(_player, out var m))
-                _mobiles[_player] = new UOMobileState(_player, m.Body, _px, _py, _pz, _pdir);
+                _mobiles[_player] = new UOMobileState(_player, m.Body, _px, _py, _pz, _pdir, m.Notoriety, m.Flags);
             _revision++;
         }
     }
@@ -1434,6 +1649,7 @@ public static class UOLoginNet {
         switch (p[o]) {
             case 0x1B:
                 if (UOGamePackets.LoginConfirm(p, o, out var serial, out var body, out var x, out var y, out var z, out var dir)) {
+                    ResetWalker();
                     SetPlayer(serial, body, x, y, z, dir, post: true);
                     QueueEnter(serial);
                 }
@@ -1443,14 +1659,14 @@ public static class UOLoginNet {
                 QueueEnter(_player);
                 return HandleResult.Continue;
             case 0x20:
-                if (UOGamePackets.UpdatePlayer(p, o, len, out serial, out body, out x, out y, out z, out dir))
+                if (UOGamePackets.UpdatePlayer(p, o, len, out serial, out body, out x, out y, out z, out dir)) {
+                    ResetWalker();
                     SetPlayer(serial, body, x, y, z, dir, post: true);
+                }
                 return HandleResult.Continue;
             case 0x21:
                 if (UOGamePackets.MoveReject(p, o, out x, out y, out dir, out z)) {
-                    _seq = p[o + 1];
-                    _nextWalk = 0;
-                    lock (Gate) _walks.Clear();
+                    ResetWalker();
                     SetPlayer(_player, _pbody, x, y, z, dir, post: false);
                 }
                 return HandleResult.Continue;
@@ -1458,7 +1674,13 @@ public static class UOLoginNet {
                 if (len >= 3) {
                     var noto = (byte)(p[o + 2] & ~0x40);
                     if (noto == 0 || noto >= 8) noto = 1;
-                    lock (Gate) { _noto = noto; _revision++; }
+                    lock (Gate) {
+                        _noto = noto;
+                        _revision++;
+                        ConfirmWalk(p[o + 1]);
+                        if (_player != 0 && _mobiles.TryGetValue(_player, out var mob))
+                            _mobiles[_player] = new UOMobileState(mob.Serial, mob.Body, mob.X, mob.Y, mob.Z, mob.Direction, noto, mob.Flags);
+                    }
                 }
                 return HandleResult.Continue;
             case 0xD2:
@@ -1468,8 +1690,8 @@ public static class UOLoginNet {
                 return HandleResult.Continue;
             case 0x78: {
                 var equip = new List<UOEquipState>();
-                if (UOGamePackets.Incoming(p, o, len, out serial, out body, out x, out y, out z, out dir, equip))
-                    SetMobile(serial, body, x, y, z, dir, equip);
+                if (UOGamePackets.Incoming(p, o, len, out serial, out body, out x, out y, out z, out dir, equip, out var mobNoto, out var mobFlags))
+                    SetMobile(serial, body, x, y, z, dir, equip, mobNoto, mobFlags);
                 return HandleResult.Continue;
             }
             case 0x2E:
@@ -1584,7 +1806,7 @@ public static class UOLoginNet {
             }
             case 0xBF:
                 // Subcommand 0x0001 is the fast-walk stack. 0x0002 adds a key. 0x0008 is the facet. 0x0004 closes a gump. 0x0014 is the popup.
-                UOGamePackets.FastWalk(p, o, len, _fastWalk);
+                UOGamePackets.FastWalk(p, o, len, _fastKeys);
                 if (UOGamePackets.TryFacet(p, o, len, out var facet)) {
                     lock (Gate) _mapIndex = facet;
                     FacetSwitch?.Invoke(facet);
@@ -1593,6 +1815,10 @@ public static class UOLoginNet {
                     lock (Gate) _gumps.Enqueue(new UOGumpEvent(gser, gbutton));
                 if (UOGamePackets.TryPopupMenu(p, o, len, out var popup))
                     lock (Gate) _popups.Enqueue(popup);
+                UOParty.Parse(p, o, len);
+                // Subcommand 0x2A is the race changer. Other subcommands return inside RaceChange.
+                PacketHandlers.RaceChange(p, o, len);
+                NoteExtended(p, o, len);
                 return HandleResult.Continue;
             case 0x73:
                 return HandleResult.Continue;
@@ -1686,7 +1912,19 @@ public static class UOLoginNet {
                 if (UOGamePackets.NewCharacterAnimation(p, o, len, out serial, out var ntype, out var naction, out var nmode))
                     NoteNewAnim(serial, ntype, naction, nmode);
                 return HandleResult.Continue;
-            case 0xD1:
+            case 0xD1: {
+                bool quit;
+                uint featureBits;
+                lock (Gate) { quit = _disconnectRequested; featureBits = _features; }
+                if (quit && (featureBits & 0x02) != 0 && len >= 2 && o + 1 < p.Length) {
+                    if (p[o + 1] != 0) LeaveLocal();
+                    else {
+                        // Server refused the logout.
+                        lock (Gate) _disconnectRequested = false;
+                    }
+                }
+                return HandleResult.Continue;
+            }
             case 0xBE:
                 return HandleResult.Continue;
             case 0x2C:
@@ -1803,8 +2041,358 @@ public static class UOLoginNet {
             case 0x82:
                 Fail(RejectReason(len > 1 ? p[o + 1] : (byte)0xFF), id);
                 return HandleResult.Stop;
-            default:
+            case 0xD3: {
+                PacketHandlers.Incoming(p, o, len);
+                if (PacketHandlers.TakeUpdateObject(out var obj)) {
+                    var equip = new List<UOEquipState>();
+                    foreach (var e in obj.Equipment)
+                        equip.Add(new UOEquipState(e.Serial, e.Graphic, e.Layer, e.Hue, obj.Serial));
+                    SetMobile(obj.Serial, obj.Graphic, obj.X, obj.Y, obj.Z, obj.Direction, equip, obj.Notoriety, obj.Flags);
+                }
                 return HandleResult.Continue;
+            }
+            case 0xF7:
+                PacketHandlers.Incoming(p, o, len);
+                while (PacketHandlers.TakeSubPacket(out var sub)) {
+                    if (sub == null || sub.Length == 0 || sub[0] != 0xF3) continue;
+                    if (UOGamePackets.WorldObject(sub, 0, sub.Length, out kind, out iserial, out graphic, out x, out y, out z, out dir)) {
+                        if (kind == 1) SetMobile(iserial, graphic, x, y, z, dir);
+                        else if (iserial != _player) SetItem(iserial, graphic, x, y, z);
+                    }
+                }
+                return HandleResult.Continue;
+            case 0xF6: {
+                PacketHandlers.Incoming(p, o, len);
+                if (PacketHandlers.TakeBoatMoving(out var boat)) {
+                    lock (Gate) {
+                        var changed = false;
+                        // ClassicUO returns when the boat item is missing, so nobody else moves. Z is the sbyte it assigns.
+                        if (_items.TryGetValue(boat.Serial, out var multi)) {
+                            var facing = (byte)(boat.Facing & 7);
+                            var bz = (int)(sbyte)boat.Z;
+                            _items[boat.Serial] = new UOItemState(boat.Serial, multi.Graphic, boat.X, boat.Y, bz);
+                            changed = true;
+                            if (_mobiles.TryGetValue(boat.Serial, out var boatMob)) {
+                                _mobiles[boat.Serial] = new UOMobileState(boat.Serial, boatMob.Body, boat.X, boat.Y, bz, facing, boatMob.Notoriety, boatMob.Flags);
+                                if (boat.Serial == _player) { _px = boat.X; _py = boat.Y; _pz = bz; _pdir = facing; }
+                                changed = true;
+                            }
+                            foreach (var ent in boat.Entities) {
+                                var ez = (int)(sbyte)ent.Z;
+                                if (_mobiles.TryGetValue(ent.Serial, out var mob)) {
+                                    _mobiles[ent.Serial] = new UOMobileState(ent.Serial, mob.Body, ent.X, ent.Y, ez, facing, mob.Notoriety, mob.Flags);
+                                    if (ent.Serial == _player) { _px = ent.X; _py = ent.Y; _pz = ez; _pdir = facing; }
+                                    changed = true;
+                                }
+                                if (_items.TryGetValue(ent.Serial, out var item)) {
+                                    _items[ent.Serial] = new UOItemState(ent.Serial, item.Graphic, ent.X, ent.Y, ez);
+                                    changed = true;
+                                }
+                            }
+                        }
+                        if (changed) _revision++;
+                    }
+                }
+                return HandleResult.Continue;
+            }
+            case 0xAF: {
+                PacketHandlers.Incoming(p, o, len);
+                if (PacketHandlers.TakeDisplayDeath(out var death)) NoteDeath(death);
+                return HandleResult.Continue;
+            }
+            default:
+                PacketHandlers.Incoming(p, o, len);
+                return HandleResult.Continue;
+        }
+    }
+
+    /// <summary>0xBF subs after fast walk, facet, gump close, popup, party, and race. Any other sub returns.</summary>
+    static void NoteExtended(byte[] p, int o, int len) {
+        if (len < 5 || o < 0 || o + 5 > p.Length) return;
+        var sub = (p[o + 3] << 8) | p[o + 4];
+        switch (sub) {
+            case 0x000C: NoteCloseHealth(p, o, len); break;
+            case 0x0010: NoteEquipInfo(p, o, len); break;
+            case 0x0016: NoteCloseWindow(p, o, len); break;
+            case 0x0019: NoteExtendedStats(p, o, len); break;
+            case 0x001B: NoteSpellbook(p, o, len); break;
+            case 0x001D: NoteHouseRevision(p, o, len); break;
+            case 0x0020: NoteHouseWindow(p, o, len); break;
+            case 0x0021: NoteClearAbilities(); break;
+            case 0x0022: NoteDamage(p, o, len); break;
+            case 0x0025: NoteSpellActive(p, o, len); break;
+            case 0x0026: NoteSpeed(p, o, len); break;
+            case 0x002B: NoteHeldAnim(p, o, len); break;
+        }
+    }
+
+    static bool Has(byte[] p, int o, int len, int need) => need <= len && o >= 0 && o + need <= p.Length;
+
+    static void NoteCloseHealth(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 9)) return;
+        lock (Gate) _windowClose.Enqueue((2, ReadU32(p, o + 5)));
+    }
+
+    static void NoteCloseWindow(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 13)) return;
+        lock (Gate) _windowClose.Enqueue((ReadU32(p, o + 5), ReadU32(p, o + 9)));
+    }
+
+    static void NoteExtendedStats(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 10)) return;
+        var version = p[o + 5];
+        var serial = ReadU32(p, o + 6);
+        if (version == 0) {
+            if (!Has(p, o, len, 11)) return;
+            NoteDead(serial, p[o + 10] != 0);
+            return;
+        }
+        if (version == 2) {
+            if (!Has(p, o, len, 12)) return;
+            NoteLocks(serial, p[o + 11]);
+            return;
+        }
+        if (version != 5 || !Has(p, o, len, 12)) return;
+        if (p[o + 11] == 0xFF) {
+            if (!Has(p, o, len, 17)) return;
+            var status = p[o + 12];
+            var animation = (ushort)((p[o + 13] << 8) | p[o + 14]);
+            var frame = (ushort)((p[o + 15] << 8) | p[o + 16]);
+            if (status == 0 && animation == 0 && frame == 0) NoteDead(serial, p[o + 10] != 0);
+            else HoldFrame(serial, animation, (byte)frame, false);
+            return;
+        }
+        NoteLocks(serial, p[o + 11]);
+    }
+
+    static void NoteDead(uint serial, bool dead) {
+        lock (Gate) {
+            if (!_mobiles.ContainsKey(serial)) return;
+            if (dead) _dead.Add(serial);
+            else _dead.Remove(serial);
+        }
+    }
+
+    static void NoteLocks(uint serial, byte state) {
+        lock (Gate) {
+            if (_player == 0 || serial != _player) return;
+            _strLock = (byte)((state >> 4) & 3);
+            _dexLock = (byte)((state >> 2) & 3);
+            _intLock = (byte)(state & 3);
+        }
+    }
+
+    static void NoteSpellbook(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 23)) return;
+        var serial = ReadU32(p, o + 7);
+        var graphic = (ushort)((p[o + 11] << 8) | p[o + 12]);
+        _ = (ushort)((p[o + 13] << 8) | p[o + 14]);
+        ulong bits = 0;
+        var at = o + 15;
+        for (var j = 0; j < 2; j++) {
+            uint spells = 0;
+            for (var i = 0; i < 4; i++) spells |= (uint)p[at++] << (i * 8);
+            bits |= (ulong)spells << (j * 32);
+        }
+        lock (Gate) {
+            _bookBits[serial] = (graphic, bits);
+            _revision++;
+        }
+    }
+
+    static void NoteHouseWindow(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 10)) return;
+        var type = p[o + 9];
+        if (type != 4 && type != 5) return;
+        lock (Gate) _houseWindow.Enqueue((ReadU32(p, o + 5), type));
+    }
+
+    static void NoteClearAbilities() {
+        lock (Gate) _clearAbilities = true;
+    }
+
+    static void NoteDamage(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 11)) return;
+        var damage = p[o + 10];
+        if (damage == 0) return;
+        var serial = ReadU32(p, o + 6);
+        bool exists;
+        lock (Gate) exists = _mobiles.ContainsKey(serial) || _items.ContainsKey(serial) || _contents.ContainsKey(serial) || _equip.ContainsKey(serial);
+        if (!exists) return;
+        NoteSpeech(new UOSpeechState(serial, "", damage.ToString(), 0), false);
+    }
+
+    static void NoteSpellActive(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 8)) return;
+        var spell = (ushort)((p[o + 5] << 8) | p[o + 6]);
+        lock (Gate) {
+            if (p[o + 7] != 0) _activeSpells.Add(spell);
+            else _activeSpells.Remove(spell);
+        }
+    }
+
+    static void NoteSpeed(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 6)) return;
+        var val = p[o + 5];
+        if (val > 3) val = 0;
+        lock (Gate) _speedMode = val;
+    }
+
+    static void NoteHeldAnim(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 9)) return;
+        var serial = (uint)((p[o + 5] << 8) | p[o + 6]);
+        HoldFrame(serial, p[o + 7], p[o + 8], true);
+    }
+
+    static void HoldFrame(uint serial, ushort group, byte frame, bool low16) {
+        lock (Gate) {
+            uint found = 0;
+            var hit = false;
+            if (low16) {
+                foreach (var kv in _mobiles) {
+                    if ((kv.Key & 0xFFFF) != serial) continue;
+                    found = kv.Key;
+                    hit = true;
+                    break;
+                }
+            }
+            else if (_mobiles.ContainsKey(serial)) {
+                found = serial;
+                hit = true;
+            }
+            if (!hit) return;
+            if (!_anims.TryGetValue(found, out var anim)) _anims[found] = anim = new Anim();
+            anim.FromServer = true;
+            anim.Raw = group;
+            anim.Frame = frame;
+            anim.Hold = true;
+        }
+    }
+
+    /// <summary>ClassicUO StringHelper.CapitalizeAllWords. Empty stays empty.</summary>
+    static string CapitalizeAllWords(string str) {
+        if (string.IsNullOrEmpty(str)) return string.Empty;
+        var chars = new char[str.Length];
+        var capitalizeNext = true;
+        for (var i = 0; i < str.Length; i++) {
+            chars[i] = capitalizeNext ? char.ToUpper(str[i]) : str[i];
+            if (!char.IsWhiteSpace(str[i]))
+                capitalizeNext = i + 1 < str.Length && char.IsWhiteSpace(str[i + 1]);
+        }
+        return new string(chars);
+    }
+
+    /// <summary>0xBF 0x0010. Equip info on an item that already exists. A missing name cliloc is not shown.</summary>
+    static void NoteEquipInfo(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 13)) return;
+        var serial = ReadU32(p, o + 5);
+        var cliloc = ReadU32(p, o + 9);
+        bool exists;
+        lock (Gate) exists = _items.ContainsKey(serial) || _contents.ContainsKey(serial) || _equip.ContainsKey(serial);
+        if (!exists) return;
+        if (cliloc > 0) {
+            var text = UOGamePackets.ClilocText((int)cliloc);
+            if (text == "#" + cliloc.ToString()) text = "";
+            else text = CapitalizeAllWords(text);
+            if (!string.IsNullOrEmpty(text))
+                NoteSpeech(new UOSpeechState(serial, text, text, 0x3B2), false);
+        }
+        var end = o + len;
+        if (end > p.Length) end = p.Length;
+        var at = o + 13;
+        uint next = 0;
+        if (at + 4 <= end) {
+            next = ReadU32(p, at);
+            at += 4;
+        }
+        var built = new StringBuilder();
+        ushort nameLen = 0;
+        if (next == 0xFFFFFFFD && at + 2 <= end) {
+            nameLen = (ushort)((p[at] << 8) | p[at + 1]);
+            at += 2;
+            if (nameLen > 0 && at + nameLen <= end) {
+                built.Append("Crafted by ");
+                built.Append(ReadAscii(p, at, nameLen));
+                at += nameLen;
+            }
+        }
+        if (nameLen != 0 && at + 4 <= end) {
+            next = ReadU32(p, at);
+            at += 4;
+        }
+        if (next == 0xFFFFFFFC) built.Append("[Unidentified");
+        byte count = 0;
+        while (at < end - 4) {
+            if (count != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC) {
+                if (at + 4 > end) break;
+                next = ReadU32(p, at);
+                at += 4;
+            }
+            if (at + 2 > end) break;
+            var charges = (short)((p[at] << 8) | p[at + 1]);
+            at += 2;
+            var id = (int)next;
+            var attr = UOGamePackets.ClilocText(id);
+            if (attr == "#" + id.ToString())
+                attr = string.Format("MegaCliloc: missing {0} [~1_val~] [~2_val~]", id);
+            if (attr != null) {
+                if (charges == -1) {
+                    if (count > 0) built.Append('/').Append(attr);
+                    else built.Append(" [").Append(attr);
+                }
+                else {
+                    built.Append("\n[").Append(attr).Append(" : ").Append(charges.ToString()).Append(']');
+                    count += 20;
+                }
+            }
+            count++;
+        }
+        if ((count < 20 && count > 0) || (next == 0xFFFFFFFC && count == 0)) built.Append(']');
+        if (built.Length != 0) NoteSpeech(new UOSpeechState(serial, NameOf(serial), built.ToString(), 0x3B2), false);
+        lock (Gate) _out.Enqueue(OutgoingPackets.Send_MegaClilocRequest_Old(serial));
+    }
+
+    /// <summary>0xBF 0x001D. Requests custom house data unless 0xD8 already stored this revision.</summary>
+    static void NoteHouseRevision(byte[] p, int o, int len) {
+        if (!Has(p, o, len, 13)) return;
+        var serial = ReadU32(p, o + 5);
+        var revision = ReadU32(p, o + 9);
+        bool exists;
+        lock (Gate) exists = _items.ContainsKey(serial) || _contents.ContainsKey(serial) || _equip.ContainsKey(serial);
+        if (!exists) PacketHandlers.DropCustomRevision(serial);
+        if (PacketHandlers.TryCustomRevision(serial, out var stored) && stored == revision) return;
+        lock (Gate) _out.Enqueue(OutgoingPackets.Send_CustomHouseDataRequest(serial));
+    }
+
+    /// <summary>0xAF. A missing mobile or the player returns. Any other mobile moves to serial | 0x80000000.</summary>
+    static void NoteDeath(UODeathState death) {
+        lock (Gate) {
+            var serial = death.Serial;
+            if (serial == _player || !_mobiles.TryGetValue(serial, out var mob)) return;
+            var newSerial = serial | 0x80000000;
+            _mobiles.Remove(serial);
+            _mobiles[newSerial] = new UOMobileState(newSerial, mob.Body, mob.X, mob.Y, mob.Z, mob.Direction, mob.Notoriety, mob.Flags);
+            List<uint> worn = null;
+            foreach (var kv in _equip)
+                if (kv.Value.Parent == serial) (worn ??= new List<uint>()).Add(kv.Key);
+            if (worn != null)
+                foreach (var key in worn) {
+                    var e = _equip[key];
+                    _equip[key] = new UOEquipState(e.Serial, e.Graphic, e.Layer, e.Hue, newSerial);
+                }
+            if (_anims.TryGetValue(serial, out var anim)) {
+                _anims.Remove(serial);
+                _anims[newSerial] = anim;
+            }
+            var corpse = death.Corpse;
+            if (corpse > 0 && corpse < 0x80000000) {
+                var known = false;
+                for (var i = 0; i < _deaths.Count; i++)
+                    if (_deaths[i].corpse == corpse) { known = true; break; }
+                if (!known) _deaths.Add((corpse, newSerial, mob.Direction, death.Running != 0));
+            }
+            // GetDeathAction needs the animation index. Leave the moved mobile's group alone.
+            _revision++;
         }
     }
 
@@ -1821,6 +2409,7 @@ public static class UOLoginNet {
             anim.Repeat = again;
             anim.Forward = forward;
             anim.Frame = forward ? (byte)0 : (byte)frames;
+            anim.Hold = false;
             anim.Next = unchecked(Environment.TickCount + (80 + 80 * (delay + 1)));
         }
     }
@@ -1848,9 +2437,11 @@ public static class UOLoginNet {
         public ushort Raw, Repeats, RepeatReset;
         public byte Delay, PacketFrames, Frame;
         public int Next;
+        // 0xBF 0x002B and 0x0019 version 5. StepAnim leaves Frame alone.
+        public bool Hold;
     }
 
-    static void SetPlayer(uint serial, ushort body, int x, int y, int z, byte dir, bool post) {
+    static void SetPlayer(uint serial, ushort body, int x, int y, int z, byte dir, bool post, int notoriety = -1, int flags = -1) {
         lock (Gate) {
             _player = serial;
             _pbody = body;
@@ -1858,18 +2449,27 @@ public static class UOLoginNet {
             _py = y;
             _pz = z;
             _pdir = (byte)(dir & 7);
-            _mobiles[serial] = new UOMobileState(serial, body, x, y, z, _pdir);
+            byte noto = 0, fl = 0;
+            if (_mobiles.TryGetValue(serial, out var old)) {
+                noto = old.Notoriety;
+                fl = old.Flags;
+            }
+            if (notoriety >= 0) noto = (byte)notoriety;
+            if (flags >= 0) fl = (byte)flags;
+            _mobiles[serial] = new UOMobileState(serial, body, x, y, z, _pdir, noto, fl);
             _revision++;
         }
         if (post) PostWorld();
     }
 
-    static void SetMobile(uint serial, ushort body, int x, int y, int z, byte dir, List<UOEquipState> equip = null) {
-        if (serial == _player) SetPlayer(serial, body, x, y, z, dir, post: false);
+    static void SetMobile(uint serial, ushort body, int x, int y, int z, byte dir, List<UOEquipState> equip = null, int notoriety = -1, int flags = -1) {
+        if (serial == _player) SetPlayer(serial, body, x, y, z, dir, false, notoriety, flags);
         else lock (Gate) {
             var added = !_mobiles.ContainsKey(serial);
             var moved = _mobiles.TryGetValue(serial, out var old) && (old.X != x || old.Y != y);
-            _mobiles[serial] = new UOMobileState(serial, body, x, y, z, (byte)(dir & 7));
+            var noto = (byte)(notoriety < 0 ? (added ? 0 : old.Notoriety) : notoriety);
+            var fl = (byte)(flags < 0 ? (added ? 0 : old.Flags) : flags);
+            _mobiles[serial] = new UOMobileState(serial, body, x, y, z, (byte)(dir & 7), noto, fl);
             if (moved) _moves[serial] = (unchecked(Environment.TickCount + ((dir & 0x80) != 0 ? 200 : 400)), (dir & 0x80) != 0);
             if (added && serial > 0 && serial < 0x80000000) _out.Enqueue(UOGamePackets.StatusRequest(serial));
             _revision++;

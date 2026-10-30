@@ -5,9 +5,11 @@ using GameX.Origin.Netcode.UO;
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO TopBarGump. Page 1 is the wide bar. Page 2 is the 30 by 27 bar.
+/// ClassicUO TopBarGump. Page 1 is the wide bar. Page 2 keeps the expand button and adds Info Bar, Counter, and Ignore.
 /// Map opens MiniMapGump. Journal opens JournalGump. Button has no caption, so the names are labels.
 /// Paperdoll and Backpack call Use when that serial is nonzero. War calls ToggleWar.
+/// Chat calls ChatGump.Toggle. Help sends the help request. World map calls WorldMapGump.Toggle.
+/// Info Bar calls InfoBarGump.Toggle. Counter calls CounterBarGump.Toggle. Ignore calls IgnoreManagerGump.Toggle.
 /// </summary>
 public sealed class TopBarGump : Gump {
     const ushort SmallButton = 0x098B;
@@ -21,7 +23,8 @@ public sealed class TopBarGump : Gump {
         ActivePage = 1;
         LayerOrder = UILayer.Over;
 
-        Add(new ResizePic(0x13BE) { Width = 30, Height = 27, AcceptMouseInput = true }, 2);
+        var mini = new ResizePic(0x13BE) { Width = 30, Height = 27, AcceptMouseInput = true };
+        Add(mini, 2);
         Add(new Button(0, 0x15A1, 0x15A1, 0x15A1) {
             X = 5, Y = 3, ToPage = 1, IsPageButton = true,
         }, 2);
@@ -39,8 +42,17 @@ public sealed class TopBarGump : Gump {
         x = AddButton((int)Buttons.Paperdoll, LargeButton, largeWidth, "Paperdoll", x);
         x = AddButton((int)Buttons.Backpack, LargeButton, largeWidth, "Backpack", x);
         x = AddButton((int)Buttons.Journal, LargeButton, largeWidth, "Journal", x);
+        x = AddButton((int)Buttons.Chat, SmallButton, smallWidth, "Chat", x);
+        x = AddButton((int)Buttons.Help, SmallButton, smallWidth, "Help", x);
+        x = AddButton((int)Buttons.WorldMap, LargeButton, largeWidth, "World Map", x);
         x = AddButton((int)Buttons.War, SmallButton, smallWidth, "War", x);
         background.Width = x + 1;
+
+        var x2 = 30;
+        x2 = AddButton((int)Buttons.InfoBar, LargeButton, largeWidth, "Info Bar", x2, 2);
+        x2 = AddButton((int)Buttons.CounterBar, LargeButton, largeWidth, "Counter", x2, 2);
+        x2 = AddButton((int)Buttons.Ignore, LargeButton, largeWidth, "Ignore", x2, 2);
+        if (x2 > 30) mini.Width = x2 + 1;
     }
 
     public override void Update() {
@@ -65,13 +77,31 @@ public sealed class TopBarGump : Gump {
             case Buttons.Journal:
                 if (UIManager.GetGump<JournalGump>() == null) UIManager.Add(new JournalGump(World));
                 break;
+            case Buttons.Chat:
+                ChatGump.Toggle(World);
+                break;
+            case Buttons.Help:
+                UOLoginNet.Send(OutgoingPackets.Send_HelpRequest());
+                break;
+            case Buttons.WorldMap:
+                WorldMapGump.Toggle(World);
+                break;
             case Buttons.War:
                 UOLoginNet.ToggleWar();
+                break;
+            case Buttons.InfoBar:
+                InfoBarGump.Toggle(World);
+                break;
+            case Buttons.CounterBar:
+                CounterBarGump.Toggle(World);
+                break;
+            case Buttons.Ignore:
+                IgnoreManagerGump.Toggle(World);
                 break;
         }
     }
 
-    int AddButton(int id, ushort graphic, int fallback, string text, int x) {
+    int AddButton(int id, ushort graphic, int fallback, string text, int x, int page = 1) {
         var button = new Button(id, graphic, graphic, graphic) {
             X = x, Y = 1, ButtonAction = ButtonAction.Activate,
         };
@@ -82,7 +112,7 @@ public sealed class TopBarGump : Gump {
         var h = button.Height;
         label.Y = h > label.Height ? (h - label.Height) >> 1 : 0;
         button.Add(label);
-        Add(button, 1);
+        Add(button, page);
         return x + span + 1;
     }
 
@@ -97,5 +127,11 @@ public sealed class TopBarGump : Gump {
         Backpack = 2,
         Journal = 3,
         War = 4,
+        Chat = 5,
+        Help = 6,
+        WorldMap = 7,
+        InfoBar = 8,
+        CounterBar = 9,
+        Ignore = 10,
     }
 }

@@ -10,7 +10,7 @@ namespace GameX.Origin.UO;
 /// poison 0x0808, else yellow 0x0809, else blue 0x0806, tiled to CalculatePercents(HitsMax, Hits, 109),
 /// the same clip as GumpPicWithWidth. Update checks IsPoisoned before IsYellowHits.
 /// A percent of 0 or 1 is not scaled. HitsMax 0 hides the line. No status is skipped.
-/// Screen position is WorldGump's player anchor.
+/// Screen position is WorldGump.ViewCenter plus the gump origin.
 /// </summary>
 public static class HealthBarGump {
     const ushort LineRed = 0x0805;
@@ -28,13 +28,14 @@ public static class HealthBarGump {
         var px = UOLoginNet.PlayerX;
         var py = UOLoginNet.PlayerY;
         var pz = UOLoginNet.PlayerZ;
+        WorldGump.ViewCenter(out var cx, out var cy);
         for (var i = 0; i < Mobiles.Count; i++) {
             var m = Mobiles[i];
             if (!UOLoginNet.TryStatus(m.Serial, out var st) || st.HitsMax == 0) continue;
             var dx = m.X - px;
             var dy = m.Y - py;
-            var x = originX + 320 + (dx - dy) * 22 - BarWidth / 2;
-            var y = originY + 220 + (dx + dy) * 22 - (m.Z - pz) * 4;
+            var x = originX + cx + (dx - dy) * 22 - BarWidth / 2;
+            var y = originY + cy + (dx + dy) * 22 - (m.Z - pz) * 4;
             var hits = CalculatePercents(st.HitsMax, st.Hits, BarWidth);
             GumpArtDraw.Pic(LineRed, x, y, 0, 0, false);
             if (hits > 0) {

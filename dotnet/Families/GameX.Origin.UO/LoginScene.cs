@@ -29,16 +29,22 @@ public enum LoginSteps {
 /// </summary>
 public sealed class LoginScene : SceneBase {
     readonly World _world;
+    readonly Pathfinder _path;
     Gump _currentGump;
     LoginSteps _lastLoginStep;
     bool _autoLogin;
     bool _rightWalk;
     bool _continueRun;
     bool _hasGoal;
+    bool _kUp, _kDown, _kLeft, _kRight, _kRun;
+    byte? _pad;
     int _goalX, _goalY;
     int _stuckX, _stuckY, _stuckPx, _stuckPy, _stuckAt;
 
-    public LoginScene(World world) => _world = world;
+    public LoginScene(World world) {
+        _world = world;
+        _path = new Pathfinder(world);
+    }
 
     public World World => _world;
     public Gump CurrentGump => _currentGump;
@@ -122,6 +128,22 @@ public sealed class LoginScene : SceneBase {
                 case UOLoginPhase.WorldEntered:
                     CurrentLoginStep = LoginSteps.InWorld;
                     break;
+                case UOLoginPhase.LoggedOut:
+                    // Main does not autologin. Do not call Load or Begin.
+                    CurrentLoginStep = LoginSteps.Main;
+                    _rightWalk = false;
+                    _continueRun = false;
+                    _hasGoal = false;
+                    _kUp = _kDown = _kLeft = _kRight = _kRun = false;
+                    _pad = null;
+                    _path.Stop();
+                    _world.Items.Clear();
+                    _world.Mobiles.Clear();
+                    UIManager.Clear();
+                    UIManager.Add(new LoginBackground(_world));
+                    UIManager.Add(_currentGump = new LoginGump(_world, this));
+                    _lastLoginStep = LoginSteps.Main;
+                    break;
             }
         }
         if (_lastLoginStep != CurrentLoginStep) {
@@ -140,23 +162,93 @@ public sealed class LoginScene : SceneBase {
         UIManager.Update();
         if (CurrentLoginStep == LoginSteps.InWorld) PropTip.Poll(_world);
         DriveMouse();
+        DriveKeys();
+        if (CurrentLoginStep == LoginSteps.InWorld) PacketWindows.Poll();
     }
 
     /// <summary>
+    /// ClassicUO holds arrow flags and calls Walk every update. Up is screen-up (direction 7).
+    /// Numpad stays cardinal: 8 is north. Shift sets the run bit. The right button wins.
+    /// </summary>
+    void DriveKeys() {
+        if (CurrentLoginStep != LoginSteps.InWorld) {
+            _kUp = _kDown = _kLeft = _kRight = _kRun = false;
+            _pad = null;
+            return;
+        }
+        if (Mouse.RButtonPressed || _continueRun) return;
+        if (!ArrowDir(out var dir)) {
+            if (_pad is not byte pad) return;
+            dir = pad;
+        }
+        _hasGoal = false;
+        _path.Stop();
+        if (_kRun) dir |= 0x80;
+        UOLoginNet.Walk(dir);
+    }
+
+    bool ArrowDir(out byte dir) {
+        dir = 0;
+        if (_kUp) {
+            if (_kLeft) dir = 6;
+            else if (_kRight) dir = 0;
+            else dir = 7;
+            return true;
+        }
+        if (_kDown) {
+            if (_kLeft) dir = 4;
+            else if (_kRight) dir = 2;
+            else dir = 3;
+            return true;
+        }
+        if (_kLeft) { dir = 5; return true; }
+        if (_kRight) { dir = 1; return true; }
+        return false;
+    }
+
+    bool HoldWalk(int key, int mod, bool down) {
+        if (key == 1073741906) _kUp = down;
+        else if (key == 1073741904) _kLeft = down;
+        else if (key == 1073741905) _kDown = down;
+        else if (key == 1073741903) _kRight = down;
+        else if (PadDir(key) is byte pad) {
+            if (down) _pad = pad;
+            else if (_pad == pad) _pad = null;
+        }
+        else return false;
+        _kRun = (mod & 3) != 0;
+        return true;
+    }
+
+    static byte? PadDir(int key) => key switch {
+        1073741920 => 0,
+        1073741921 => 1,
+        1073741918 => 2,
+        1073741915 => 3,
+        1073741914 => 4,
+        1073741913 => 5,
+        1073741916 => 6,
+        1073741919 => 7,
+        _ => null,
+    };
+
+    /// <summary>
     /// ClassicUO right-button walk. Direction is GetMouseDirection minus one, and North wraps through 8.
-    /// The run bit is set at 190 pixels from the player anchor. Left-up while right is held keeps walking.
-    /// A left-up on empty ground steps toward that tile until the player arrives.
+    /// The run bit is set at 190 pixels from the window center. Left-up while right is held keeps walking.
+    /// A left-up on empty ground builds a path. Each update issues at most one Walk, after the last turn or step shows.
     /// </summary>
     void DriveMouse() {
         if (CurrentLoginStep != LoginSteps.InWorld) {
             _rightWalk = false;
             _continueRun = false;
             _hasGoal = false;
+            _path.Stop();
             return;
         }
         if (Mouse.RButtonPressed) {
             if (_rightWalk || _continueRun) {
                 _hasGoal = false;
+                _path.Stop();
                 WalkFacing();
             }
             return;
@@ -164,6 +256,7 @@ public sealed class LoginScene : SceneBase {
         _rightWalk = false;
         if (_continueRun) {
             _hasGoal = false;
+            _path.Stop();
             WalkFacing();
             return;
         }
@@ -179,25 +272,20 @@ public sealed class LoginScene : SceneBase {
         }
         else if (unchecked(System.Environment.TickCount - _stuckAt) > 1000) {
             _hasGoal = false;
+            _path.Stop();
             return;
         }
-        var gx = _goalX - px;
-        var gy = _goalY - py;
-        if (gx == 0 && gy == 0) {
-            _hasGoal = false;
-            return;
-        }
-        var step = StepDir(Sign(gx), Sign(gy));
-        if (Abs(gx) + Abs(gy) > 2) step |= 0x80;
-        UOLoginNet.Walk(step);
+        if (_path.Issue(out var step)) UOLoginNet.Walk(step);
+        else if (!_path.Active) _hasGoal = false;
     }
 
     static void WalkFacing() {
-        var facing = GameCursor.GetMouseDirection(320, 220, Mouse.Position.X, Mouse.Position.Y, 1);
+        WorldGump.ViewCenter(out var cx, out var cy);
+        var facing = GameCursor.GetMouseDirection(cx, cy, Mouse.Position.X, Mouse.Position.Y, 1);
         if (facing == 0) facing = 8;
         var walk = (byte)((facing - 1) & 7);
-        var dx = Mouse.Position.X - 320;
-        var dy = Mouse.Position.Y - 220;
+        var dx = Mouse.Position.X - cx;
+        var dy = Mouse.Position.Y - cy;
         if ((long)dx * dx + (long)dy * dy >= 190L * 190L) walk |= 0x80;
         UOLoginNet.Walk(walk);
     }
@@ -206,20 +294,6 @@ public sealed class LoginScene : SceneBase {
         var over = UIManager.MouseOverControl;
         return over == null || over is WorldGump || over is UseLabel;
     }
-
-    static int Sign(int n) => n < 0 ? -1 : n > 0 ? 1 : 0;
-    static int Abs(int n) => n < 0 ? -n : n;
-
-    static byte StepDir(int sx, int sy) => (sx, sy) switch {
-        (0, -1) => 0,
-        (1, -1) => 1,
-        (1, 0) => 2,
-        (1, 1) => 3,
-        (0, 1) => 4,
-        (-1, 1) => 5,
-        (-1, 0) => 6,
-        _ => 7,
-    };
 
     public override bool Draw() {
         var sink = GumpArt.Sink;
@@ -266,12 +340,13 @@ public sealed class LoginScene : SceneBase {
                 _continueRun = false;
                 if (WorldPick.TryActor(_world, x, y, out var picked)) {
                     _hasGoal = false;
+                    _path.Stop();
                     UOLoginNet.RequestPopup(picked);
                 }
                 else {
                     _goalX = wx;
                     _goalY = wy;
-                    _hasGoal = true;
+                    _hasGoal = _path.Build(wx, wy, wz);
                 }
                 return true;
             }
@@ -285,6 +360,7 @@ public sealed class LoginScene : SceneBase {
         if (CurrentLoginStep == LoginSteps.InWorld && button == (int)MouseButtonType.Left
             && WorldPick.TryActor(_world, x, y, out var serial)) {
             _hasGoal = false;
+            _path.Stop();
             if (serial != UOLoginNet.PlayerSerial && UOLoginNet.IsMobile(serial) && UOLoginNet.InWarMode)
                 UOLoginNet.Attack(serial);
             else UOLoginNet.Use(serial);
@@ -294,7 +370,7 @@ public sealed class LoginScene : SceneBase {
     }
 
     public override bool OnKeyDown(int key, int mod) {
-        if (CurrentLoginStep == LoginSteps.InWorld && TryWalk(key, mod)) return true;
+        if (CurrentLoginStep == LoginSteps.InWorld && HoldWalk(key, mod, true)) return true;
         if (CurrentLoginStep == LoginSteps.InWorld) {
             if (key == 9) {
                 UOLoginNet.ToggleWar();
@@ -342,27 +418,11 @@ public sealed class LoginScene : SceneBase {
         }
     }
 
-    /// <summary>SDL keycodes. Shift (KMOD_SHIFT, bits 0 and 1) sets the run bit.</summary>
-    static bool TryWalk(int key, int mod) {
-        byte? dir = key switch {
-            1073741906 or 1073741920 => 0, // up, kp 8
-            1073741921 => 1, // kp 9
-            1073741903 or 1073741918 => 2, // right, kp 6
-            1073741915 => 3, // kp 3
-            1073741905 or 1073741914 => 4, // down, kp 2
-            1073741913 => 5, // kp 1
-            1073741904 or 1073741916 => 6, // left, kp 4
-            1073741919 => 7, // kp 7
-            _ => null,
-        };
-        if (dir is not byte d) return false;
-        if ((mod & 3) != 0) d |= 0x80;
-        UOLoginNet.Walk(d);
-        return true;
+    public override bool OnKeyUp(int key, int mod) {
+        if (key == 160 || key == 161) _kRun = false;
+        if (CurrentLoginStep == LoginSteps.InWorld && HoldWalk(key, mod, false)) return true;
+        return UIManager.OnKeyUp(key, mod) || base.OnKeyUp(key, mod);
     }
-
-    public override bool OnKeyUp(int key, int mod)
-        => UIManager.OnKeyUp(key, mod) || base.OnKeyUp(key, mod);
 
     public override void OnTextInput(string text) {
         UIManager.OnTextInput(text);

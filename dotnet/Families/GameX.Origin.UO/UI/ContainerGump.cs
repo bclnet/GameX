@@ -9,6 +9,7 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// Opened by 0x24. Each 0x3C or 0x25 row is drawn at its stored X,Y on the ClassicUO container gump.
+/// A count above 1 draws that art again at +5,+5, unless the coin pile graphic already changed.
 /// Double-click sends 0x06. A drag is the UseLabel hit, so mouse up calls Lift.
 /// Spellbook 0xFFFF and vendor 0x0030 are not opened here.
 /// </summary>
@@ -128,7 +129,15 @@ public sealed class ContainerGump : Gump {
             }
             if (assets == null || !ArtPixels(assets, shown, it.Hue, out var key, out var pix, out var w, out var h)) continue;
             _art.Add(new Stamp { Key = key, X = x, Y = y, W = w, H = h, Px = pix });
-            AddHit(it.Serial, x, y, w, h);
+            var hitW = w;
+            var hitH = h;
+            // ItemGump's second blit. Coins already switched graphic. Tiledata IsStackable is not on Assets, so any other amount above 1 is drawn again, the same rule as the held cursor.
+            if (it.Amount > 1 && shown == it.Graphic) {
+                _art.Add(new Stamp { Key = key, X = x + 5, Y = y + 5, W = w, H = h, Px = pix });
+                hitW += 5;
+                hitH += 5;
+            }
+            AddHit(it.Serial, x, y, hitW, hitH);
         }
     }
 
@@ -177,7 +186,8 @@ public sealed class ContainerGump : Gump {
         key = 0;
         pixels = null;
         w = h = 0;
-        var file = (graphic & 0x7FFF) + 0x4000;
+        // Arts.GetArt adds 0x4000 to the packet graphic. 0x3C does not set the world 0x1A hue bit.
+        var file = graphic + 0x4000;
         if (file > 0xFFFF || !assets.TryArtPixels(file, out var src, out w, out h)) return false;
         if (src == null || w <= 0 || h <= 0 || src.Length < w * h * 2) return false;
         var index = hue & 0x3FFF;

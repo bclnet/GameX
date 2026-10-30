@@ -1,10 +1,13 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using GameX.Origin.Clients.UO;
+using GameX.Origin.Formats.UO;
 using GameX.Origin.Netcode.UO;
+using GameX.Origin.Structs.UO;
 using OpenX.Client;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace GameX.Origin.UO;
 
@@ -12,11 +15,14 @@ namespace GameX.Origin.UO;
 /// Overhead view after 0x1B. The player is a body frame plus the center label. Arrows are handled by LoginScene.
 /// Felucca land and static art are drawn through GumpArt.Sink when the map is open.
 /// A body uses ClassicUO's group: people stand on 4, walk on 0 or 1, run on 2 or 3. 0x6E replaces that group.
+/// Worn art is MobileArt. The mount paints under that frame. The other layers use it.
 /// While a step is in flight the body and its name sit back on the previous tile. Run is 200 ms, walk is 400.
 /// Enter sends 0xAD, or answers a prompt. Double-click sends 0x06, or 0x05 on another mobile while at war.
 /// A drag lifts with 0x07. Tab sends 0x72. Hits sit on the coordinate line.
 /// Stamps are multiplied by IsometricLight when personal is below overall. Weather.Draw paints the stored packet.
-/// The player name uses ClassicUO Notoriety.GetHue. Other names stay 0x0481.
+/// The player name uses ClassicUO Notoriety.GetHue. Another mobile uses that hue when its notoriety is 1 through 7, otherwise 0x0481.
+/// An item or corpse name is 0x0481. Default overhead types are all shown. A serial that already has a label is not drawn again.
+/// An ignored name still draws on the mobile and the item. That speaker's journal row and overhead line are skipped. The player label always runs. The player's own lines stay.
 /// </summary>
 public class WorldGump : Gump {
     const int Slots = 48;
@@ -42,6 +48,8 @@ public class WorldGump : Gump {
     readonly List<Stamp> _stamps = [];
     readonly List<(ushort graphic, sbyte z)> _statics = [];
     readonly List<UOEquipState> _worn = [];
+    readonly List<MobileArt.Sprite> _art = [];
+    readonly HashSet<uint> _held = [];
     readonly List<UOSpeechState> _lines = [];
     readonly Dictionary<long, byte[]> _shadePx = [];
     readonly Dictionary<long, int> _shadeId = [];
@@ -55,9 +63,11 @@ public class WorldGump : Gump {
     sbyte _wWind;
     uint _wTimer, _wWindAt, _wLast;
     bool _wLit, _wSeen;
+    static Binary_TileData.ItemData[] _tiles;
+    static bool _tilesMiss;
 
     struct Stamp {
-        public int Key, X, Y, W, H, Ord;
+        public int Key, X, Y, W, H, Ord, Seq;
         public byte[] Px;
     }
 
@@ -180,10 +190,20 @@ public class WorldGump : Gump {
         base.Dispose();
     }
 
+    /// <summary>ClassicUO Camera.Bounds center. The player tile is this point.</summary>
+    public static void ViewCenter(out int x, out int y) {
+        var s = Mouse.Current;
+        var w = s.BufW > 0 ? s.BufW : 640;
+        var h = s.BufH > 0 ? s.BufH : 480;
+        x = w >> 1;
+        y = h >> 1;
+    }
+
     /// <summary>Inverse of the diamond used to place labels. Z comes from StepHeight when the asset slot set it.</summary>
     public static void GroundTile(int sx, int sy, out int x, out int y, out int z) {
-        var u = RoundDiv(sx - 320, 22);
-        var v = RoundDiv(sy - 220, 22);
+        ViewCenter(out var cx, out var cy);
+        var u = RoundDiv(sx - cx, 22);
+        var v = RoundDiv(sy - cy, 22);
         var dx = RoundDiv(u + v, 2);
         var dy = RoundDiv(v - u, 2);
         x = UOLoginNet.PlayerX + dx;
@@ -215,6 +235,7 @@ public class WorldGump : Gump {
         var px = UOLoginNet.PlayerX;
         var py = UOLoginNet.PlayerY;
         var pz = UOLoginNet.PlayerZ;
+        ViewCenter(out var cx, out var cy);
         _stamps.Clear();
         for (var dy = -Radius; dy <= Radius; dy++)
             for (var dx = -Radius; dx <= Radius; dx++) {
@@ -222,15 +243,15 @@ public class WorldGump : Gump {
                 var wy = py + dy;
                 if (!assets.TryLandTile(wx, wy, out var tile, out var tz)) continue;
                 if (!assets.TryArtPixels(tile, out var pix, out var w, out var h)) continue;
-                var sx = 320 + (dx - dy) * 22;
-                var sy = 220 + (dx + dy) * 22 - (tz - pz) * 4;
+                var sx = cx + (dx - dy) * 22;
+                var sy = cy + (dx + dy) * 22 - (tz - pz) * 4;
                 _stamps.Add(new Stamp { Key = 0x10000 | tile, X = ox + sx - 22, Y = oy + sy - 22, W = w, H = h, Px = pix, Ord = (dx + dy + 32) * 1000 + tz });
                 _statics.Clear();
                 assets.CopyStatics(wx, wy, _statics);
                 foreach (var (graphic, z) in _statics) {
                     var id = graphic + 0x4000;
                     if (id > 0xFFFF || !assets.TryArtPixels(id, out var ap, out var aw, out var ah)) continue;
-                    var ssy = 220 + (dx + dy) * 22 - (z - pz) * 4;
+                    var ssy = cy + (dx + dy) * 22 - (z - pz) * 4;
                     _stamps.Add(new Stamp { Key = 0x20000 | id, X = ox + sx - aw / 2, Y = oy + ssy - ah + 22, W = aw, H = ah, Px = ap, Ord = (dx + dy + 32) * 1000 + z + 1 });
                 }
             }
@@ -242,18 +263,22 @@ public class WorldGump : Gump {
             if (dx > Radius || dx < -Radius || dy > Radius || dy < -Radius) continue;
             AddBody(assets, ox, oy, m.Serial, m.Body, m.Direction, dx, dy, m.Z);
         }
+        NoteHeld();
         foreach (var entry in World.Items) {
-            if (entry.Value is not Item it) continue;
+            if (entry.Value is not Item it || _held.Contains(it.Serial)) continue;
             var dx = it.X - px;
             var dy = it.Y - py;
             if (dx > Radius || dx < -Radius || dy > Radius || dy < -Radius) continue;
             var id = (it.Graphic & 0x7FFF) + 0x4000;
             if (id > 0xFFFF || !assets.TryArtPixels(id, out var ap, out var aw, out var ah)) continue;
-            var sx = 320 + (dx - dy) * 22;
-            var sy = 220 + (dx + dy) * 22 - (it.Z - pz) * 4;
+            var sx = cx + (dx - dy) * 22;
+            var sy = cy + (dx + dy) * 22 - (it.Z - pz) * 4;
             _stamps.Add(new Stamp { Key = 0x20000 | id, X = ox + sx - aw / 2, Y = oy + sy - ah + 22, W = aw, H = ah, Px = ap, Ord = (dx + dy + 32) * 1000 + it.Z + 1 });
         }
-        _stamps.Sort((a, b) => a.Ord - b.Ord);
+        _stamps.Sort((a, b) => {
+            var c = a.Ord - b.Ord;
+            return c != 0 ? c : a.Seq - b.Seq;
+        });
         var scale = LightScale();
         foreach (var s in _stamps) {
             var lit = Shaded(s.Key, s.Px, scale);
@@ -268,9 +293,11 @@ public class WorldGump : Gump {
         if (body <= 0 || assets == null) return;
         var dir = direction & 7;
         var moving = StepSlide(serial, dir, UOLoginNet.PlayerX + dx, UOLoginNet.PlayerY + dy, out var run, out var sox, out var soy);
-        var war = serial == UOLoginNet.PlayerSerial && UOLoginNet.InWarMode;
+        // ClassicUO MobileView still draws Hidden (0x80). That body is not skipped and hue 0x038E is not applied.
+        var war = serial == UOLoginNet.PlayerSerial ? UOLoginNet.InWarMode : (UOLoginNet.MobileFlags(serial) & 0x40) != 0;
         UOLoginNet.TryServerAnim(serial, out var fromServer, out var raw, out var frame);
-        var action = assets.GroupFor((ushort)body, moving, run, war, TwoHanded(serial), fromServer, raw);
+        var two = TwoHanded(serial);
+        var action = assets.GroupFor((ushort)body, moving, run, war, two, fromServer, raw);
         if (!assets.TryFrameCount(body, action, dir, out var count)) {
             if (action == 0 || !assets.TryFrameCount(body, 0, dir, out count)) return;
             action = 0;
@@ -279,10 +306,17 @@ public class WorldGump : Gump {
         frame = (byte)(frame % count);
         if (!assets.TryBodyFrame(body, action, dir, frame, out var pix, out var w, out var h, out var cx, out var cy)) return;
         UOLoginNet.StepAnim(serial, count);
-        var sx = 320 + (dx - dy) * 22 + sox;
-        var sy = 220 + (dx + dy) * 22 - (z - UOLoginNet.PlayerZ) * 4 + soy;
+        ViewCenter(out var vx, out var vy);
+        var sx = vx + (dx - dy) * 22 + sox;
+        var sy = vy + (dx + dy) * 22 - (z - UOLoginNet.PlayerZ) * 4 + soy;
         var key = 0x30000 + (body << 16) + ((action & 0x7F) << 9) + ((dir & 7) << 6) + (frame & 0x3F);
-        _stamps.Add(new Stamp { Key = key, X = ox + sx - cx, Y = oy + sy - cy - h, W = w, H = h, Px = pix, Ord = (dx + dy + 32) * 1000 + z + 2 });
+        var ord = (dx + dy + 32) * 1000 + z + 2;
+        _stamps.Add(new Stamp { Key = key, X = ox + sx - cx, Y = oy + sy - cy - h, W = w, H = h, Px = pix, Ord = ord });
+        UOLoginNet.CopyEquip(serial, _worn);
+        _art.Clear();
+        MobileArt.Draw(assets, _worn, body, action, dir, frame, moving, run, war, two, ox + sx, oy + sy, ord, _art);
+        foreach (var s in _art)
+            _stamps.Add(new Stamp { Key = s.Key, X = s.X, Y = s.Y, W = s.W, H = s.H, Px = s.Px, Ord = s.Ord, Seq = s.Seq });
     }
 
     bool TwoHanded(uint serial) {
@@ -290,6 +324,20 @@ public class WorldGump : Gump {
         foreach (var e in _worn)
             if (e.Layer == 0x02) return true;
         return false;
+    }
+
+    /// <summary>A serial in CopyEquip is worn, so the ground-item loop must not stamp it again.</summary>
+    void NoteHeld() {
+        _held.Clear();
+        foreach (var entry in World.Mobiles) Hold(entry.Key);
+        var you = UOLoginNet.PlayerSerial;
+        if (you != 0 && !World.Mobiles.ContainsKey(you)) Hold(you);
+    }
+
+    void Hold(uint serial) {
+        UOLoginNet.CopyEquip(serial, _worn);
+        for (var i = 0; i < _worn.Count; i++)
+            if (_worn[i].Serial != 0) _held.Add(_worn[i].Serial);
     }
 
     void Paint() {
@@ -317,32 +365,49 @@ public class WorldGump : Gump {
         _pack.Serial = pack;
         _pack.IsVisible = pack != 0;
         var n = 0;
+        var seen = new HashSet<uint>();
         var you = UOLoginNet.NameOf(UOLoginNet.PlayerSerial);
         Place(ref n, string.IsNullOrEmpty(you) ? "You" : you, NotorietyHue(UOLoginNet.Notoriety), 0, 0, 0, UOLoginNet.PlayerSerial);
+        seen.Add(UOLoginNet.PlayerSerial);
         foreach (var m in mobiles) {
             World.Mobiles[m.Serial] = new Mobile(m.Serial, m.Body, m.X, m.Y, m.Z, m.Direction);
             if (m.Serial == UOLoginNet.PlayerSerial) continue;
+            if (!seen.Add(m.Serial)) continue;
             var name = UOLoginNet.NameOf(m.Serial);
-            // UOMobileState has no notoriety. 0x22 stores only the player.
-            Place(ref n, string.IsNullOrEmpty(name) ? $"M {m.Body:X4}" : name, 0x0481, m.X - px, m.Y - py, m.Z - pz, m.Serial);
+            var noto = UOLoginNet.MobileNotoriety(m.Serial);
+            var hue = noto >= 1 && noto <= 7 ? NotorietyHue(noto) : (ushort)0x0481;
+            Place(ref n, string.IsNullOrEmpty(name) ? $"M {m.Body:X4}" : name, hue, m.X - px, m.Y - py, m.Z - pz, m.Serial);
         }
         foreach (var it in items) {
             World.Items[it.Serial] = new Item(it.Serial, it.Graphic, it.X, it.Y, it.Z);
-            Place(ref n, $"I {it.Graphic:X4}", 0x034F, it.X - px, it.Y - py, it.Z - pz, it.Serial);
+            if (!seen.Add(it.Serial) || !ShowOverhead(it.Graphic)) continue;
+            var name = ItemName(it.Serial);
+            if (string.IsNullOrEmpty(name)) continue;
+            Place(ref n, name, 0x0481, it.X - px, it.Y - py, it.Z - pz, it.Serial);
         }
         for (; n < Slots; n++) _rows[n].IsVisible = false;
         UOLoginNet.CopySpeech(_lines);
         var start = _lines.Count > Journal ? _lines.Count - Journal : 0;
         var j = 0;
-        for (var i = start; i < _lines.Count && j < Journal; i++, j++) {
+        for (var i = start; i < _lines.Count && j < Journal; i++) {
             var line = _lines[i];
+            if (HideSpeech(line)) continue;
             var who = string.IsNullOrEmpty(line.Name) ? " " : line.Name;
             _journal[j].Text = $"{who}: {line.Text}";
             _journal[j].Hue = line.Hue == 0 ? (ushort)0x03B2 : line.Hue;
             _journal[j].IsVisible = true;
+            j++;
         }
         for (; j < Journal; j++) _journal[j].IsVisible = false;
         NoteSpeech();
+    }
+
+    /// <summary>Player lines stay. Any other line is hidden when its name, or NameOf when that name is empty, is ignored.</summary>
+    static bool HideSpeech(UOSpeechState line) {
+        // Spell is not separated because the speech struct has no type.
+        if (line.Serial == UOLoginNet.PlayerSerial) return false;
+        var name = !string.IsNullOrEmpty(line.Name) ? line.Name : UOLoginNet.NameOf(line.Serial);
+        return IgnoreManagerGump.Ignored(name);
     }
 
     /// <summary>New 0x1C and 0xAE lines. The list drops from the front once it holds 12.</summary>
@@ -364,6 +429,7 @@ public class WorldGump : Gump {
         for (var i = overlap; i < _lines.Count; i++) {
             var line = _lines[i];
             if (line.Serial == 0 || string.IsNullOrEmpty(line.Text)) continue;
+            if (HideSpeech(line)) continue;
             ShowOver(line);
         }
         _prevSpeech.Clear();
@@ -431,8 +497,9 @@ public class WorldGump : Gump {
             var stack = 0;
             for (var k = 0; k < i; k++)
                 if (_overSerial[k] == _overSerial[i] && _over[k].IsVisible) stack++;
-            row.X = 320 + (dx - dy) * 22 - 20 + ox;
-            row.Y = 220 + (dx + dy) * 22 - dz * 4 + oy - 16 - stack * 14;
+            ViewCenter(out var cx, out var cy);
+            row.X = cx + (dx - dy) * 22 - 20 + ox;
+            row.Y = cy + (dx + dy) * 22 - dz * 4 + oy - 16 - stack * 14;
             row.IsVisible = true;
         }
     }
@@ -512,8 +579,9 @@ public class WorldGump : Gump {
             }
             else continue;
             StepSlide(row.Serial, dir, tileX, tileY, out _, out var ox, out var oy);
-            row.X = 320 + (dx - dy) * 22 - 20 + ox;
-            row.Y = 220 + (dx + dy) * 22 - dz * 4 + oy;
+            ViewCenter(out var cx, out var cy);
+            row.X = cx + (dx - dy) * 22 - 20 + ox;
+            row.Y = cy + (dx + dy) * 22 - dz * 4 + oy;
         }
     }
 
@@ -534,15 +602,91 @@ public class WorldGump : Gump {
         }
     }
 
+    /// <summary>NameOverheadTypeAllowed.All. A corpse is 0x2006. Another item must be drawable and not internal. A graphic at or above 0x4000 is a multi.</summary>
+    static bool ShowOverhead(ushort graphic) {
+        if (graphic == 0x2006) return true;
+        if (graphic >= 0x4000) return false;
+        var tiles = Tiles();
+        if (tiles != null && graphic < tiles.Length && (tiles[graphic].Flags & TileFlag.Internal) != 0) return false;
+        return CanBeDrawn(graphic);
+    }
+
+    /// <summary>0xD6 name when that list is stored, otherwise NameOf. An empty result is not labeled.</summary>
+    static string ItemName(uint serial) {
+        if (UOLoginNet.TryProperties(serial, out var name, out _))
+            return string.IsNullOrEmpty(name) ? null : name;
+        name = UOLoginNet.NameOf(serial);
+        return string.IsNullOrEmpty(name) ? null : name;
+    }
+
+    /// <summary>ClassicUO GameObject.CanBeDrawn. A missing tiledata file does not hide the hardcoded cases.</summary>
+    static bool CanBeDrawn(ushort g) {
+        switch (g) {
+            case 0x0001:
+            case 0x21BC:
+            case 0xA1FE:
+            case 0xA1FF:
+            case 0xA200:
+            case 0xA201:
+                return false;
+            case 0x9E4C:
+            case 0x9E64:
+            case 0x9E65:
+            case 0x9E7D:
+                if (!TryTile(g, out var special)) return Tiles() == null;
+                return !special.IsBackground && !special.IsSurface;
+        }
+        if (g == 0x63D3) return false;
+        if (g >= 0x2198 && g <= 0x21A4) return false;
+        var tiles = Tiles();
+        if (tiles == null) return true;
+        var ver = UltimaOnline.Current?.Version ?? default;
+        if (g == 0x0F65 && ver != default && ver < ClientVersion.CV_60144) return true;
+        if (g >= tiles.Length) return false;
+        var data = tiles[g];
+        if (!string.IsNullOrEmpty(data.Name) && data.Name.StartsWith("nodraw", StringComparison.OrdinalIgnoreCase))
+            return false;
+        if ((data.Flags & TileFlag.NoDiagonal) == 0) return true;
+        var body = UOLoginNet.PlayerBody;
+        return data.IsAnimation && (body == 0x029A || body == 0x029B);
+    }
+
+    static bool TryTile(ushort g, out Binary_TileData.ItemData data) {
+        var tiles = Tiles();
+        if (tiles == null || g >= tiles.Length) {
+            data = default;
+            return false;
+        }
+        data = tiles[g];
+        return true;
+    }
+
+    static Binary_TileData.ItemData[] Tiles() {
+        if (_tiles != null || _tilesMiss) return _tiles;
+        var root = UltimaOnline.Current?.ClientPath;
+        if (string.IsNullOrEmpty(root)) return null;
+        _tilesMiss = true;
+        try {
+            var path = Path.Combine(root, "tiledata.mul");
+            if (!File.Exists(path)) return null;
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var r = new BinaryReader(fs);
+            _tiles = new Binary_TileData(r).ItemDatas;
+        }
+        catch { _tiles = null; }
+        return _tiles;
+    }
+
     void Place(ref int n, string text, ushort hue, int dx, int dy, int dz, uint serial) {
         if (n >= Slots) return;
         if (dx > 12 || dx < -12 || dy > 12 || dy < -12) return;
+        ViewCenter(out var cx, out var cy);
         var row = _rows[n++];
         row.Hue = hue;
         row.Text = text;
         row.Serial = serial;
-        row.X = 320 + (dx - dy) * 22 - 20;
-        row.Y = 220 + (dx + dy) * 22 - dz * 4;
+        row.X = cx + (dx - dy) * 22 - 20;
+        row.Y = cy + (dx + dy) * 22 - dz * 4;
         row.IsVisible = true;
     }
 

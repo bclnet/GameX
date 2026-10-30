@@ -26,9 +26,6 @@ public static class GameCursor {
         0x205B, 0x205C, 0x205D, 0x205E, 0x205F, 0x2060, 0x2061, 0x2062,
     ];
 
-    // Player anchor in WorldGump. Direction points away from it.
-    const int AnchorX = 320;
-    const int AnchorY = 220;
     const int RawKey = 0x40000000;
     const int HoldKey = 0x54000000;
 
@@ -224,7 +221,8 @@ public static class GameCursor {
         var over = UIManager.MouseOverControl;
         if (over is TextBox && over.AcceptKeyboardInput) return At(war, 14);
         if (!inWorld || over != null) return At(war, 9);
-        return At(war, GetMouseDirection(AnchorX, AnchorY, UIManager.MouseX, UIManager.MouseY, 1));
+        WorldGump.ViewCenter(out var cx, out var cy);
+        return At(war, GetMouseDirection(cx, cy, UIManager.MouseX, UIManager.MouseY, 1));
     }
 
     static ushort At(bool war, int index) => (war ? War : Peace)[index];

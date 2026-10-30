@@ -8,8 +8,12 @@ namespace GameX.Origin.UO;
 /// <summary>
 /// Opened for container gump 0xFFFF. Book art, page corners, and circle buttons follow ClassicUO.
 /// A content row is a spell when Amount is the 1-based index, which is ClassicUO Item.Amount.
-/// Not stored: 0xBF 0x1B spell bits and the graphic that packet writes, SpellDefinition reagents,
-/// power words, mana, min skill, and tithing, World.Player.TithingPoints, World.OPL, and ActiveSpellIcons.
+/// 0xBF 0x1B bits are ORed onto the content mask. A non-zero packet graphic replaces the 0x0EFA fallback.
+/// Not stored: SpellDefinition reagents, power words, mana, min skill, and tithing,
+/// World.Player.TithingPoints, World.OPL, and ActiveSpellIcons.
+/// Shift-click on a spell icon creates one UseSpellButtonGump for that spell id at the mouse.
+/// A second Shift-click of the same id shows that one. A click without Shift still casts on double-click.
+/// This host has no drag that pulls a child out.
 /// </summary>
 public sealed class SpellbookGump : Gump {
     readonly BookPic _pic;
@@ -69,6 +73,7 @@ public sealed class SpellbookGump : Gump {
             var n = it.Amount;
             if (n > 0 && n <= info.Max) bits |= 1UL << (n - 1);
         }
+        if (UOLoginNet.TrySpellbook(ServerSerial, out _, out var packetBits)) bits |= packetBits;
         if (_ready && graphic == _graphic && kind == _kind && bits == _bits) return;
         _ready = true;
         _graphic = graphic;
@@ -98,7 +103,7 @@ public sealed class SpellbookGump : Gump {
         WantUpdateSize = true;
     }
 
-    // World.Items, player equipment, and the backpack. 0xBF 0x1B is the ClassicUO field that sets Item.Graphic and the spell bits. A book inside a nested bag is not in those three lists either, so the art stays the magery book 0x08AC.
+    // World.Items, player equipment, and the backpack. A non-zero 0xBF 0x1B graphic replaces the 0x0EFA fallback. A book inside a nested bag is not in those three lists either, so the art stays the magery book 0x08AC unless that packet graphic is set.
     ushort FindGraphic() {
         if (World != null && World.Items.TryGetValue(LocalSerial, out var obj) && obj is Item item) return item.Graphic;
         UOLoginNet.CopyActors(_mobiles, _worldItems);
@@ -113,6 +118,7 @@ public sealed class SpellbookGump : Gump {
             foreach (var it in _pack)
                 if (it.Serial == LocalSerial) return it.Graphic;
         }
+        if (UOLoginNet.TrySpellbook(LocalSerial, out var stored, out _) && stored != 0) return stored;
         return 0x0EFA;
     }
 
@@ -211,7 +217,7 @@ public sealed class SpellbookGump : Gump {
             }
             placed++;
             var spellId = SpellId(info.Kind, i);
-            var pic = new SpellIcon(iconX, 40, IconOf(info, i), spellId);
+            var pic = new SpellIcon(this, iconX, 40, IconOf(info, i), spellId);
             if (!pic.IsDisposed) Place(pic, page1);
             if (info.Kind == BookKind.Magery) {
                 var circle = i >> 3;
@@ -345,9 +351,22 @@ public sealed class SpellbookGump : Gump {
     }
 
     sealed class SpellIcon : GumpPic {
+        readonly SpellbookGump _book;
         readonly int _id;
 
-        public SpellIcon(int x, int y, ushort graphic, int id) : base(x, y, graphic, 0) => _id = id;
+        public SpellIcon(SpellbookGump book, int x, int y, ushort graphic, int id) : base(x, y, graphic, 0) {
+            _book = book;
+            _id = id;
+        }
+
+        public override void OnMouseClick(int x, int y) {
+            if (!GameController.Shift || _id <= 0) return;
+            if (UseSpellButtonGump.ShowExisting(_id)) return;
+            UIManager.Add(new UseSpellButtonGump(_book.World, _id) {
+                X = UIManager.MouseX - 22,
+                Y = UIManager.MouseY - 22,
+            });
+        }
 
         public override bool OnMouseDoubleClick(int x, int y) {
             if (_id > 0) UOLoginNet.CastSpell(_id);

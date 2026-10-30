@@ -12,6 +12,9 @@ public static class GameController {
     static int _x, _y, _scroll;
     static bool _seen, _scrollReady, _ignoreNextText;
 
+    /// <summary>SDL shift bits. LoginScene uses this same mask for the run bit.</summary>
+    public static bool Shift { get; private set; }
+
     public static void Update(SceneBase scene) {
         if (scene == null || !scene.IsLoaded || scene.IsDestroyed) return;
         Mouse.Update();
@@ -39,11 +42,13 @@ public static class GameController {
     /// ClassicUO KEY_DOWN with no plugin. A handled key suppresses the text event that follows it.
     /// </summary>
     public static void KeyDown(SceneBase scene, int key, int mod) {
+        Shift = (mod & 3) != 0;
         if (scene == null || !scene.IsLoaded || scene.IsDestroyed) { _ignoreNextText = false; return; }
         _ignoreNextText = scene.OnKeyDown(key, mod);
     }
 
     public static void KeyUp(SceneBase scene, int key, int mod) {
+        Shift = (mod & 3) != 0;
         if (scene == null || !scene.IsLoaded || scene.IsDestroyed) return;
         scene.OnKeyUp(key, mod);
     }

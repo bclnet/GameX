@@ -110,6 +110,12 @@ public static class UIManager {
             }
         }
         else if (button == 1 && down is UseLabel src && src != hit && src.Serial != 0 && !UOLoginNet.HasTarget && !UOLoginNet.Holding) {
+            // Shift on a stack opens one split gump and does not pick the pile up.
+            if (GameController.Shift && UOLoginNet.AmountOf(src.Serial) > 1) {
+                if (GetGump<SplitMenuGump>(src.Serial) == null)
+                    Add(new SplitMenuGump(src.Serial));
+                return true;
+            }
             UOLoginNet.Lift(src.Serial);
             if (UOLoginNet.Holding) {
                 if (DropHeldOn(hit)) return true;

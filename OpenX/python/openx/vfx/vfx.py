@@ -87,7 +87,7 @@ class DirectoryFileSystem(FileSystem):
             return self.advance(self.basePath, os.path.basename(self.baseRoot)).next() or self
         @staticmethod
         def _lambdax(self):
-            if self.basePath: self.root = os.path.join(self.baseRoot, self.basePath); self.skip = len(self.root) + 1
+            if self.basePath: self.root = os.path.normpath(os.path.join(self.baseRoot, self.basePath)); self.skip = len(self.root) + 1
             return self
         return self.next2(self.basePath, -1, lambda: next(iter(os.listdir(self.root)), None), lambda: _lambdax(self))
 # end::DirectoryFileSystem[]

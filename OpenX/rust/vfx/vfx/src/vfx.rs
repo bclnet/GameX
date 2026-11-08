@@ -340,7 +340,8 @@ impl DirectoryFileSystem {
         let Some(first) = firstFile(&self.root) else { return self; };
         if endsIgnore(&first, ".bin") || endsIgnore(&first, ".cue") { return self; }
         if !self.basePath.is_empty() {
-            self.root = pathCombine(&self.baseRoot, &self.basePath);
+            // "." must not stay in root. Skip is that length plus one, and read_dir paths do not include the dot.
+            self.root = pathFull(&pathCombine(&self.baseRoot, &self.basePath));
             self.skip = self.root.as_os_str().len() + 1;
         }
         self
@@ -404,6 +405,19 @@ fn fileName(path: &Path) -> String {
 
 fn endsIgnore(s: &str, ext: &str) -> bool {
     s.get(s.len().saturating_sub(ext.len())..).is_some_and(|t| t.eq_ignore_ascii_case(ext))
+}
+
+/// C# `Path.GetFullPath` for a path that is already absolute. Drops `.` and `..`.
+fn pathFull(path: &Path) -> PathBuf {
+    let mut out = PathBuf::new();
+    for c in path.components() {
+        match c {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => { out.pop(); }
+            other => out.push(other.as_os_str()),
+        }
+    }
+    out
 }
 
 /// C# `Path.Combine`. A rooted `b` (`/`, `\`, or `X:` on Windows) replaces `a`.

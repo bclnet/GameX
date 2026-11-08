@@ -1,5 +1,8 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace GameX.IW;
 
@@ -27,6 +30,14 @@ public class FormatsTest {
     public void DLG(bool installed, string sampleFile) {
         if (!installed) return;
         var dat = family.GetArchive(new Uri(sampleFile));
+        if (sampleFile == "game:/code_post_gfx.ff#COD4") {
+            var zone = Cod4Zone(dat);
+            Assert.AreEqual(1640, zone.Files.Count);
+            Assert.AreEqual("scriptstrings.txt", zone.Files[0].Path);
+            using var stream = zone.ReadData(zone.Files[0]).Result;
+            var text = new StreamReader(stream, Encoding.ASCII).ReadToEnd();
+            StringAssert.StartsWith(text, "1\tend\n2\ttag_origin\n");
+        }
     }
 
     [TestMethod]
@@ -49,6 +60,26 @@ public class FormatsTest {
     public void DLG2(bool installed, string sampleFile) {
         if (!installed) return;
         var dat = family.GetArchive(new Uri(sampleFile));
+        if (sampleFile == "game:/mp_backlot_load.ff#COD4") {
+            var zone = Cod4Zone(dat);
+            Assert.AreEqual(6, zone.Files.Count);
+            Assert.AreEqual("techset/0000", zone.Files[0].Path);
+            Assert.AreEqual("techset/0001", zone.Files[1].Path);
+            Assert.AreEqual("material/0002", zone.Files[2].Path);
+            Assert.AreEqual("material/0003", zone.Files[3].Path);
+            Assert.AreEqual("material/0004", zone.Files[4].Path);
+            Assert.AreEqual("rawfile/0005", zone.Files[5].Path);
+            using var stream = zone.ReadData(zone.Files[2]).Result;
+            var index = new byte[8];
+            Assert.AreEqual(8, stream.Read(index, 0, 8));
+            CollectionAssert.AreEqual(new byte[] { 4, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }, index);
+        }
+    }
+
+    static IWArchive Cod4Zone(Archive archive) {
+        if (archive is IWArchive iw) return iw;
+        var many = (BinaryArchive)archive;
+        return many.Files.Select(f => f.Arc).OfType<IWArchive>().First();
     }
 }
 

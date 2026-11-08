@@ -20,7 +20,6 @@ public class IWArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <param name="state">The state.</param>
     public IWArchive(Archive parent, BinaryState state) : base(parent, state, Binary_IW.Current) {
         AssetFactoryFunc = AssetFactory;
-        UseReader = false;
     }
 
     #region Factories

@@ -1,6 +1,6 @@
 __title__ = "gamex"
 __version__ = "0.0.1"
-__current__ = "Arkane"
+# __current__ = "Arkane"
 # __current__ = "Beamdog"
 # __current__ = "Bethesda"
 # __current__ = "Bioware"
@@ -20,7 +20,7 @@ __current__ = "Arkane"
 # __current__ = "Frontier"
 # __current__ = "Gamebryo"
 # __current__ = "ID"
-# __current__ = "IW"
+__current__ = "IW"
 # __current__ = "Lucas"
 # __current__ = "Monolith"
 # __current__ = "Mythic"
@@ -383,8 +383,9 @@ match __current__:
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "IW",
+            Game = "COD", # Call of Duty - IWD
             # Game = "COD2", # Call of Duty 2 - IWD
-            # Game = "COD3", # Call of Duty 3 - XBOX only
+            # Game = "#COD3", # Call of Duty 3 - XBOX only
             # Game = "COD4", # Call of Duty 4: Modern Warfare - IWD, FF
             # Game = "COD:WaW", # Call of Duty: World at War - IWD, FF
             # Game = "MW2", # Call of Duty: Modern Warfare 2
@@ -395,7 +396,7 @@ match __current__:
             # Game = "COD:BO3", # Call of Duty: Black Ops III - XPAC,FF
             # Game = "MW3", # Call of Duty: Modern Warfare 3
             # Game = "WWII", # Call of Duty: WWII
-            Game = "BO4", # Call of Duty Black Ops 4
+            # Game = "BO4", # Call of Duty Black Ops 4
             # Game = "BOCW", # Call of Duty Black Ops Cold War
             # Game = "Vanguard", # Call of Duty Vanguard
         )

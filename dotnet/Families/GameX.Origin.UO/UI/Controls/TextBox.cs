@@ -6,7 +6,7 @@ namespace GameX.Origin.UO;
 /// Account and password field. Not ClassicUO's StbTextBox: no caret, no glyph texture.
 /// Draw asks GumpArt.Sink.DrawText. A password stores the real characters and draws stars.
 /// </summary>
-public sealed class TextBox : Control {
+public class TextBox : Control {
     string _text = "";
 
     public TextBox() {

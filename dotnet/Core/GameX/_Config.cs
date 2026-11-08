@@ -17,12 +17,12 @@
 //#define Frontier
 //#define Gamebryo
 //#define ID
-//#define IW
+#define IW
 //#define Lucas
 //#define Monolith
 //#define Mythic
 //#define Nintendo
-#define Origin
+//#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft
@@ -402,11 +402,11 @@ public partial class FamilyManager {
     public static GlobalOption Option = new() {
         Engine = "GL",
         ForceOpen = true,
-        ForcePath = "sample:*",
+        ForcePath = "sample:0",
         Family = "IW",
-        //Game = "COD2", // Call of Duty 2 - IWD 
-        //Game = "COD3", // Call of Duty 3 - XBOX only
-        //Game = "COD4", // Call of Duty 4: Modern Warfare - IWD, FF
+        //Game = "COD", // Call of Duty - IWD
+        //Game = "COD2", // Call of Duty 2 - IWD
+        Game = "COD4", // Call of Duty 4: Modern Warfare - IWD, FF
         //Game = "COD:WaW", // Call of Duty: World at War - IWD, FF
         //Game = "MW2", // Call of Duty: Modern Warfare 2
         //Game = "COD:BO", // Call of Duty: Black Ops - IWD, FF
@@ -416,7 +416,7 @@ public partial class FamilyManager {
         //Game = "COD:BO3", // Call of Duty: Black Ops III - XPAC,FF
         //Game = "MW3", // Call of Duty: Modern Warfare 3
         //Game = "WWII", // Call of Duty: WWII
-        Game = "BO4", // Call of Duty Black Ops 4
+        //Game = "BO4", // Call of Duty Black Ops 4
         //Game = "BOCW", // Call of Duty Black Ops Cold War
         //Game = "Vanguard", // Call of Duty Vanguard
     };

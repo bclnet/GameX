@@ -1,7 +1,11 @@
 ﻿{
   "COD": {
     "name": "Call of Duty",
-    "files": []
+    "files": [
+      {
+        "path": "pak0.pk3/avatar.cfg"
+      }
+    ]
   },
   "COD2": {
     "name": "Call of Duty 2",
@@ -16,8 +20,11 @@
     "name": "Call of Duty 4: Modern Warfare",
     "files": [
       {
-        "path": "mp_farm.ff/images/155_cannon.iwi",
+        "path": "ac130.ff/col_map_sp/0371",
         "type": "Texture"
+      },
+      {
+        "path": "iw_00.iwd/ac130.cfg"
       }
     ]
   },

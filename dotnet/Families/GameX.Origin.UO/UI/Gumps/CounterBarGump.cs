@@ -12,10 +12,14 @@ namespace GameX.Origin.UO;
 /// Count walks layers 1 through 0x18 (ClassicUO OneHanded through Legs). A non-empty container,
 /// and the backpack, are CopyContents trees. AmountOf supplies each row. A worn non-container counts as 1.
 /// A click while Holding, whose container row is still public, records that graphic and DropHeld puts it back.
-/// Double-click calls Use on the matching serial. A click with nothing held does nothing. There is no drag-off.
-/// BGRA1555 has no partial alpha, so the 0.7 black fill is an opaque dark pixel. Right-click closes.
+/// Double-click calls Use on the matching serial. A click with nothing held does nothing.
+/// CounterItem is the cell. A move of four pixels or more lifts it onto DraggableGump.
+/// A drop on a cell inserts, a drop on the bar appends, and a drop outside disposes that cell.
+/// There is no context-menu host and no profile file. Compare, hue, and read-only stay on that menu.
+/// Highlight on change is the profile default: an opaque hue for five seconds. Right-click closes.
+/// BGRA1555 has no partial alpha, so the 0.7 black fill is an opaque dark pixel.
 /// </summary>
-public sealed class CounterBarGump : Gump {
+public sealed partial class CounterBarGump : Gump {
     const int Cell = 40;
     const int Edge = 4;
     const int Pad = 2;
@@ -117,22 +121,22 @@ public sealed class CounterBarGump : Gump {
     }
 
     void AddSlot(ushort graphic, ushort hue) {
-        var slot = new Slot(graphic, hue);
-        _slots.Add(slot);
-        Add(slot);
+        Add(new CounterItem(this, graphic, hue, 0));
         Layout();
     }
 
     void Layout() {
+        var count = _slots.Count;
+        for (var i = 0; i < Children.Count; i++)
+            if (Children[i] is CounterItem item && !item.IsDisposed) count++;
         var inner = Width - Edge * 2;
         var cols = inner / Cell;
         if (cols < 1) cols = 1;
-        var rows = _slots.Count == 0 ? 1 : (_slots.Count + cols - 1) / cols;
+        var rows = count == 0 ? 1 : (count + cols - 1) / cols;
         Height = rows * Cell + Edge * 2;
         var x = 0;
         var y = 0;
-        for (var i = 0; i < _slots.Count; i++) {
-            var s = _slots[i];
+        void Place(Control s) {
             s.X = Edge + x + Pad;
             s.Y = Edge + y + Pad;
             s.Width = Cell - Pad * 2;
@@ -143,12 +147,17 @@ public sealed class CounterBarGump : Gump {
                 y += Cell;
             }
         }
-        var empty = _slots.Count == 0;
+        for (var i = 0; i < _slots.Count; i++) Place(_slots[i]);
+        for (var i = 0; i < Children.Count; i++)
+            if (Children[i] is CounterItem item && !item.IsDisposed) Place(item);
+        var empty = count == 0;
         _help1.IsVisible = empty;
         _help2.IsVisible = empty;
         if (_grip != null && !_grip.IsDisposed) {
             _grip.X = Width - _grip.Width + 2;
             _grip.Y = Height - _grip.Height + 2;
+            Children.Remove(_grip);
+            Children.Add(_grip);
         }
     }
 

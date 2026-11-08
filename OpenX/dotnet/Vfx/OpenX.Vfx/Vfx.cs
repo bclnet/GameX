@@ -147,7 +147,8 @@ public class DirectoryFileSystem(string baseRoot, string basePath) : FileSystem 
             return Advance(BasePath, Path.GetFileName(BaseRoot))?.Next() ?? this;
         }
         return Next2(BasePath, -1, () => Directory.EnumerateFiles(Root).FirstOrDefault(), () => {
-            if (!string.IsNullOrEmpty(BasePath)) { Root = Path.Combine(BaseRoot, BasePath); Skip = Root.Length + 1; }
+            // "." must not stay in Root. Skip is Root.Length + 1, and glob results do not include that dot.
+            if (!string.IsNullOrEmpty(BasePath)) { Root = Path.GetFullPath(Path.Combine(BaseRoot, BasePath)); Skip = Root.Length + 1; }
             return this;
         });
     }

@@ -274,7 +274,7 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
     #endregion
 
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        var files = source.Files = new List<FileSource>();
+        var files = source.Files = [];
         var extension = Path.GetExtension(source.BinPath);
 
         switch (source.Game.Id) {
@@ -290,11 +290,10 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
         }
 
         switch (extension) {
-            // IWD
-            case ".iwd": {
+            // PK3, IWD
+            case ".pk3" or ".iwd": {
                     source.UseReader = false;
                     source.Magic = (int)Magic.IWD;
-
                     var arc = (ZipFile)(source.Tag = new ZipFile(r.BaseStream));
                     foreach (ZipEntry entry in arc)
                         if (entry.Size != 0)
@@ -310,24 +309,23 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
             // FF
             case ".ff": {
                     source.Magic = (int)Magic.FF;
-
                     var header = r.ReadS<FF_Header>();
                     if (header.Magic != FF_MAGIC.IWff && header.Magic != FF_MAGIC.S1ff && header.Magic != FF_MAGIC.TAff) throw new FormatException($"Bad magic {header.Magic}");
                     if (header.Format != FF_FORMAT.U100 && header.Format != FF_FORMAT._100 && header.Format != FF_FORMAT.A100 && header.Format != FF_FORMAT._000) throw new FormatException($"Bad format {header.Format}");
 
+                    var listed = FastFile.ListCod4(r, header);
+                    if (listed is { } z) {
+                        source.Tag = z.zone;
+                        foreach (var asset in z.files)
+                            files.Add(new FileSource {
+                                Id = asset.Id,
+                                Path = asset.Path,
+                                Offset = asset.Position,
+                                FileSize = asset.FileSize,
+                                Data = asset.Data,
+                            });
+                    }
                     return Task.CompletedTask;
-                    //var assets = FastFile.GetAssets(source, r, cryptKey, ref header);
-                    //if (assets != null)
-                    //    foreach (var asset in assets)
-                    //        files.Add(new FileMetadata
-                    //        {
-                    //            Id = asset.Id,
-                    //            Path = asset.Path,
-                    //            Position = asset.Position,
-                    //            FileSize = asset.FileSize,
-                    //        });
-
-                    //return Task.CompletedTask;
                 }
             // PAK
             case ".pak": {
@@ -397,9 +395,10 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
                 }
                 catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
             case Magic.FF: {
-                    var s = new MemoryStream();
-                    s.Position = 0;
-                    return Task.FromResult((Stream)s);
+                    if (file.Data != null) return Task.FromResult((Stream)new MemoryStream(file.Data, false));
+                    if (source.Tag is byte[] zone && file.FileSize > 0)
+                        return Task.FromResult((Stream)new MemoryStream(zone, (int)file.Offset, (int)file.FileSize, false));
+                    return Task.FromResult((Stream)new MemoryStream());
                 }
             default: throw new NotImplementedException();
         }

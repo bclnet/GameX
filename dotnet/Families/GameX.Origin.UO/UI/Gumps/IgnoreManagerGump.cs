@@ -1,11 +1,9 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
-using System.Collections.Generic;
-
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// Session ignore list. The names stay on this type until the process exits.
+/// Session ignore list. The names stay on IgnoreManager until the process exits.
 /// Nothing is written to a profile or a settings file.
 /// An empty or whitespace name is not added. A name already stored is not added again.
 /// A different case is a different entry. The stored key is the trimmed name.
@@ -15,8 +13,6 @@ public sealed class IgnoreManagerGump : Gump {
     const int AddId = 1;
     const int RemoveBase = 100;
     const int RowStep = 25;
-
-    static readonly HashSet<string> Names = new HashSet<string>();
 
     TextBox _box;
     string _draft = "";
@@ -34,7 +30,7 @@ public sealed class IgnoreManagerGump : Gump {
     /// <summary>False for a null or empty name. Otherwise Contains with the default comparer, which is ordinal and case-sensitive.</summary>
     public static bool Ignored(string name) {
         if (string.IsNullOrEmpty(name)) return false;
-        return Names.Contains(name);
+        return IgnoreManager.Instance.IgnoredCharsList.Contains(name);
     }
 
     /// <summary>One gump. A second call disposes it and does not add another.</summary>
@@ -54,7 +50,7 @@ public sealed class IgnoreManagerGump : Gump {
         }
         var index = buttonID - RemoveBase;
         if (index < 0 || index >= _shown.Length) return;
-        Names.Remove(_shown[index]);
+        IgnoreManager.Instance.RemoveIgnoredTarget(_shown[index]);
         Build();
     }
 
@@ -62,10 +58,7 @@ public sealed class IgnoreManagerGump : Gump {
 
     void AddName() {
         var text = _box != null && !_box.IsDisposed ? _box.Text : _draft;
-        if (string.IsNullOrWhiteSpace(text)) return;
-        text = text.Trim();
-        if (Ignored(text)) return;
-        Names.Add(text);
+        if (!IgnoreManager.Instance.AddIgnoredTarget(text)) return;
         _draft = "";
         if (_box != null && !_box.IsDisposed) _box.Text = "";
         Build();
@@ -75,8 +68,9 @@ public sealed class IgnoreManagerGump : Gump {
         _draft = _box != null && !_box.IsDisposed ? _box.Text : _draft;
         ClearChildren();
         _box = null;
-        _shown = new string[Names.Count];
-        Names.CopyTo(_shown);
+        var names = IgnoreManager.Instance.IgnoredCharsList;
+        _shown = new string[names.Count];
+        names.CopyTo(_shown);
         var height = 96 + _shown.Length * RowStep + 12;
         if (height < 400) height = 400;
         Width = 300;

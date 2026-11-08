@@ -7,7 +7,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using FF_FORMAT = GameX.IW.Formats.Binary_IW.FF_FORMAT;
 using FF_Header = GameX.IW.Formats.Binary_IW.FF_Header;
+using FF_MAGIC = GameX.IW.Formats.Binary_IW.FF_MAGIC;
 using FF_VERSION = GameX.IW.Formats.Binary_IW.FF_VERSION;
 
 namespace GameX.IW.Formats {
@@ -308,6 +310,63 @@ namespace GameX.IW.Formats {
             public string Path;
             public long Position;
             public long FileSize;
+            public byte[] Data;
+        }
+
+        // COD4 retail zone. Every installed IWffu100 version 0x0005 file is zlib at byte 12.
+        // The 44-byte XFile header is followed by the script-string pointers, then their C strings,
+        // then an asset index of (type, pointer) pairs. Pointer -1 has a string; 0 is an empty slot.
+        // The asset body does not follow the index record.
+        internal static (byte[] zone, List<FileHeader> files)? ListCod4(BinaryReader r, FF_Header header) {
+            if (header.Magic != FF_MAGIC.IWff || header.Format != FF_FORMAT.U100 || header.Version != FF_VERSION.CO4_WWII) return null;
+            var cmf = r.ReadByte();
+            var flg = r.ReadByte();
+            if (cmf != 0x78 || (flg != 0x01 && flg != 0x5E && flg != 0x9C && flg != 0xDA)) throw new FormatException($"COD4 fastfile is not zlib ({cmf:X2}{flg:X2})");
+            byte[] zone;
+            using (var deflate = new DeflateStream(r.BaseStream, CompressionMode.Decompress, true))
+            using (var ms = new MemoryStream()) { deflate.CopyTo(ms); zone = ms.ToArray(); }
+            if (zone.Length < 0x3C) throw new FormatException($"COD4 zone is {zone.Length} bytes");
+            var zr = new BinaryReader(new MemoryStream(zone));
+            zr.Seek(0x2C);
+            var stringCount = zr.ReadInt32();
+            var stringPtr = zr.ReadInt32();
+            var assetCount = zr.ReadInt32();
+            var assetPtr = zr.ReadInt32();
+            if (stringCount < 0 || assetCount < 0 || stringCount > 1_000_000 || assetCount > 1_000_000) throw new FormatException($"COD4 index counts {stringCount}/{assetCount}");
+            var files = new List<FileHeader>(assetCount + 1);
+            if (stringCount > 0) {
+                if (stringPtr != -1) throw new FormatException($"COD4 script strings are not inline ({stringPtr:X8})");
+                var ptrs = new int[stringCount];
+                for (var i = 0; i < stringCount; i++) ptrs[i] = zr.ReadInt32();
+                var text = new System.Text.StringBuilder();
+                for (var i = 0; i < stringCount; i++) {
+                    var ptr = ptrs[i];
+                    if (ptr == -1) {
+                        var name = zr.ReadVAString();
+                        if (name.Length > 0) text.Append(i).Append('\t').Append(name).Append('\n');
+                    }
+                    else if (ptr != 0) throw new FormatException($"COD4 script string pointer {ptr:X8}");
+                }
+                if (text.Length > 0) {
+                    var data = System.Text.Encoding.ASCII.GetBytes(text.ToString());
+                    files.Add(new FileHeader { Id = -1, Path = "scriptstrings.txt", FileSize = data.Length, Data = data });
+                }
+            }
+            if (assetCount > 0) {
+                if (assetPtr != -1) throw new FormatException($"COD4 asset list is not inline ({assetPtr:X8})");
+                for (var i = 0; i < assetCount; i++) {
+                    var pos = zr.BaseStream.Position;
+                    var type = zr.ReadInt32();
+                    zr.ReadInt32();
+                    files.Add(new FileHeader {
+                        Id = i,
+                        Path = $"{(type >= 0 && type < (int)IW3XAssetType.max ? ((IW3XAssetType)type).ToString() : $"type{type}")}/{i:D4}",
+                        Position = pos,
+                        FileSize = 8,
+                    });
+                }
+            }
+            return (zone, files);
         }
 
         struct COD_Material {

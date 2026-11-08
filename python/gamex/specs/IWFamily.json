@@ -13,7 +13,7 @@
   "games": {
     "*": {
       "archiveType": "GameX.IW.IWArchive, GameX.IW",
-      "arcExt": ".iwd"
+      "arcExt": [".iwd", ".ff"]
     },
     "COD": {
       "name": "Call of Duty",
@@ -23,6 +23,7 @@
       ],
       "date": "2003-10-29",
       "tags": "WorldWarII COD",
+      "arcExt": ".pk3",
       "files": {
         "key": [
           "Steam:2620",
@@ -61,9 +62,9 @@
       "url": "https://store.steampowered.com/app/7940",
       "date": "2007-11-07",
       "tags": "ModernWarfare COD4",
-      "arc": "game:/*.iwd",
-      "pakx": "game:/mp_backlot_load.ff",
-      "paky": "game:/*.(iwd:ff)",
+      // "arc": "game:/*.iwd",
+      // "pakx": "game:/mp_backlot_load.ff",
+      // "paky": "game:/*.(iwd:ff)",
       "files": {
         "key": [
           "Steam:7940",

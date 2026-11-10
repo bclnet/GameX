@@ -236,8 +236,8 @@ class BinaryArchive(Archive):
         return file.cachedObjectFactory
 
     def process(self) -> None:
-        if self.useFileId and self.files: self.filesById = { x.id:x for x in self.files if x }
-        if self.files: self.filesByPath = { k.lower():list(g) for k,g in groupby(sorted(self.files, key=lambda s: s.path), lambda s: s.path) }
+        if self.useFileId and self.files is not None: self.filesById = { x.id:x for x in self.files if x }
+        if self.files is not None: self.filesByPath = { k.lower():list(g) for k,g in groupby(sorted(self.files, key=lambda s: s.path), lambda s: s.path) }
         if self.arcBinary: self.arcBinary.process(self)
 
     def _findPath(self, path: str) -> tuple[object, str]:

@@ -208,8 +208,10 @@ todo	70	0586c71786bfa4f5	Families/GameX.Gamebryo/Platforms/NifObjectBuilder.cs	f
 todo	917	b289df2afadc91c2	Families/GameX.ID/Formats/Binary.cs	families/id/src/formats/binary.rs	gamex-id
 todo	11	fb73b739d975a070	Families/GameX.ID/Games/Q/Database.cs	families/id/src/games/q/database.rs	gamex-id
 todo	46	9e143a7100ea21b5	Families/GameX.ID/ID.cs	families/id/src/id.rs	gamex-id
-todo	182	2ca6331db37cfe96	Families/GameX.IW/Formats/FastFile+AssetType.cs	families/iw/src/formats/fast_file_asset_type.rs	gamex-iw
+done	182	2ca6331db37cfe96	Families/GameX.IW/Formats/FastFile+AssetType.cs	families/iw/src/formats/fast_file_asset_type.rs	gamex-iw
 todo	277	f36f11a8651477bb	Families/GameX.IW/Formats/FastFile.cs	families/iw/src/formats/fast_file.rs	gamex-iw
+todo	4	3a2c330a06ce65e2	Families/GameX.IW/Formats/FastFileUnused.cs	families/iw/src/formats/fast_file_unused.rs	gamex-iw
+todo	656	f59ba82df59b0e9c	Families/GameX.IW/Formats/Binary.cs	families/iw/src/formats/binary.rs	gamex-iw
 todo	25	757584843dc8ca46	Families/GameX.IW/IW.cs	families/iw/src/iw.rs	gamex-iw
 todo	119	3cadc696c1dcd014	Families/GameX.IW/Zone/ASSET_TYPE.cs	families/iw/src/zone/asset_type.rs	gamex-iw
 todo	15	e77343086e969fcb	Families/GameX.IW/Zone/Asset.cs	families/iw/src/zone/asset.rs	gamex-iw

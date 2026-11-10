@@ -313,7 +313,7 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
                     if (header.Magic != FF_MAGIC.IWff && header.Magic != FF_MAGIC.S1ff && header.Magic != FF_MAGIC.TAff) throw new FormatException($"Bad magic {header.Magic}");
                     if (header.Format != FF_FORMAT.U100 && header.Format != FF_FORMAT._100 && header.Format != FF_FORMAT.A100 && header.Format != FF_FORMAT._000) throw new FormatException($"Bad format {header.Format}");
 
-                    var listed = FastFile.ListCod4(r, header);
+                    var listed = FastFile.ListFastFile(r, header);
                     if (listed is { } z) {
                         source.Tag = z.zone;
                         foreach (var asset in z.files)
@@ -382,10 +382,9 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
         switch ((Magic)source.Magic) {
             case Magic.CASC:
                 return Task.FromResult(casc.ReadData(file));
-            case Magic.IWD:
-                var arc = (ZipFile)source.Tag;
-                var entry = (ZipEntry)file.Tag;
-                try {
+            case Magic.IWD: {
+                    var arc = (ZipFile)source.Tag;
+                    var entry = (ZipEntry)file.Tag;
                     using var input = arc.GetInputStream(entry);
                     if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
                     var s = new MemoryStream();
@@ -393,7 +392,6 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
                     s.Position = 0;
                     return Task.FromResult((Stream)s);
                 }
-                catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
             case Magic.FF: {
                     if (file.Data != null) return Task.FromResult((Stream)new MemoryStream(file.Data, false));
                     if (source.Tag is byte[] zone && file.FileSize > 0)

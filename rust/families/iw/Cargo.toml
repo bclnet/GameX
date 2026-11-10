@@ -12,3 +12,7 @@ workspace = true
 gamex = { path = "../../core/gamex" }
 gamex-blizzard = { path = "../../families/blizzard" }
 gamex-uncore = { path = "../../families/uncore" }
+openx-poly = { path = "../../../OpenX/rust/core/poly" }
+openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }
+flate2 = "1"
+sha1 = "0.10"

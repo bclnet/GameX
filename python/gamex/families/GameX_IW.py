@@ -3,6 +3,7 @@ import os
 from openx.core import _pathExtension
 from gamex import ArcBinary, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
+from gamex.families.IW.formats.binary import Binary_IW
 
 # IWArchive
 class IWArchive(BinaryArchive):
@@ -14,7 +15,7 @@ class IWArchive(BinaryArchive):
 
     @staticmethod
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
-        pass
+        return Binary_IW()
 
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:

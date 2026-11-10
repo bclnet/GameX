@@ -31,13 +31,27 @@ public class FormatsTest {
         if (!installed) return;
         var dat = family.GetArchive(new Uri(sampleFile));
         if (sampleFile == "game:/code_post_gfx.ff#COD4") {
-            var zone = Cod4Zone(dat);
+            var zone = IwZone(dat);
             Assert.AreEqual(1640, zone.Files.Count);
             Assert.AreEqual("scriptstrings.txt", zone.Files[0].Path);
             using var stream = zone.ReadData(zone.Files[0]).Result;
             var text = new StreamReader(stream, Encoding.ASCII).ReadToEnd();
             StringAssert.StartsWith(text, "1\tend\n2\ttag_origin\n");
         }
+        else if (sampleFile == "game:/core_post_gfx.ff#BO3") {
+            var zone = IwZone(dat);
+            Assert.IsTrue(zone.Files.Any(f => f.Path == "language.cfg"));
+        }
+        else if (sampleFile == "game:/code_post_gfx.ff#Ghosts") {
+            var zone = IwZone(dat);
+            Assert.AreEqual(101, zone.Files.Count);
+            Assert.AreEqual("options_graphics.cfg", zone.Files[0].Path);
+            Assert.AreEqual("code_post_gfx", zone.Files[100].Path);
+        }
+        else if (sampleFile is "game:/code_post_gfx.ff#WaW" or "game:/code_post_gfx.ff#MW2" or "game:/code_post_gfx.ff#BO" or "game:/code_post_gfx.ff#MW3")
+            Assert.AreEqual(0, IwZone(dat).Files.Count);
+        else if (sampleFile is "game:/code_post_gfx.ff#AW" or "game:/code_post_gfx.ff#IW" or "game:/code_post_gfx.ff#WWII" or "game:/code_post_gfx.ff#MW")
+            Assert.AreEqual(0, IwZone(dat).Files.Count);
     }
 
     [TestMethod]
@@ -61,7 +75,7 @@ public class FormatsTest {
         if (!installed) return;
         var dat = family.GetArchive(new Uri(sampleFile));
         if (sampleFile == "game:/mp_backlot_load.ff#COD4") {
-            var zone = Cod4Zone(dat);
+            var zone = IwZone(dat);
             Assert.AreEqual(6, zone.Files.Count);
             Assert.AreEqual("techset/0000", zone.Files[0].Path);
             Assert.AreEqual("techset/0001", zone.Files[1].Path);
@@ -74,9 +88,78 @@ public class FormatsTest {
             Assert.AreEqual(8, stream.Read(index, 0, 8));
             CollectionAssert.AreEqual(new byte[] { 4, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }, index);
         }
+        else if (sampleFile == "game:/mp_makin_day_load.ff#WaW") {
+            var zone = IwZone(dat);
+            Assert.AreEqual(9, zone.Files.Count);
+            Assert.AreEqual("sound/0000", zone.Files[0].Path);
+            Assert.AreEqual("image/0001", zone.Files[1].Path);
+            Assert.AreEqual("image/0002", zone.Files[2].Path);
+            Assert.AreEqual("image/0003", zone.Files[3].Path);
+            Assert.AreEqual("stringtable/0004", zone.Files[4].Path);
+            Assert.AreEqual("stringtable/0008", zone.Files[8].Path);
+        }
+        else if (sampleFile == "game:/mp_underpass_load.ff#MW2") {
+            var zone = IwZone(dat);
+            Assert.AreEqual(5, zone.Files.Count);
+            Assert.AreEqual("techset/0000", zone.Files[0].Path);
+            Assert.AreEqual("material/0001", zone.Files[1].Path);
+            Assert.AreEqual("material/0002", zone.Files[2].Path);
+            Assert.AreEqual("material/0003", zone.Files[3].Path);
+            Assert.AreEqual("rawfile/0004", zone.Files[4].Path);
+            var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#MW2")));
+            Assert.AreEqual(8, pre.Files.Count);
+            Assert.AreEqual("codescripts/$default", pre.Files[0].Path);
+            Assert.AreEqual("configure.csv", pre.Files[1].Path);
+            Assert.AreEqual("code_pre_gfx", pre.Files[7].Path);
+            using var csv = pre.ReadData(pre.Files[1]).Result;
+            Assert.IsTrue(csv.Length > 100);
+        }
+        else if (sampleFile == "game:/ui_mp.ff#BO") {
+            var zone = IwZone(dat);
+            Assert.AreEqual(376, zone.Files.Count);
+            Assert.AreEqual("VertexShader/0000", zone.Files[0].Path);
+            var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#BO")));
+            Assert.AreEqual(37, pre.Files.Count);
+            Assert.AreEqual("StringTable/0000", pre.Files[0].Path);
+            Assert.AreEqual("RawFile/0001", pre.Files[1].Path);
+        }
+        else if (sampleFile == "game:/mp_alpha_load.ff#MW3") {
+            var zone = IwZone(dat);
+            Assert.AreEqual(5, zone.Files.Count);
+            Assert.AreEqual("techset/0000", zone.Files[0].Path);
+            Assert.AreEqual("material/0001", zone.Files[1].Path);
+            Assert.AreEqual("material/0003", zone.Files[3].Path);
+            Assert.AreEqual("rawfile/0004", zone.Files[4].Path);
+            var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#MW3")));
+            Assert.AreEqual(7, pre.Files.Count);
+            Assert.AreEqual("codescripts/$default", pre.Files[0].Path);
+            Assert.AreEqual("configure.csv", pre.Files[1].Path);
+            Assert.AreEqual("code_pre_gfx", pre.Files[6].Path);
+            using var csv = pre.ReadData(pre.Files[1]).Result;
+            Assert.IsTrue(csv.Length > 100);
+        }
+        else if (sampleFile == "game:/yemen_gump_outro.ff#BO2") {
+            var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#BO2")));
+            Assert.IsTrue(pre.Files.Any(f => f.Path == "configure.cfg"));
+        }
+        else if (sampleFile == "game:/ui_install.ff#Ghosts") {
+            var zone = IwZone(dat);
+            Assert.AreEqual(1, zone.Files.Count);
+            Assert.AreEqual("ui_install", zone.Files[0].Path);
+            var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#Ghosts")));
+            Assert.AreEqual(6, pre.Files.Count);
+            Assert.AreEqual("codescripts/$default", pre.Files[0].Path);
+            Assert.AreEqual("configure.csv", pre.Files[1].Path);
+            Assert.AreEqual("ragdoll.cfg", pre.Files[4].Path);
+            Assert.AreEqual("code_pre_gfx", pre.Files[5].Path);
+            using var csv = pre.ReadData(pre.Files[1]).Result;
+            Assert.IsTrue(csv.Length > 100);
+        }
+        else if (sampleFile is "game:/patch_sanfran.ff#AW" or "game:/code_pre_gfx.ff#IW" or "game:/code_post_gfx.ff#WWII")
+            Assert.AreEqual(0, IwZone(dat).Files.Count);
     }
 
-    static IWArchive Cod4Zone(Archive archive) {
+    static IWArchive IwZone(Archive archive) {
         if (archive is IWArchive iw) return iw;
         var many = (BinaryArchive)archive;
         return many.Files.Select(f => f.Arc).OfType<IWArchive>().First();

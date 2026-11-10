@@ -20,8 +20,10 @@
     "name": "Call of Duty 4: Modern Warfare",
     "files": [
       {
-        "path": "ac130.ff/col_map_sp/0371",
-        "type": "Texture"
+        "path": "mp_backlot_load.ff/col_map_sp/0371"
+      },
+      {
+        "path": "ac130.ff/col_map_sp/0371"
       },
       {
         "path": "iw_00.iwd/ac130.cfg"

@@ -387,7 +387,7 @@ match __current__:
             # Game = "COD2", # Call of Duty 2 - IWD
             # Game = "#COD3", # Call of Duty 3 - XBOX only
             # Game = "COD4", # Call of Duty 4: Modern Warfare - IWD, FF
-            # Game = "COD:WaW", # Call of Duty: World at War - IWD, FF
+            # Game = "WaW", # Call of Duty: World at War - IWD, FF
             # Game = "MW2", # Call of Duty: Modern Warfare 2
             # Game = "COD:BO", # Call of Duty: Black Ops - IWD, FF
             # Game = "MW3", # Call of Duty: Call of Duty: Modern Warfare 3

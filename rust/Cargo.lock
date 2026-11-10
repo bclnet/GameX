@@ -1895,9 +1895,13 @@ dependencies = [
 name = "gamex-iw"
 version = "0.1.0"
 dependencies = [
+ "flate2",
  "gamex",
  "gamex-blizzard",
  "gamex-uncore",
+ "openx-poly",
+ "openx-vfx",
+ "sha1",
 ]
 
 [[package]]

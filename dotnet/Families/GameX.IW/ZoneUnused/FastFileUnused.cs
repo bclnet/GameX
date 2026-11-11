@@ -1,6 +1,5 @@
-﻿namespace GameX.IW.Formats {
-    // Members ListFastFile does not call. Left commented. GetZoneFile writes a sibling .ff~.
-    public unsafe static partial class FastFile {
+﻿    // Members ListFastFile does not call. Left commented. GetZoneFile writes a sibling .ff~.
+    //public unsafe static partial class FastFile {
         // Unused by ListFastFile: FF_BO3BlockHeader, FF_ZoneHeader, the stop bytes, GetZoneFile, COD_Material, COD_Shader, and GetAssets.
         // [StructLayout(LayoutKind.Sequential)]
         // struct FF_BO3BlockHeader {
@@ -385,8 +384,7 @@
 
             // return null;
         // }
-    }
-}
+//    }
 
 // find start
 //r.SeekNeedles(FF_Stop4).First();

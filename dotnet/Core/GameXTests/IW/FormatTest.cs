@@ -77,12 +77,12 @@ public class FormatsTest {
         if (sampleFile == "game:/mp_backlot_load.ff#COD4") {
             var zone = IwZone(dat);
             Assert.AreEqual(6, zone.Files.Count);
-            Assert.AreEqual("techset/0000", zone.Files[0].Path);
-            Assert.AreEqual("techset/0001", zone.Files[1].Path);
-            Assert.AreEqual("material/0002", zone.Files[2].Path);
-            Assert.AreEqual("material/0003", zone.Files[3].Path);
-            Assert.AreEqual("material/0004", zone.Files[4].Path);
-            Assert.AreEqual("rawfile/0005", zone.Files[5].Path);
+            Assert.AreEqual("techset/0000.tec", zone.Files[0].Path);
+            Assert.AreEqual("techset/0001.tec", zone.Files[1].Path);
+            Assert.AreEqual("material/0002.mat", zone.Files[2].Path);
+            Assert.AreEqual("material/0003.mat", zone.Files[3].Path);
+            Assert.AreEqual("material/0004.mat", zone.Files[4].Path);
+            Assert.AreEqual("rawfile/0005.raw", zone.Files[5].Path);
             using var stream = zone.ReadData(zone.Files[2]).Result;
             var index = new byte[8];
             Assert.AreEqual(8, stream.Read(index, 0, 8));
@@ -91,21 +91,21 @@ public class FormatsTest {
         else if (sampleFile == "game:/mp_makin_day_load.ff#WaW") {
             var zone = IwZone(dat);
             Assert.AreEqual(9, zone.Files.Count);
-            Assert.AreEqual("sound/0000", zone.Files[0].Path);
-            Assert.AreEqual("image/0001", zone.Files[1].Path);
-            Assert.AreEqual("image/0002", zone.Files[2].Path);
-            Assert.AreEqual("image/0003", zone.Files[3].Path);
-            Assert.AreEqual("stringtable/0004", zone.Files[4].Path);
-            Assert.AreEqual("stringtable/0008", zone.Files[8].Path);
+            Assert.AreEqual("sound/0000.snd", zone.Files[0].Path);
+            Assert.AreEqual("image/0001.iwi", zone.Files[1].Path);
+            Assert.AreEqual("image/0002.iwi", zone.Files[2].Path);
+            Assert.AreEqual("image/0003.iwi", zone.Files[3].Path);
+            Assert.AreEqual("stringtable/0004.tbl", zone.Files[4].Path);
+            Assert.AreEqual("stringtable/0008.tbl", zone.Files[8].Path);
         }
         else if (sampleFile == "game:/mp_underpass_load.ff#MW2") {
             var zone = IwZone(dat);
             Assert.AreEqual(5, zone.Files.Count);
-            Assert.AreEqual("techset/0000", zone.Files[0].Path);
-            Assert.AreEqual("material/0001", zone.Files[1].Path);
-            Assert.AreEqual("material/0002", zone.Files[2].Path);
-            Assert.AreEqual("material/0003", zone.Files[3].Path);
-            Assert.AreEqual("rawfile/0004", zone.Files[4].Path);
+            Assert.AreEqual("techset/0000.tec", zone.Files[0].Path);
+            Assert.AreEqual("material/0001.mat", zone.Files[1].Path);
+            Assert.AreEqual("material/0002.mat", zone.Files[2].Path);
+            Assert.AreEqual("material/0003.mat", zone.Files[3].Path);
+            Assert.AreEqual("rawfile/0004.raw", zone.Files[4].Path);
             var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#MW2")));
             Assert.AreEqual(8, pre.Files.Count);
             Assert.AreEqual("codescripts/$default", pre.Files[0].Path);
@@ -117,19 +117,19 @@ public class FormatsTest {
         else if (sampleFile == "game:/ui_mp.ff#BO") {
             var zone = IwZone(dat);
             Assert.AreEqual(376, zone.Files.Count);
-            Assert.AreEqual("VertexShader/0000", zone.Files[0].Path);
+            Assert.AreEqual("VertexShader/0000.vsh", zone.Files[0].Path);
             var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#BO")));
             Assert.AreEqual(37, pre.Files.Count);
-            Assert.AreEqual("StringTable/0000", pre.Files[0].Path);
-            Assert.AreEqual("RawFile/0001", pre.Files[1].Path);
+            Assert.AreEqual("StringTable/0000.tbl", pre.Files[0].Path);
+            Assert.AreEqual("RawFile/0001.raw", pre.Files[1].Path);
         }
         else if (sampleFile == "game:/mp_alpha_load.ff#MW3") {
             var zone = IwZone(dat);
             Assert.AreEqual(5, zone.Files.Count);
-            Assert.AreEqual("techset/0000", zone.Files[0].Path);
-            Assert.AreEqual("material/0001", zone.Files[1].Path);
-            Assert.AreEqual("material/0003", zone.Files[3].Path);
-            Assert.AreEqual("rawfile/0004", zone.Files[4].Path);
+            Assert.AreEqual("techset/0000.tec", zone.Files[0].Path);
+            Assert.AreEqual("material/0001.mat", zone.Files[1].Path);
+            Assert.AreEqual("material/0003.mat", zone.Files[3].Path);
+            Assert.AreEqual("rawfile/0004.raw", zone.Files[4].Path);
             var pre = IwZone(family.GetArchive(new Uri("game:/code_pre_gfx.ff#MW3")));
             Assert.AreEqual(7, pre.Files.Count);
             Assert.AreEqual("codescripts/$default", pre.Files[0].Path);

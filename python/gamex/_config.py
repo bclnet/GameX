@@ -381,7 +381,7 @@ match __current__:
         option = GlobalOption(
             Engine = "GL",
             ForceOpen = True,
-            ForcePath = "sample:*",
+            ForcePath = "sample:0",
             Family = "IW",
             Game = "COD", # Call of Duty - IWD
             # Game = "COD2", # Call of Duty 2 - IWD

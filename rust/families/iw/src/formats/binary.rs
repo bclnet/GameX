@@ -17,8 +17,6 @@ use flate2::read::DeflateDecoder;
 use sha1::{Digest, Sha1};
 use gamex::binary::{ArcBinary, Archive, BinaryArchive, Stream, Task};
 use gamex::meta::{extension, fileName, FileSource, IHaveMetaInfo, MetaContent, MetaInfo, MetaManager, Tag};
-use crate::formats::fast_file_asset_type::{IW3XAssetType, IW4XAssetType, IW5XAssetType, Oth_AssetType};
-
 fn reader<'a>(r: Option<&'a mut dyn VfsRead>) -> io::Result<&'a mut dyn VfsRead> { r.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "r")) }
 fn fromResult<'a>(value: io::Result<Tag>) -> Task<'a, Tag> { Box::pin(std::future::ready(value)) }
 
@@ -103,6 +101,40 @@ const BO2: u32 = 0x0093;
 const Ghosts: u32 = 0x0235;
 const BO3: u32 = 0x0251;
 
+// Index names. Same strings as the C# enums, which stay in ZoneUnused and are not ported.
+const IW3_NAMES: &[&str] = &[
+    "xmodelpieces", "physpreset", "xanim", "xmodel", "material", "techset", "image", "sound",
+    "sndcurve", "loaded_sound", "col_map_sp", "col_map_mp", "com_map", "game_map_sp", "game_map_mp",
+    "map_ents", "gfx_map", "lightdef", "ui_map", "font", "menufile", "menu", "localize", "weapon",
+    "snddriverglobals", "fx", "impactfx", "aitype", "mptype", "character", "xmodelalias", "rawfile",
+    "stringtable",
+];
+const IW4_NAMES: &[&str] = &[
+    "physpreset", "phys_collmap", "xanim", "xmodelsurfs", "xmodel", "material", "pixelshader",
+    "vertexshader", "vertexdecl", "techset", "image", "sound", "sndcurve", "loaded_sound",
+    "col_map_sp", "col_map_mp", "com_map", "game_map_sp", "game_map_mp", "map_ents", "fx_map",
+    "gfx_map", "lightdef", "ui_map", "font", "menufile", "menu", "localize", "weapon",
+    "snddriverglobals", "fx", "impactfx", "aitype", "mptype", "character", "xmodelalias", "rawfile",
+    "stringtable", "leaderboarddef", "structureddatadef", "tracer", "vehicle", "addon_map_ents",
+];
+const IW5_NAMES: &[&str] = &[
+    "physpreset", "phys_collmap", "xanim", "xmodelsurfs", "xmodel", "material", "pixelshader",
+    "vertexshader", "vertexdecl", "techset", "image", "sound", "sndcurve", "loaded_sound",
+    "col_map_mp", "com_map", "glass_map", "ai_paths", "vehicle_tracks", "map_ents", "fx_map",
+    "gfx_map", "lightdef", "ui_map", "font", "menufile", "menu", "localize", "attachment", "weapon",
+    "snddriverglobals", "fx", "impactfx", "surfacefx", "aitype", "mptype", "character", "xmodelalias",
+    "rawfile", "scriptfile", "stringtable", "leaderboarddef", "structureddatadef", "tracer", "vehicle",
+    "addon_map_ents",
+];
+const OTH_NAMES: &[&str] = &[
+    "PhysPreset", "PhysColMap", "XAnim", "XModelSurfs", "XModel", "Material", "PixelShader",
+    "VertexShader", "VertexDecl", "TechSet", "Image", "Sound", "SndCurve", "LoadedSound",
+    "ColMapSP", "ColMapMP", "ComMap", "GameMapSP", "GameMapMP", "MapEnts", "FXMap", "GfxMap",
+    "LightDef", "UIMap", "Font", "MenuFile", "Menu", "Localize", "Weapon", "SndDriverGlobals",
+    "FX", "ImpactFX", "AIType", "MPType", "Character", "XModelAlias", "RawFile", "StringTable",
+    "LeaderBoardDef", "StructuredDataDef", "Tracer", "Vehical", "AddONMapEnts",
+];
+
 const GhostsNil: i64 = i64::from_le_bytes([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFD, 0xFD, 0xFD]);
 const Bo2Key: [u8; 32] = [
     0x64, 0x1D, 0x8A, 0x2F, 0xE3, 0x1D, 0x3A, 0xA6, 0x36, 0x22, 0xBB, 0xC9, 0xCE, 0x85, 0x87, 0x22,
@@ -162,22 +194,18 @@ impl Binary_IW {
         Self::inflateRaw(&packed[2..])
     }
 
-    fn enumName<T: std::fmt::Debug>(type_: i32, max: i32, fromRaw: fn(i32) -> Option<T>) -> String {
-        if type_ >= 0 && type_ < max {
-            if let Some(v) = fromRaw(type_) { return format!("{v:?}"); }
+    fn typeName(type_: i32, names: &[&str]) -> String {
+        if type_ >= 0 {
+            let i = type_ as usize;
+            if i < names.len() { return names[i].to_string(); }
         }
         format!("type{type_}")
     }
-
-    fn iw3Name(type_: i32) -> String { Self::enumName(type_, IW3XAssetType::max as i32, IW3XAssetType::fromRaw) }
-    fn iw4Name(type_: i32) -> String { Self::enumName(type_, IW4XAssetType::max as i32, IW4XAssetType::fromRaw) }
-    fn iw5Name(type_: i32) -> String { Self::enumName(type_, IW5XAssetType::max as i32, IW5XAssetType::fromRaw) }
-    fn othName(type_: i32) -> String {
-        if type_ >= 0 && type_ < Oth_AssetType::Max as i32 {
-            if let Some(v) = Oth_AssetType::fromRaw(type_) { return format!("{v:?}"); }
-        }
-        format!("type{type_}")
-    }
+    fn nameIndex(names: &[&str], name: &str) -> i32 { names.iter().position(|s| *s == name).expect(name) as i32 }
+    fn iw3Name(type_: i32) -> String { Self::typeName(type_, IW3_NAMES) }
+    fn iw4Name(type_: i32) -> String { Self::typeName(type_, IW4_NAMES) }
+    fn iw5Name(type_: i32) -> String { Self::typeName(type_, IW5_NAMES) }
+    fn othName(type_: i32) -> String { Self::typeName(type_, OTH_NAMES) }
 
     fn assetExt(typeName: &str) -> String {
         let key = typeName.to_ascii_lowercase().replace('_', "");
@@ -294,7 +322,7 @@ impl Binary_IW {
         }
         return Ok((zone, files));
         }
-        let (nameOf, maxType): (fn(i32) -> String, i32) = if version == WaW { (Self::iw3Name, IW3XAssetType::max as i32) } else { (Self::othName, Oth_AssetType::Max as i32) };
+        let (nameOf, maxType): (fn(i32) -> String, i32) = if version == WaW { (Self::iw3Name, IW3_NAMES.len() as i32) } else { (Self::othName, OTH_NAMES.len() as i32) };
         let zone = Self::inflateAt(r, 12)?;
         if zone.len() < 0x30 { return Ok((zone, Vec::new())); }
         let count = Self::i32At(&zone, 0x2C);
@@ -327,9 +355,9 @@ impl Binary_IW {
             return Ok((Some(zone), files));
         }
         let (countAt, recAt, rawType, maxType, nameOf): (usize, usize, i32, i32, fn(i32) -> String) = if version == MW2 {
-            (0x38, 0x40, IW4XAssetType::rawfile as i32, IW4XAssetType::max as i32, Self::iw4Name)
+            (0x38, 0x40, Self::nameIndex(IW4_NAMES, "rawfile"), IW4_NAMES.len() as i32, Self::iw4Name)
         } else {
-            (0x3C, 0x44, IW5XAssetType::rawfile as i32, IW5XAssetType::max as i32, Self::iw5Name)
+            (0x3C, 0x44, Self::nameIndex(IW5_NAMES, "rawfile"), IW5_NAMES.len() as i32, Self::iw5Name)
         };
         let zone = if format_ == U100 { Self::inflateAt(r, 0x15)? }
             else if format_ == F100 { Self::inflateAuthed(r)? }
@@ -717,6 +745,18 @@ mod tests {
         assert_eq!(Binary_IW::indexPath("fx", 0), "fx/0000.fx");
         assert_eq!(Binary_IW::indexPath("xmodel", 0), "xmodel/0000.xmd");
         assert_eq!(Binary_IW::indexPath("xmodelpieces", 0), "xmodelpieces/0000.xmp");
+        assert_eq!(Binary_IW::iw3Name(7), "sound");
+        assert_eq!(Binary_IW::iw3Name(31), "rawfile");
+        assert_eq!(Binary_IW::iw3Name(32), "stringtable");
+        assert_eq!(Binary_IW::iw3Name(33), "type33");
+        assert_eq!(Binary_IW::iw4Name(36), "rawfile");
+        assert_eq!(Binary_IW::iw4Name(43), "type43");
+        assert_eq!(Binary_IW::iw5Name(14), "col_map_mp");
+        assert_eq!(Binary_IW::iw5Name(38), "rawfile");
+        assert_eq!(Binary_IW::iw5Name(46), "type46");
+        assert_eq!(Binary_IW::othName(41), "Vehical");
+        assert_eq!(Binary_IW::othName(42), "AddONMapEnts");
+        assert_eq!(Binary_IW::othName(43), "type43");
     }
 
     #[test]

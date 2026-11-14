@@ -32,7 +32,14 @@
   },
   "WaW": {
     "name": "Call of Duty: World at War",
-    "files": []
+    "files": [
+      {
+        "path": "mp_makin_day_load.ff/col_map_sp/0371"
+      },
+      {
+        "path": "ber3.ff/col_map_sp/0371"
+      }
+    ]
   },
   "MW2": {
     "name": "Call of Duty: Modern Warfare 2",
@@ -48,7 +55,11 @@
   },
   "BO2": {
     "name": "Call of Duty: Black Ops II",
-    "files": []
+    "files": [
+      {
+        "path": "karma_gump_checkin.ff/col_map_sp/0371"
+      }
+    ]
   },
   "Ghosts": {
     "name": "Call of Duty: Ghosts",

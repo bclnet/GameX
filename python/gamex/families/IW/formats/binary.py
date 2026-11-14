@@ -125,39 +125,55 @@ class Binary_IW(ArcBinaryT):
         return Binary_IW.inflateRaw(bytes(packed[2:]))
 
 
+    # Index names. Same strings as the C# enums, which stay in ZoneUnused and are not ported.
+    _IW3 = (
+        'xmodelpieces', 'physpreset', 'xanim', 'xmodel', 'material', 'techset', 'image', 'sound',
+        'sndcurve', 'loaded_sound', 'col_map_sp', 'col_map_mp', 'com_map', 'game_map_sp', 'game_map_mp',
+        'map_ents', 'gfx_map', 'lightdef', 'ui_map', 'font', 'menufile', 'menu', 'localize', 'weapon',
+        'snddriverglobals', 'fx', 'impactfx', 'aitype', 'mptype', 'character', 'xmodelalias', 'rawfile',
+        'stringtable',
+    )
+    _IW4 = (
+        'physpreset', 'phys_collmap', 'xanim', 'xmodelsurfs', 'xmodel', 'material', 'pixelshader',
+        'vertexshader', 'vertexdecl', 'techset', 'image', 'sound', 'sndcurve', 'loaded_sound',
+        'col_map_sp', 'col_map_mp', 'com_map', 'game_map_sp', 'game_map_mp', 'map_ents', 'fx_map',
+        'gfx_map', 'lightdef', 'ui_map', 'font', 'menufile', 'menu', 'localize', 'weapon',
+        'snddriverglobals', 'fx', 'impactfx', 'aitype', 'mptype', 'character', 'xmodelalias', 'rawfile',
+        'stringtable', 'leaderboarddef', 'structureddatadef', 'tracer', 'vehicle', 'addon_map_ents',
+    )
+    _IW5 = (
+        'physpreset', 'phys_collmap', 'xanim', 'xmodelsurfs', 'xmodel', 'material', 'pixelshader',
+        'vertexshader', 'vertexdecl', 'techset', 'image', 'sound', 'sndcurve', 'loaded_sound',
+        'col_map_mp', 'com_map', 'glass_map', 'ai_paths', 'vehicle_tracks', 'map_ents', 'fx_map',
+        'gfx_map', 'lightdef', 'ui_map', 'font', 'menufile', 'menu', 'localize', 'attachment', 'weapon',
+        'snddriverglobals', 'fx', 'impactfx', 'surfacefx', 'aitype', 'mptype', 'character', 'xmodelalias',
+        'rawfile', 'scriptfile', 'stringtable', 'leaderboarddef', 'structureddatadef', 'tracer', 'vehicle',
+        'addon_map_ents',
+    )
+    _OTH = (
+        'PhysPreset', 'PhysColMap', 'XAnim', 'XModelSurfs', 'XModel', 'Material', 'PixelShader',
+        'VertexShader', 'VertexDecl', 'TechSet', 'Image', 'Sound', 'SndCurve', 'LoadedSound',
+        'ColMapSP', 'ColMapMP', 'ComMap', 'GameMapSP', 'GameMapMP', 'MapEnts', 'FXMap', 'GfxMap',
+        'LightDef', 'UIMap', 'Font', 'MenuFile', 'Menu', 'Localize', 'Weapon', 'SndDriverGlobals',
+        'FX', 'ImpactFX', 'AIType', 'MPType', 'Character', 'XModelAlias', 'RawFile', 'StringTable',
+        'LeaderBoardDef', 'StructuredDataDef', 'Tracer', 'Vehical', 'AddONMapEnts',
+    )
+
     @staticmethod
-    def _enumName(enum, type_: int, max_: int) -> str:
-        if 0 <= type_ < max_:
-            try: return enum(type_).name
-            except ValueError: pass
-        return f'type{type_}'
-
+    def _typeName(names: tuple, type_: int) -> str:
+        return names[type_] if 0 <= type_ < len(names) else f'type{type_}'
 
     @staticmethod
-    def iw3Name(type_: int) -> str:
-        from gamex.families.IW.formats.fastFile_assetType import IW3XAssetType
-        return Binary_IW._enumName(IW3XAssetType, type_, int(IW3XAssetType.max))
-
+    def iw3Name(type_: int) -> str: return Binary_IW._typeName(Binary_IW._IW3, type_)
 
     @staticmethod
-    def iw4Name(type_: int) -> str:
-        from gamex.families.IW.formats.fastFile_assetType import IW4XAssetType
-        return Binary_IW._enumName(IW4XAssetType, type_, int(IW4XAssetType.max))
-
+    def iw4Name(type_: int) -> str: return Binary_IW._typeName(Binary_IW._IW4, type_)
 
     @staticmethod
-    def iw5Name(type_: int) -> str:
-        from gamex.families.IW.formats.fastFile_assetType import IW5XAssetType
-        return Binary_IW._enumName(IW5XAssetType, type_, int(IW5XAssetType.max))
-
+    def iw5Name(type_: int) -> str: return Binary_IW._typeName(Binary_IW._IW5, type_)
 
     @staticmethod
-    def othName(type_: int) -> str:
-        from gamex.families.IW.formats.fastFile_assetType import Oth_AssetType
-        if 0 <= type_ < int(Oth_AssetType.Max):
-            try: return Oth_AssetType(type_).name
-            except ValueError: pass
-        return f'type{type_}'
+    def othName(type_: int) -> str: return Binary_IW._typeName(Binary_IW._OTH, type_)
 
 
     @staticmethod
@@ -234,42 +250,6 @@ class Binary_IW(ArcBinaryT):
 
 
     @staticmethod
-    def iw3Max() -> int:
-        from gamex.families.IW.formats.fastFile_assetType import IW3XAssetType
-        return int(IW3XAssetType.max)
-
-
-    @staticmethod
-    def iw4Max() -> int:
-        from gamex.families.IW.formats.fastFile_assetType import IW4XAssetType
-        return int(IW4XAssetType.max)
-
-
-    @staticmethod
-    def iw4Raw() -> int:
-        from gamex.families.IW.formats.fastFile_assetType import IW4XAssetType
-        return int(IW4XAssetType.rawfile)
-
-
-    @staticmethod
-    def iw5Max() -> int:
-        from gamex.families.IW.formats.fastFile_assetType import IW5XAssetType
-        return int(IW5XAssetType.max)
-
-
-    @staticmethod
-    def iw5Raw() -> int:
-        from gamex.families.IW.formats.fastFile_assetType import IW5XAssetType
-        return int(IW5XAssetType.rawfile)
-
-
-    @staticmethod
-    def othMax() -> int:
-        from gamex.families.IW.formats.fastFile_assetType import Oth_AssetType
-        return int(Oth_AssetType.Max)
-
-
-    @staticmethod
     def list32(r: BinaryReader, version: int):
         if version == CO4_WWII:
             cmf = r.readByte()
@@ -308,7 +288,7 @@ class Binary_IW(ArcBinaryT):
                     o += 8
                     files.append(Binary_IW.FileHeader(i, Binary_IW.indexPath(Binary_IW.iw3Name(type_), i), pos, 8))
             return zone, files
-        nameOf, maxType = (iw3Name, Binary_IW.iw3Max()) if version == WaW else (othName, Binary_IW.othMax())
+        nameOf, maxType = (Binary_IW.iw3Name, len(Binary_IW._IW3)) if version == WaW else (Binary_IW.othName, len(Binary_IW._OTH))
         zone = Binary_IW.inflateAt(r, 12)
         if len(zone) < 0x30: return zone, []
         count = Binary_IW._i32(zone, 0x2C)
@@ -327,8 +307,8 @@ class Binary_IW(ArcBinaryT):
         if version == Ghosts:
             zone = Binary_IW.inflateAt(r, 0x2C)
             return zone, Binary_IW.scanRaw(zone, GhostsNil)
-        if version == MW2: countAt, recAt, rawType, maxType, nameOf = 0x38, 0x40, Binary_IW.iw4Raw(), Binary_IW.iw4Max(), iw4Name
-        else: countAt, recAt, rawType, maxType, nameOf = 0x3C, 0x44, Binary_IW.iw5Raw(), Binary_IW.iw5Max(), iw5Name
+        if version == MW2: countAt, recAt, rawType, maxType, nameOf = 0x38, 0x40, Binary_IW._IW4.index('rawfile'), len(Binary_IW._IW4), Binary_IW.iw4Name
+        else: countAt, recAt, rawType, maxType, nameOf = 0x3C, 0x44, Binary_IW._IW5.index('rawfile'), len(Binary_IW._IW5), Binary_IW.iw5Name
         if format_ == U100: zone = Binary_IW.inflateAt(r, 0x15)
         elif format_ == F100: zone = Binary_IW.inflateAuthed(r)
         else: return None, []

@@ -94,7 +94,17 @@ class MirageTextureBuilder : TextureBuilder<Texture> {
 
     public override Texture CreateSolid(int width, int height, float[] rgbas) {
         var name = $"solid_{width}x{height}_{string.Join("_", rgbas.Take(4).Select(x => SceneText.Format(x)))}";
-        return MirageEngine.Tree.Resources.Add(new Texture { Name = name, Width = width, Height = height, Format = "RGBA32", Bytes = width * height * 4 });
+        var t = new Texture { Name = name, Width = width, Height = height, Format = "RGBA32", Bytes = width * height * 4 };
+        if (MirageEngine.KeepPixels && width > 0 && height > 0 && rgbas != null && rgbas.Length >= 4) {
+            var px = new byte[width * height * 4];
+            var r = (byte)(Math.Clamp(rgbas[0], 0f, 1f) * 255f);
+            var g = (byte)(Math.Clamp(rgbas[1], 0f, 1f) * 255f);
+            var b = (byte)(Math.Clamp(rgbas[2], 0f, 1f) * 255f);
+            var a = (byte)(Math.Clamp(rgbas[3], 0f, 1f) * 255f);
+            for (var i = 0; i < px.Length; i += 4) { px[i] = r; px[i + 1] = g; px[i + 2] = b; px[i + 3] = a; }
+            t.Pixels = px;
+        }
+        return MirageEngine.Tree.Resources.Add(t);
     }
 
     public override Texture Create(Texture reuse, ITexture src, Range? level = null) => src.Create("MR", x => {
@@ -327,7 +337,7 @@ public class MirageSfx : IOpenSfx<Audio> {
 #region Engine
 
 /// <summary>
-/// MirageEngine - engine code "MR". Everything it is asked to draw lands in Tree, a headless scene graph with a text form.
+/// MirageEngine - engine code "MR". Everything it is asked to draw lands in Tree. The text form stays the test surface. SceneView paints that tree. Caps.Drawing lets image files decode through System.Drawing.
 /// </summary>
 public class MirageEngine : Engine {
     public static readonly Engine This = new MirageEngine();
@@ -343,7 +353,7 @@ public class MirageEngine : Engine {
     public static bool KeepPixels;
 
     MirageEngine() : base("MR", "Mirage") {
-        Caps = EngineX.Caps.None_;
+        Caps = EngineX.Caps.Drawing;
         GfxFactory = () => [new MirageGfxApi(), new MirageGfxSprite2D(), new MirageGfxSprite3D(), new MirageGfxModel(), new MirageGfxLight(), new MirageGfxTerrain()];
         SfxFactory = () => [new MirageSfx()];
         LogFunc = a => Tree.Log(a);

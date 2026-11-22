@@ -1,7 +1,7 @@
 Mirage
 ===============
 
-Engine code `MR`. A headless test engine: everything GameX would draw is built into a `Mirage.SceneTree` instead, and the tree has a canonical text form you can assert against.
+Engine code `MR`. Everything GameX would draw is built into a `Mirage.SceneTree`. Tests assert on the text form. `SceneView.Png` paints kept texture pixels, sprites, and mesh bounds into one image. `Mirage/dotnet/Mirage.Mcp` speaks MCP on stdio and opens an asset itself (`families`, `games`, `samples`, `files`, `open`, `texture`). There is no Python or Rust Mirage engine.
 
 ```csharp
 EngineX.Activate(MirageEngine.This);          // or MirageEngine.Reset() for a fresh tree
@@ -31,6 +31,6 @@ Console.WriteLine(MirageEngine.Tree.ToText());
 | GameX engine (family builders, `MirageRenderer.CreateRenderer`) | `dotnet/Engines/GameX.Engine.Mirage`
 | Tests | `Mirage/dotnet/MirageTests`, `OpenX/dotnet/Engines/OpenX.EngineTests/Mirage.cs`
 
-Renderer types: `TestTri`, `Texture`/`VideoTexture`, `Sprite`, `Object`, `Material`, `Audio`.
+Renderer types: `TestTri`, `Texture`/`VideoTexture`, `Sprite`, `Object`, `Model`, `Level`, `Material`, `Audio`. A model is an FTL or a NIF. A level is an FTS map. `Object` stays the untyped path.
 
 `MirageEngine.Tree.Resources` lists every mesh, texture, material, shader, sprite and audio the engine was handed, one line each; `MirageEngine.Tree.Journal` records node adds, component readies, frames and log lines in order.

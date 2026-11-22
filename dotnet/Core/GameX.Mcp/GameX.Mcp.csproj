@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Mirage.Mcp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Mirage\dotnet\Mirage\Mirage.csproj" />
+    <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Mirage\OpenX.Engine.Mirage.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\Engines\GameX.Engine.Mirage\GameX.Engine.Mirage.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\Core\GameX.All\GameX.All.csproj" />
+  </ItemGroup>
+
+</Project>

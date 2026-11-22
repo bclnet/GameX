@@ -3,7 +3,7 @@ Mirage
 
 Mirage is a lightweight, headless test engine that simulates a real-time game loop with pure text and console outputs. Designed entirely for decoupled unit testing, CI/CD validation, and logic benchmarking without a graphical overhead.
 
-The interface is the familiar one - a `SceneTree` of `Node`s, each with a `Transform`, `Component`s and children, plus named `Resource`s (`Mesh`, `Material`, `Texture`, `Shader`, `Sprite`, `Audio`, `TerrainData`) - but nothing is drawn. Instead every scene has a canonical text form that tests can assert against, and every lifecycle event goes into a journal.
+The interface is the familiar one - a `SceneTree` of `Node`s, each with a `Transform`, `Component`s and children, plus named `Resource`s (`Mesh`, `Material`, `Texture`, `Shader`, `Sprite`, `Audio`, `TerrainData`). Tests assert on the canonical text form, and every lifecycle event goes into a journal. `SceneView` paints that same tree into one image: kept texture pixels, sprites, and mesh bounds. `Mirage.Mcp` is the stdio MCP that opens a family archive through engine `MR` and returns that image.
 
 ```
 Root
@@ -43,7 +43,8 @@ Root
 
 | Path | Contents
 | -- | --
-| `dotnet/Mirage` | the engine (`netstandard2.1`, no dependencies beyond `System.Drawing.Common`)
+| `dotnet/Mirage` | the engine (`netstandard2.1`, no dependencies beyond `System.Drawing.Common`), including `SceneView`
 | `dotnet/MirageTests` | MSTest suite
+| `dotnet/Mirage.Mcp` | stdio MCP server. Tools: `families`, `games`, `samples`, `files`, `open`, `texture` |
 
 GameX drives Mirage through `OpenX.Engine.Mirage` (engine code `MR`) and `GameX.Engine.Mirage`, so any asset GameX can load can be rendered into a Mirage scene and checked as text.

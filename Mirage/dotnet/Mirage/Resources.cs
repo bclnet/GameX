@@ -208,7 +208,7 @@ public class ResourceSet {
     /// </summary>
     public override string ToString() {
         var b = new StringBuilder();
-        foreach (var r in All.OrderBy(x => x.Kind, StringComparer.Ordinal).ThenBy(x => x.Name, StringComparer.Ordinal)) b.AppendLine(SceneText.Write(r));
+        foreach (var r in All.OrderBy(x => x.Kind, StringComparer.Ordinal).ThenBy(x => x.Name, StringComparer.Ordinal)) b.Append(SceneText.Write(r)).Append('\n');
         return b.ToString();
     }
 }

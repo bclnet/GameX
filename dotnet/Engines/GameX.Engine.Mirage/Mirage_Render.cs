@@ -28,6 +28,8 @@ public static class MirageRenderer {
             "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0.., false),
             "Sprite" => new SpriteRenderer(gfx, source, obj),
             "Object" => new ObjectRenderer(gfx, source, obj),
+            "Model" => new ModelRenderer(gfx, source, obj),
+            "Level" => new LevelRenderer(gfx, source, obj),
             "Material" => new MaterialRenderer(gfx, source, obj),
             "Audio" => new AudioRenderer(EngineX.Sfx, source, obj),
             _ => default,

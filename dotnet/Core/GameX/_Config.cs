@@ -17,7 +17,7 @@
 //#define Frontier
 //#define Gamebryo
 //#define ID
-#define IW
+//#define IW
 //#define Lucas
 //#define Monolith
 //#define Mythic

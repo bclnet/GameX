@@ -88,17 +88,36 @@ public class TextureRenderer : MirageRenderer {
 #region ObjectRenderer
 
 /// <summary>
-/// ObjectRenderer - builds a model into the scene through the ObjectManager and the family's registered builder.
+/// ObjectRenderer - builds a model or a level into the scene through the ObjectManager and the family's registered builder.
+/// The node name is the kind: Object, Model, or Level.
 /// </summary>
-public class ObjectRenderer(IOpenGfx[] gfx, ISource source, object obj) : MirageRenderer("Object") {
-    readonly MirageGfxModel GfxModel = (MirageGfxModel)gfx[GfX.XModel];
+public class ObjectRenderer : MirageRenderer {
+    readonly MirageGfxModel GfxModel;
+    readonly ISource _source;
+    readonly object _obj;
     public Node Obj { get; private set; }
+
+    public ObjectRenderer(IOpenGfx[] gfx, ISource source, object obj, string name = "Object") : base(name) {
+        GfxModel = (MirageGfxModel)gfx[GfX.XModel];
+        _source = source;
+        _obj = obj;
+    }
 
     public override void Start() {
         base.Start();
-        (Obj, _) = GfxModel.ObjectManager.Create(source, obj, false, Node).Result;
+        (Obj, _) = GfxModel.ObjectManager.Create(_source, _obj, false, Node).Result;
     }
 }
+
+/// <summary>
+/// ModelRenderer - a Model, the same build as Object under a node named Model. An FTL or a NIF is a model.
+/// </summary>
+public class ModelRenderer(IOpenGfx[] gfx, ISource source, object obj) : ObjectRenderer(gfx, source, obj, "Model");
+
+/// <summary>
+/// LevelRenderer - a Level, the same build as Object under a node named Level. An FTS map is a level.
+/// </summary>
+public class LevelRenderer(IOpenGfx[] gfx, ISource source, object obj) : ObjectRenderer(gfx, source, obj, "Level");
 
 #endregion
 

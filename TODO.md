@@ -32,6 +32,7 @@ Last updated 2026-10-25. The Arkane bullet in section 3 is still open (Crytek mo
 
 These do not block each other. One session takes one track. The five engines are five tracks.
 
+- [x] **Mirage view and MCP.** `SceneView` paints kept pixels, sprites, and mesh bounds. Engine `MR` sets `Caps.Drawing` so `Binary_Img` decodes. Renderer types include `Model` (FTL, NIF) and `Level` (an FTS map). `Object` stays the untyped path. The stdio server is `dotnet/Core/GameX.Mcp` (`families`, `games`, `samples`, `files`, `open`, `texture`). Python and Rust have no Mirage engine. Object builders are still only NIF, FTL, and FTS.
 - [ ] **Arkane leftovers** (section 3). FTS map, OpenGL FTL, and `Binary_BspX` are in. Next is Crytek models. Leave `ZipArchiveX` and `UPackage`.
 - [ ] **Python catch-up** (section 4). The missing Uncore readers, OpenX graphics, core types, `TestEngine`, `%20`, and Store's Abandon/Archive/Ubisoft roots are in. Still open: `Compression` codecs that have no Python module (Doboz, LZ4, LZO, LZF, Oodle, Snappy, XCompress). The nine Arx `.bmp`s, `Binary_Zip`, and `Binary_Engine` match C#.
 - [x] **`disc_mds`** (section 2). `LoadMdsToDisc` mounts a disc. Twelve tests passed.

@@ -199,6 +199,20 @@ Root
     }
 
     [TestMethod]
+    public void ModelAndLevel_NameTheirNodes() {
+        MirageX.BuildersByType[typeof(string)] = (source, path, isStatic, mm) => Task.FromResult(new Node($"model:{path}"));
+        try {
+            Source.Assets["m.model"] = "m.model";
+            new ModelRenderer(EngineX.Gfx, Source, "m.model").Start();
+            StringAssert.Contains(MirageEngine.Tree.ToText(), "\n  Model\n");
+            MirageEngine.Reset();
+            new LevelRenderer(EngineX.Gfx, Source, "m.model").Start();
+            StringAssert.Contains(MirageEngine.Tree.ToText(), "\n  Level\n");
+        }
+        finally { MirageX.BuildersByType.Remove(typeof(string)); Source.Assets.Remove("m.model"); }
+    }
+
+    [TestMethod]
     public void Reset_GivesAFreshTreeAndFreshManagers() {
         var model = (MirageGfxModel)EngineX.Gfx[GfX.XModel];
         model.CreateTexture(Source, "tex.rgba").Wait();

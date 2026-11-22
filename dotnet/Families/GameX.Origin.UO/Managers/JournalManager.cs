@@ -5,7 +5,7 @@ using System.IO;
 
 namespace GameX.Origin.UO;
 
-/// <summary>ClassicUO JournalManager. Entries stay in memory, capped at 100. The log file is not opened.</summary>
+/// <summary>ClassicUO JournalManager. Entries stay in memory, capped at 100. The log file opens only when SaveJournalToFile is set.</summary>
 public sealed class JournalManager {
     const int MaxJournalHistoryCount = 100;
 
@@ -19,8 +19,11 @@ public sealed class JournalManager {
     public void Add(string text, ushort hue, string name, uint? serial, byte type, bool isunicode = true, MessageType messageType = MessageType.Regular) {
         JournalEntry entry = Entries.Count >= MaxJournalHistoryCount ? Entries.RemoveFromFront() : new JournalEntry();
 
-        // There is no font or hue profile. Hue and text stay what Add received.
         byte font = (byte)(isunicode ? 0 : 9);
+        if (UOSettings.GetBool("OverrideAllFonts", false)) {
+            font = (byte)UOSettings.GetInt("ChatFont", 1);
+            isunicode = UOSettings.GetBool("OverrideAllFontsIsUnicode", true);
+        }
         DateTime timeNow = DateTime.Now;
 
         entry.Text = text;
@@ -31,13 +34,17 @@ public sealed class JournalManager {
         entry.Time = timeNow;
         entry.TextType = type;
         entry.MessageType = messageType;
+        if (UOSettings.GetBool("ForceUnicodeJournal", false)) {
+            entry.Font = 0;
+            entry.IsUnicode = true;
+        }
 
         Entries.AddToBack(entry);
         EntryAdded?.Invoke(null, entry);
 
         if (_fileWriter == null && !_writerHasException) CreateWriter();
 
-        bool saveSerial = false;
+        bool saveSerial = UOSettings.GetBool("JournalFileWithSerial", false);
         string serialText = saveSerial && serial.HasValue ? $"<0x{serial.Value:X8}> " : string.Empty;
         string output = $"[{timeNow:G}]  {serialText}{name}: {text}";
         if (string.IsNullOrWhiteSpace(name)) output = $"[{timeNow:G}]  {serialText}{text}";
@@ -45,7 +52,28 @@ public sealed class JournalManager {
     }
 
     private void CreateWriter() {
-        // Profile path is not ported.
+        if (_fileWriter != null || !UOSettings.GetBool("SaveJournalToFile", false)) return;
+        try {
+            var path = Path.Combine(AppContext.BaseDirectory, "Data", "Client", "JournalLogs");
+            Directory.CreateDirectory(path);
+            var maxJournalFiles = UOSettings.GetInt("MaxJournalFiles", 100);
+            if (maxJournalFiles >= 0) {
+                try {
+                    var files = Directory.GetFiles(path, "*_journal.txt");
+                    Array.Sort(files);
+                    Array.Reverse(files);
+                    for (var i = files.Length - 1; i >= maxJournalFiles; --i)
+                        File.Delete(files[i]);
+                }
+                catch { }
+            }
+            _fileWriter = new StreamWriter(File.Open(Path.Combine(path, $"{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_journal.txt"), FileMode.Create, FileAccess.Write, FileShare.Read)) {
+                AutoFlush = true
+            };
+        }
+        catch {
+            _writerHasException = true;
+        }
     }
 
     public void CloseWriter() {

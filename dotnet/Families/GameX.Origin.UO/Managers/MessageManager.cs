@@ -16,11 +16,11 @@ public enum AffixType : byte {
 
 /// <summary>
 /// ClassicUO MessageManager. Overhead text is stored here. Nothing is drawn and no gump is opened.
-/// Profile reads are the in-memory defaults. Speech is not pushed into UOLoginNet.
+/// Profile reads are UOSettings. Speech is not pushed into UOLoginNet.
 /// </summary>
 public sealed class MessageManager {
-    // Profile path is not ported.
-    const string Language = "ENU";
+    // Settings.GlobalSettings.Language. A missing key stays ENU.
+    static string Language => UOSettings.Get("Language", "ENU");
     const int MaxLabelWidth = 200;
     const int MaxSize = 5;
     const byte TextObject = 2;
@@ -30,7 +30,6 @@ public sealed class MessageManager {
     const byte TargetHarmful = 1;
     const byte TargetBeneficial = 2;
 
-    // Profile path is not ported.
     static readonly Profile CurrentProfile = new Profile();
 
     readonly World _world;
@@ -60,7 +59,6 @@ public sealed class MessageManager {
 
     public void SendServerPromptResponse(string text) {
         var cancel = text.Length < 1;
-        // Profile path is not ported.
         if (UOLoginNet.HasPrompt)
             UOLoginNet.ReplyPrompt(text, cancel);
         else if (PromptData.Prompt == PromptAscii)
@@ -98,7 +96,6 @@ public sealed class MessageManager {
     ) {
         if (string.IsNullOrEmpty(text)) return;
 
-        // Profile path is not ported.
         if (CurrentProfile != null && CurrentProfile.OverrideAllFonts) {
             font = CurrentProfile.ChatFont;
             unicode = CurrentProfile.OverrideAllFontsIsUnicode;
@@ -165,7 +162,6 @@ public sealed class MessageManager {
     }
 
     public string CreateMessage(string msg, ushort hue, byte font, bool isunicode, MessageType type, byte textType) {
-        // Profile path is not ported.
         if (CurrentProfile != null && CurrentProfile.OverrideAllFonts) {
             font = CurrentProfile.ChatFont;
             isunicode = CurrentProfile.OverrideAllFontsIsUnicode;
@@ -208,7 +204,6 @@ public sealed class MessageManager {
     }
 
     static long CalculateTimeToLive(int linesCount) {
-        // Profile path is not ported.
         var currentProfile = CurrentProfile;
         if (currentProfile == null) return 0;
         long timeToLive;
@@ -368,22 +363,21 @@ public sealed class MessageManager {
         return false;
     }
 
-    // Profile path is not ported.
     sealed class Profile {
-        public bool OverrideAllFonts = false;
-        public byte ChatFont = 1;
-        public bool OverrideAllFontsIsUnicode = true;
-        public bool OverheadPartyMessages = false;
-        public bool IgnoreGuildMessages = false;
-        public bool IgnoreAllianceMessages = false;
-        public ushort BeneficHue = 0x0059;
-        public ushort HarmfulHue = 0x0020;
-        public ushort NeutralHue = 0x03B1;
-        public bool EnabledSpellHue = false;
-        public bool EnabledSpellFormat = false;
-        public string SpellDisplayFormat = "{power} [{spell}]";
-        public bool ScaleSpeechDelay = true;
-        public int SpeechDelay = 100;
+        public bool OverrideAllFonts => UOSettings.GetBool("OverrideAllFonts", false);
+        public byte ChatFont => (byte)UOSettings.GetInt("ChatFont", 1);
+        public bool OverrideAllFontsIsUnicode => UOSettings.GetBool("OverrideAllFontsIsUnicode", true);
+        public bool OverheadPartyMessages => UOSettings.GetBool("OverheadPartyMessages", false);
+        public bool IgnoreGuildMessages => UOSettings.GetBool("IgnoreGuildMessages", false);
+        public bool IgnoreAllianceMessages => UOSettings.GetBool("IgnoreAllianceMessages", false);
+        public ushort BeneficHue => (ushort)UOSettings.GetInt("BeneficHue", 0x0059);
+        public ushort HarmfulHue => (ushort)UOSettings.GetInt("HarmfulHue", 0x0020);
+        public ushort NeutralHue => (ushort)UOSettings.GetInt("NeutralHue", 0x03B1);
+        public bool EnabledSpellHue => UOSettings.GetBool("EnabledSpellHue", false);
+        public bool EnabledSpellFormat => UOSettings.GetBool("EnabledSpellFormat", false);
+        public string SpellDisplayFormat => UOSettings.Get("SpellDisplayFormat", "{power} [{spell}]");
+        public bool ScaleSpeechDelay => UOSettings.GetBool("ScaleSpeechDelay", true);
+        public int SpeechDelay => UOSettings.GetInt("SpeechDelay", 100);
     }
 
     struct Line {

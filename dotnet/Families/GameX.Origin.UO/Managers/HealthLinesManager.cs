@@ -20,12 +20,7 @@ public sealed class HealthLinesManager {
     const int OBJECT_HANDLES_GUMP_HEIGHT = 18;
     const int OBJECT_HANDLES_HP_BAR_HEIGHT = 3;
 
-    // Profile path is not ported. Defaults match Profile.cs.
-    bool _showMobilesHP = false;
-    int _mobileHPType = 0;
-    int _mobileHPShowWhen = 0;
-    bool _useNewTargetSystem = true;
-    bool _nameOverheadShowHpBar = true;
+    // Object handles are not a profile flag. The HP keys below keep the Profile.cs defaults.
     bool _handlesDisplaying = false;
     uint _lastTarget = 0, _selectedTarget = 0, _newTargetSerial = 0;
     readonly List<UOMobileState> _mobiles = [];
@@ -39,19 +34,13 @@ public sealed class HealthLinesManager {
 
     public HealthLinesManager(World world) { _world = world; }
 
-    public bool IsEnabled {
-        get {
-            // Profile path is not ported.
-            return _showMobilesHP;
-        }
-    }
+    public bool IsEnabled => UOSettings.GetBool("ShowMobilesHP", false);
 
     public void Draw(uint serial, int hits, int maxHits, byte flags, NotorietyFlag notoriety) {
-        // Profile path is not ported.
-        var mode = _mobileHPType;
+        var mode = UOSettings.GetInt("MobileHPType", 0);
         if (mode < 0) return;
-        var showWhen = _mobileHPShowWhen;
-        var useNewTargetSystem = _useNewTargetSystem;
+        var showWhen = UOSettings.GetInt("MobileHPShowWhen", 0);
+        var useNewTargetSystem = UOSettings.GetBool("UseNewTargetSystem", true);
         var isEnabled = IsEnabled;
         var version = UltimaOnline.Current?.Version ?? default;
         var sa = version >= ClientVersion.CV_7000;
@@ -89,7 +78,7 @@ public sealed class HealthLinesManager {
             p1X -= (hitsTextW >> 1) + 5;
             p1Y -= hitsTextH;
             if (_handlesDisplaying) {
-                var ohHeight = OBJECT_HANDLES_GUMP_HEIGHT + (_nameOverheadShowHpBar ? OBJECT_HANDLES_HP_BAR_HEIGHT + 1 : 0);
+                var ohHeight = OBJECT_HANDLES_GUMP_HEIGHT + (UOSettings.GetBool("NameOverheadShowHpBar", true) ? OBJECT_HANDLES_HP_BAR_HEIGHT + 1 : 0);
                 p1Y -= ohHeight + 5;
                 offsetY += ohHeight + 5;
             }

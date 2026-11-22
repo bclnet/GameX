@@ -101,12 +101,15 @@ public sealed class HouseManager {
 
     public bool EntityIntoHouse(uint house, object obj) {
         if (obj != null && TryGetHouse(house, out _)) {
-            if (!_world.Items.TryGetValue(house, out object raw) || raw is not Item) {
+            if (!_world.Items.TryGetValue(house, out object raw) || raw is not Item foundation) {
                 return true;
             }
 
-            // no MultiInfo
-            return true;
+            if (obj is not Item item) return true;
+            if (!TryMultiRect(foundation.Graphic, out short minX, out short minY, out short maxX, out short maxY))
+                return true;
+            return item.X >= foundation.X + minX && item.X <= foundation.X + maxX
+                && item.Y >= foundation.Y + minY && item.Y <= foundation.Y + maxY;
         }
 
         return false;
@@ -221,10 +224,14 @@ public sealed class HouseManager {
         return true;
     }
 
-    // ClassicUO MultiInfo starts at 0. A positive-only multi therefore keeps minX and minY at 0.
-    static bool TryMultiRect(ushort graphic, out short minX, out short minY, out short maxY) {
+    static bool TryMultiRect(ushort graphic, out short minX, out short minY, out short maxY)
+        => TryMultiRect(graphic, out minX, out minY, out _, out maxY);
+
+    // ClassicUO MultiInfo starts at 0. Width and Height are the max tile, not a size. A positive-only multi therefore keeps minX and minY at 0.
+    static bool TryMultiRect(ushort graphic, out short minX, out short minY, out short maxX, out short maxY) {
         minX = 0;
         minY = 0;
+        maxX = 0;
         maxY = 0;
         var root = UltimaOnline.Current?.ClientPath;
         if (string.IsNullOrEmpty(root)) return false;
@@ -256,6 +263,7 @@ public sealed class HouseManager {
                 var x = BitConverter.ToInt16(buf, o + 2);
                 var y = BitConverter.ToInt16(buf, o + 4);
                 if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
                 if (y < minY) minY = y;
                 if (y > maxY) maxY = y;
             }

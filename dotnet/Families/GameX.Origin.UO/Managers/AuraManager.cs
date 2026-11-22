@@ -120,8 +120,10 @@ public sealed class AuraManager {
         _aura = new Aura(40);
     }
 
-    // Profile path is not ported.
-    public int AuraUnderFeetType { get; set; }
+    public int AuraUnderFeetType {
+        get => UOSettings.GetInt("AuraUnderFeetType", 0);
+        set => UOSettings.Set("AuraUnderFeetType", value);
+    }
 
     public bool IsEnabled {
         get {

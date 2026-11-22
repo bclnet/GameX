@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
@@ -95,7 +97,13 @@ public sealed class AnchorManager {
     }
 
     public void Save(XmlTextWriter writer) {
-        // Profile path is not ported.
+        var sb = new StringBuilder();
+        using (var copy = new XmlTextWriter(new StringWriter(sb))) {
+            foreach (var value in reverseMap.Values.Distinct())
+                value.Save(copy);
+        }
+        // ClassicUO writes anchored_group_gump inside gumps.xml. There is no profile property.
+        UOSettings.Set("anchoredGroups", sb.ToString());
         foreach (var value in reverseMap.Values.Distinct())
             value.Save(writer);
     }
@@ -319,7 +327,6 @@ public sealed class AnchorManager {
         }
 
         public void Save(XmlTextWriter writer) {
-            // Profile path is not ported.
             writer.WriteStartElement("anchored_group_gump");
             writer.WriteAttributeString("matrix_w", controlMatrix.GetLength(0).ToString());
             writer.WriteAttributeString("matrix_h", controlMatrix.GetLength(1).ToString());

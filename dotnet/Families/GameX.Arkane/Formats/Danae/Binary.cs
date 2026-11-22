@@ -1,4 +1,5 @@
-﻿using GameX.Bullfrog;
+﻿using GameX.Arkane.Engines;
+using GameX.Bullfrog;
 using GameX.Uncore.Formats;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,11 @@ namespace GameX.Arkane.Formats.Danae;
 // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/DANAE/ARX_FTL.cpp#L575
 
 public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Ftl(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) {
+        var ftl = new Binary_Ftl(r);
+        FtlObjectBuilder.FixTexturePaths(s, ftl.Obj);
+        return Task.FromResult((object)ftl);
+    }
 
     #region Headers
 

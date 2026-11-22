@@ -45,7 +45,7 @@ public class IDArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
          => Path.GetExtension(filePath).ToLowerInvariant() switch {
              "" => null,
              ".pk3" or ".pk4" or ".zip" => Binary_Zip.GetArcBinary(game),
-             ".arc" => Binary_Pak.Current,
+             ".arc" or ".pak" => Binary_Pak.Current,
              ".wad" => Binary_Wad.Current,
              _ => throw new ArgumentOutOfRangeException(),
          };

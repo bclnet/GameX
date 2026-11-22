@@ -22,6 +22,7 @@
 // sequence, the client triggers a resync (0x22 "bad step" path).
 
 using GameX.Origin.Formats.UO;
+using GameX.Origin.Netcode.UO;
 
 namespace GameX.Origin.UO;
 
@@ -171,13 +172,21 @@ public sealed class WalkerManager {
 
         if (isBadStep) {
             if (!ResendPacketResync) {
-                // no Send_* in this tree
+                UOLoginNet.Send(OutgoingPackets.Send_Resync());
                 ResendPacketResync = true;
             }
             WalkingFailed = true;
             StepsCount = 0;
             CurrentWalkSequence = 0;
         }
+    }
+
+    /// <summary>Bad step from the netcode hook. The resync is already queued there.</summary>
+    public void NoteFailed() {
+        WalkingFailed = true;
+        StepsCount = 0;
+        CurrentWalkSequence = 0;
+        ResendPacketResync = true;
     }
 
     public void Reset() {
@@ -285,8 +294,13 @@ public sealed class WalkerManager {
             Run = run
         });
 
-        _ = FastWalkStack.GetValue();
-        // no Send_* in this tree
+        var packetDir = (byte)direction;
+        if (run) packetDir |= 0x80;
+        if (!UOLoginNet.CommitWalk(packetDir, x, y, z)) {
+            StepsCount--;
+            Steps.RemoveFromBack();
+            return false;
+        }
         ServerDirection = direction;
         if (WalkSequence == 0xFF)
             WalkSequence = 1;

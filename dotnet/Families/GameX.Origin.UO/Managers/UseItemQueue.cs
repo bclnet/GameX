@@ -1,5 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Netcode.UO;
+
 namespace GameX.Origin.UO;
 
 public sealed class UseItemQueue {
@@ -37,7 +39,7 @@ public sealed class UseItemQueue {
                     serial |= 0x8000_0000;
                 }
 
-                // no Send_* in this tree
+                UOLoginNet.Send(OutgoingPackets.Send_DoubleClick(serial));
             }
         }
     }
@@ -62,7 +64,9 @@ public sealed class UseItemQueue {
                 continue;
             }
 
-            // IsCorpse is not on Item
+            if (entity is Item item && item.IsCorpse) {
+                _actions.RemoveAt(i--);
+            }
         }
     }
 }

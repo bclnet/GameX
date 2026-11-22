@@ -7,7 +7,7 @@ namespace GameX.Origin.UO;
 /// <summary>
 /// Session ignore list. One set, the default comparer, ordinal and case-sensitive.
 /// A different case is a different entry. A stored name is trimmed.
-/// Nothing is written to a profile or a settings file.
+/// The names are the yaml key ignoredChars. Login keys are not written.
 /// </summary>
 public sealed class IgnoreManager {
     /// <summary>The one instance the ignore gump uses.</summary>
@@ -20,7 +20,6 @@ public sealed class IgnoreManager {
 
     /// <summary>Initialize the ignore list.</summary>
     public void Initialize() {
-        // Profile path is not ported.
         ReadIgnoreList();
     }
 
@@ -29,21 +28,25 @@ public sealed class IgnoreManager {
         if (name == null) return false;
         name = name.Trim();
         if (name.Length == 0) return false;
-        return IgnoredCharsList.Add(name);
+        if (!IgnoredCharsList.Add(name)) return false;
+        SaveIgnoreList();
+        return true;
     }
 
     /// <summary>Remove a char from the ignored list.</summary>
     public void RemoveIgnoredTarget(string charName) {
-        if (IgnoredCharsList.Contains(charName)) IgnoredCharsList.Remove(charName);
+        if (IgnoredCharsList.Contains(charName) && IgnoredCharsList.Remove(charName)) SaveIgnoreList();
     }
 
     /// <summary>Load the ignored list.</summary>
     void ReadIgnoreList() {
-        // Profile path is not ported.
+        IgnoredCharsList.Clear();
+        foreach (var name in UOSettings.GetList("ignoredChars"))
+            if (!string.IsNullOrEmpty(name)) IgnoredCharsList.Add(name);
     }
 
     /// <summary>Save the ignored list.</summary>
     public void SaveIgnoreList() {
-        // Profile path is not ported.
+        UOSettings.Set("ignoredChars", new List<string>(IgnoredCharsList));
     }
 }

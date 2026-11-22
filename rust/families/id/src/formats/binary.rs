@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.ID/Formats/Binary.cs
-// PORT-SHA: b289df2afadc91c2
+// PORT-SHA: 9e65640947f92bf5
 // PORT-STATUS: done
 //
 // Ported: `Binary_Pak`, `Binary_Wad` (the `.wad` child `Binary_Pak` opens),

@@ -129,6 +129,22 @@ public static class UoMusic {
         UoMp3.SetEnabled(on);
     }
 
+    public static void PlayEffect(int index) {
+        if (index <= 0) return;
+        try { PlaySound(index); }
+        catch (Exception ex) { LogSoundOnce($"UO sound: {ex.GetType().Name}: {ex.Message}"); }
+    }
+
+    public static void PlayScore(int index) {
+        var clientPath = UltimaOnline.Current?.ClientPath;
+        if (string.IsNullOrEmpty(clientPath) || index <= 0) return;
+        try { PlayMusic(clientPath, index); }
+        catch (Exception ex) {
+            Console.WriteLine($"UO music: {ex.GetType().Name}: {ex.Message}");
+            Console.Out.Flush();
+        }
+    }
+
     /// <summary>
     /// The same open Assets uses for a pack. soundLegacyMUL.uop, else soundidx.mul.
     /// </summary>

@@ -20,7 +20,8 @@ public class HotKeyCombination {
 /// Key rows stay empty until Bind. This type does not subscribe to a key hook.
 /// </summary>
 public class HotkeysManager {
-    // Profile path is not ported.
+    // ClassicUO Profile.DisableDefaultHotkeys. This table still runs. Missing key stays false.
+    public bool DisableDefaultHotkeys => UOSettings.GetBool("DisableDefaultHotkeys", false);
     readonly Dictionary<HotkeyAction, Action> _actions = new Dictionary<HotkeyAction, Action>();
     readonly List<HotKeyCombination> _hotkeys = new List<HotKeyCombination>();
 

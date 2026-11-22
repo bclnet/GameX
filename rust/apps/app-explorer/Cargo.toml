@@ -22,6 +22,7 @@ gamex-engine-unreal = { path = "../../engines/engine-unreal" }
 gamex = { path = "../../core/gamex" }
 gamex-arkane = { path = "../../families/arkane" }
 gamex-beamdog = { path = "../../families/beamdog" }
+gamex-bioware = { path = "../../families/bioware" }
 gamex-id = { path = "../../families/id" }
 gamex-uncore = { path = "../../families/uncore" }
 openx = { path = "../../../OpenX/rust/core/openx" }

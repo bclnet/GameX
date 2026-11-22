@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.Arkane/Formats/Danae/Binary.cs
-// PORT-SHA: e564ffd995bec5ba
+// PORT-SHA: cc8a9551e631d4a6
 // PORT-STATUS: done
 //
 // C#'s nested header structs are module-level here (Rust has no nested types),
@@ -222,7 +222,13 @@ impl FTL_SELECTIONS {
 // #endregion
 
 impl Binary_Ftl {
-    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { Box::pin(async move { Ok(Tag::Info(Arc::new(Binary_Ftl::new(r)?))) }) }
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> {
+        Box::pin(async move {
+            let mut bin = Binary_Ftl::new(r)?;
+            crate::engines::ftl_object_builder::fixTexturePaths(s, &mut bin.Obj)?;
+            Ok(Tag::Info(Arc::new(bin)))
+        })
+    }
 
     const FTL_MAGIC: u32 = 0x004c5446;
     const FTL_VERSION: f32 = 0.83257;

@@ -65,7 +65,10 @@
 //   Format8bppIndexed (GDI+ loads 8-bit gray as indexed with a gray palette; expanded to RGB here,
 //   as the blit does), Rgb8 is Format24bppRgb, Rgba8 is Format32bppArgb. `image` has nothing like
 //   Format32bppRgb. GIFs decode to Rgba8 (ARGB32) where GDI+ gives Format8bppIndexed (RGB24).
-//   C# keeps the `Bitmap` in an `IDisposable Image` field; here the decoded image is dropped.
+//   A 24-bit BI_RGB BMP does not go through the crate. LockBits keeps B,G,R (top-down, packed
+//   when the stride is already a multiple of 4) and the crate reverses each pixel to R,G,B.
+//   The label stays RGB24. `quit1.bmp` is that case: `offBits` is 58, four bytes past the
+//   54-byte header. C# keeps the `Bitmap` in an `IDisposable Image` field; here it is dropped.
 // - Binary_Iif: `MidiEvent` is a C# class in a linked list, so it is `Arc<Mutex<MidiEvent>>`.
 //   C#'s `BinaryWriter` `Write`/`WriteE` are `write_all` of `to_le_bytes`/`to_be_bytes`.
 // - Binary_Xga: `Decode1` returns null; `TextureAsBytes.bytes` is a `Vec`, so it is empty.
@@ -742,6 +745,36 @@ pub struct Binary_Img {
     me: Weak<Binary_Img>,
 }
 
+/// 24-bit BI_RGB the way `Bitmap.LockBits` returns it: top-down B,G,R, rows packed.
+/// `None` for every other image, which stays on the `image` crate. No channel swap.
+fn bmpAsLockBits(data: &[u8]) -> Option<(i32, i32, Vec<u8>)> {
+    if data.len() < 54 || &data[0..2] != b"BM" { return None; }
+    let off = u32::from_le_bytes(data[10..14].try_into().ok()?) as usize;
+    let info = u32::from_le_bytes(data[14..18].try_into().ok()?);
+    if info < 40 { return None; }
+    let width = i32::from_le_bytes(data[18..22].try_into().ok()?);
+    let heightS = i32::from_le_bytes(data[22..26].try_into().ok()?);
+    let planes = u16::from_le_bytes(data[26..28].try_into().ok()?);
+    let bpp = u16::from_le_bytes(data[28..30].try_into().ok()?);
+    let comp = u32::from_le_bytes(data[30..34].try_into().ok()?);
+    if planes != 1 || bpp != 24 || comp != 0 || width <= 0 || heightS == 0 || heightS == i32::MIN { return None; }
+    let topDown = heightS < 0;
+    let height = heightS.unsigned_abs() as usize;
+    let row = (width as usize).checked_mul(3)?;
+    let stride = row.checked_add(3)? & !3;
+    let pixels = row.checked_mul(height)?;
+    let need = off.checked_add(stride.checked_mul(height)?)?;
+    if need > data.len() { return None; }
+    let mut bytes = vec![0u8; pixels];
+    for y in 0..height {
+        let srcY = if topDown { y } else { height - 1 - y };
+        let src = off + srcY * stride;
+        let dst = y * row;
+        bytes[dst..dst + row].copy_from_slice(&data[src..src + row]);
+    }
+    Some((width, height as i32, bytes))
+}
+
 impl Binary_Img {
     pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { fromResult(Binary_Img::new(r, &f).map(|s| arc(s, |s| &mut s.me))) }
 
@@ -749,6 +782,10 @@ impl Binary_Img {
         let capsDrawing = EngineX::Current().caps.contains(Caps::Drawing);
         if capsDrawing {
             let data = r.readBytes(f.fileSize as usize)?;
+            if let Some((width, height, bytes)) = bmpAsLockBits(&data) {
+                let format = ("Bmp".into(), (TextureFormat::RGB24, TexturePixel::Unknown));
+                return Ok(Self { capsDrawing, bytes, format, width, height, depth: 0, mipMaps: 1, texFlags: TextureFlags::empty(), me: Weak::new() });
+            }
             let rawFormat = image::guess_format(&data).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
             let image = image::load_from_memory_with_format(&data, rawFormat).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
             let (width, height) = (image.width() as i32, image.height() as i32);

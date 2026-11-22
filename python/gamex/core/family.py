@@ -490,7 +490,7 @@ class FamilyGame:
         else: raise Exception(f'Unknown searchBy: {self.searchBy}')
 
     # is a Archive
-    def _isArcPath(self, path: str) -> bool: return self.arcExts and any([x for x in self.arcExts if path.endswith(x)])
+    def _isArcPath(self, path: str) -> bool: return self.arcExts and any(path.lower().endswith(x.lower()) for x in self.arcExts)
 
     # get Archive
     def _getArchive(self, vfx: FileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> Archive:

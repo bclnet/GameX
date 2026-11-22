@@ -1,5 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Netcode.UO;
+
 namespace GameX.Origin.UO;
 
 public sealed class DelayedObjectClickManager {
@@ -29,7 +31,8 @@ public sealed class DelayedObjectClickManager {
         }
 
         if (entity != null) {
-            // no Send_* in this tree
+            UOLoginNet.Send(OutgoingPackets.Send_ClickRequest(Serial));
+            UOLoginNet.RequestPopup(Serial);
         }
 
         Clear();

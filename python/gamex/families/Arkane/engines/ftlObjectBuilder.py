@@ -25,6 +25,31 @@ def getTexturePaths(obj: E_3DOBJ):
     for t in obj.textures:
         if t is not None and t.path: yield t.path
 
+# A game archive opens a pak file as "name:path". Arx tries png, jpg, jpeg, bmp, tga when the stored extension is missing.
+def fixTexturePaths(source, obj: E_3DOBJ):
+    if source is None or obj is None or not obj.textures: return
+    name = getattr(source, 'name', None) or ''
+    for t in obj.textures:
+        if t is None or not t.path: continue
+        stored = t.path.replace('\\', '/')
+        hit = None
+        for candidate in _textureCandidates(stored):
+            if source.contains(candidate):
+                hit = candidate
+                break
+        t.path = f'{name}:{hit}' if hit and name else (hit or stored)
+
+def _textureCandidates(stored: str):
+    yield stored
+    slash = stored.rfind('/')
+    dir_ = stored[:slash + 1] if slash >= 0 else ''
+    file = stored[slash + 1:] if slash >= 0 else stored
+    dot = file.rfind('.')
+    stem = file[:dot] if dot >= 0 else file
+    ext = file[dot:] if dot >= 0 else ''
+    for alt in ('.png', '.jpg', '.jpeg', '.bmp', '.tga'):
+        if ext.lower() != alt: yield dir_ + stem + alt
+
 def toMaterialProp(tex: E_TEXTURE) -> MaterialStd2Prop:
     mp = MaterialStd2Prop()
     mp.textures = {}

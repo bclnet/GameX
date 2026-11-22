@@ -1,4 +1,150 @@
 ﻿{
+  "CK:IOTV": {
+    "name": "Commander Keen in Invasion of the Vorticons",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "SK": {
+    "name": "Shadow Knights",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "HT3D": {
+    "name": "Hovertank 3D",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "DD:THM": {
+    "name": "Dangerous Dave in the Haunted Mansion",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "RR": {
+    "name": "Rescue Rover",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "CK:KD": {
+    "name": "Commander Keen in Keen Dreams",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "RR2": {
+    "name": "Rescue Rover 2",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "C3D": {
+    "name": "Catacomb 3-D",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "CK:GG": {
+    "name": "Commander Keen in Goodbye, Galaxy",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "CK:AAMB": {
+    "name": "Commander Keen in Aliens Ate My Babysitter",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "W3D": {
+    "name": "Wolfenstein 3D",
+    "files": [
+      {
+        "path": "base/GAMEMAPS.WL6",
+        "type": "Unknown"
+      },
+      {
+        "path": "base/VSWAP.WL6",
+        "type": "Unknown"
+      },
+      {
+        "path": "base/AUDIOT.WL6",
+        "type": "Unknown"
+      },
+      {
+        "path": "GAMEMAPS.WL6",
+        "type": "Unknown"
+      },
+      {
+        "path": "VSWAP.WL6",
+        "type": "Unknown"
+      },
+      {
+        "path": "AUDIOT.WL6",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "TOTD": {
+    "name": "Tiles of the Dragon",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "D1": {
+    "name": "Doom",
+    "files": [
+      {
+        "path": "DOOM.WAD",
+        "type": "Wad"
+      }
+    ]
+  },
+  "D2": {
+    "name": "Doom II",
+    "files": [
+      {
+        "path": "doom2/DOOM2.WAD",
+        "type": "Wad"
+      }
+    ]
+  },
   "Q": {
     "name": "Quake",
     "files": [
@@ -23,8 +169,32 @@
         "type": "Lump"
       },
       {
-        "path": "gfx.wad:xxx",
-        "type": "Palette"
+        "path": "PAK0.PAK:gfx.wad:SBAR.tex",
+        "type": "Texture"
+      },
+      {
+        "path": "PAK0.PAK:maps/start.bsp",
+        "type": "Level"
+      },
+      {
+        "path": "PAK0.PAK:maps/e1m1.bsp",
+        "type": "Level"
+      },
+      {
+        "path": "PAK1.PAK:maps/e2m1.bsp",
+        "type": "Level"
+      },
+      {
+        "path": "PAK0.PAK:progs/s_explod.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "PAK0.PAK:progs/soldier.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "PAK0.PAK:sound/items/health1.wav",
+        "type": "Audio"
       }
     ]
   },
@@ -38,6 +208,18 @@
       {
         "path": "pak0.arc:maps/base1.bsp",
         "type": "Bsp"
+      },
+      {
+        "path": "pak0.pak:env/space1bk.pcx",
+        "type": "Texture"
+      },
+      {
+        "path": "pak0.pak:maps/base1.bsp",
+        "type": "Bsp"
+      },
+      {
+        "path": "pak0.pak:pics/colormap.pcx",
+        "type": "Texture"
       }
     ]
   },
@@ -47,35 +229,177 @@
       {
         "path": "pak0.pk3:textures/skin/nibbles.tga",
         "type": "Texture"
+      },
+      {
+        "path": "pak0.pk3:maps/q3dm1.bsp",
+        "type": "Bsp"
+      },
+      {
+        "path": "pak0.pk3:levelshots/Q3DM1.jpg",
+        "type": "Image"
       }
     ]
   },
   "D3": {
     "name": "Doom 3",
-    "files": []
+    "files": [
+      {
+        "path": "pak000.pk4:maps/game/alphalabs4/textures/objective1.tga",
+        "type": "Texture"
+      },
+      {
+        "path": "pak000.pk4:maps/game/admin.map",
+        "type": "Text"
+      },
+      {
+        "path": "pak002.pk4:models/md5/characters/npcs/heads/goggles.md5mesh",
+        "type": "Model"
+      },
+      {
+        "path": "pak003.pk4:sound/ambient/1shot_eerie_01.wav",
+        "type": "Audio"
+      }
+    ]
+  },
+  "D:RPG": {
+    "name": "Doom RPG",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "OE": {
+    "name": "Orcs & Elves",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "QE2": {
+    "name": "Orcs & Elves II",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "W:RPG": {
+    "name": "Wolfenstein RPG",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "D2:RPG": {
+    "name": "Doom II RPG",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "Q:L": {
+    "name": "Quake Live",
+    "files": [
+      {
+        "path": "pak00.pk3:gfx/2d/crosshair20.tga",
+        "type": "Texture"
+      },
+      {
+        "path": "pak00.pk3:maps/aerowalk.bsp",
+        "type": "Bsp"
+      },
+      {
+        "path": "pak00.pk3:models/ammo/rocket/rocket.md3",
+        "type": "Model"
+      },
+      {
+        "path": "pak00.pk3:sound/ambient/1shot_beep_01.wav",
+        "type": "Audio"
+      }
+    ]
+  },
+  "R:MBT": {
+    "name": "Rage: Mutant Bash TV",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
   },
   "R": {
     "name": "Rage",
-    "files": []
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
   },
   "D": {
     "name": "Doom (2016)",
-    "files": []
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
   },
   "D:VFR": {
     "name": "Doom VFR",
-    "files": []
+    "files": [
+      {
+        "path": "base/gameresources.resources",
+        "type": "Unknown"
+      },
+      {
+        "path": "base/gameresources.index",
+        "type": "Unknown"
+      }
+    ]
   },
   "R2": {
     "name": "Rage 2",
-    "files": []
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
   },
   "D:E": {
     "name": "Doom Eternal",
-    "files": []
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
   },
   "Q:C": {
     "name": "Quake Champions",
-    "files": []
+    "files": [
+      {
+        "path": "client/preload/paks/shared.pak",
+        "type": "Unknown"
+      },
+      {
+        "path": "client/preload/paks/main_menu.pak",
+        "type": "Unknown"
+      },
+      {
+        "path": "client/preload/paks/bloodrun.pak",
+        "type": "Unknown"
+      }
+    ]
   }
 }

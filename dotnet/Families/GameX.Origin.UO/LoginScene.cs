@@ -30,6 +30,7 @@ public enum LoginSteps {
 public sealed class LoginScene : SceneBase {
     readonly World _world;
     readonly Pathfinder _path;
+    readonly WalkerManager _walker = new WalkerManager();
     Gump _currentGump;
     LoginSteps _lastLoginStep;
     bool _autoLogin;
@@ -166,9 +167,12 @@ public sealed class LoginScene : SceneBase {
         DriveMouse();
         DriveKeys();
         if (CurrentLoginStep == LoginSteps.InWorld) {
+            UOLoginNet.WalkFailHook = seq => _walker.NoteFailed();
+            UOLoginNet.WalkResetHook = _walker.Reset;
             PacketWindows.Poll();
             _world.BoatMovingManager.Update();
             _world.Macros.Update();
+            _world.DelayedObjectClickManager.Update();
         }
         _world.Update();
     }
@@ -191,7 +195,18 @@ public sealed class LoginScene : SceneBase {
         _hasGoal = false;
         _path.Stop();
         if (_kRun) dir |= 0x80;
-        UOLoginNet.Walk(dir);
+        IssueWalk(dir);
+    }
+
+    void IssueWalk(byte dir) {
+        _walker.X = (ushort)UOLoginNet.PlayerX;
+        _walker.Y = (ushort)UOLoginNet.PlayerY;
+        _walker.Z = (sbyte)UOLoginNet.PlayerZ;
+        _walker.Direction = (Direction)(UOLoginNet.PlayerDirection & 7);
+        _walker.ServerDirection = _walker.Direction;
+        _walker.IsMounted = UOLoginNet.PlayerMounted();
+        _walker.Stamina = 100;
+        _walker.Walk((Direction)(dir & 7), (dir & 0x80) != 0);
     }
 
     bool ArrowDir(out byte dir) {
@@ -282,11 +297,11 @@ public sealed class LoginScene : SceneBase {
             _path.Stop();
             return;
         }
-        if (_path.Issue(out var step)) UOLoginNet.Walk(step);
+        if (_path.Issue(out var step)) IssueWalk(step);
         else if (!_path.Active) _hasGoal = false;
     }
 
-    static void WalkFacing() {
+    void WalkFacing() {
         WorldGump.ViewCenter(out var cx, out var cy);
         var facing = GameCursor.GetMouseDirection(cx, cy, Mouse.Position.X, Mouse.Position.Y, 1);
         if (facing == 0) facing = 8;
@@ -294,7 +309,7 @@ public sealed class LoginScene : SceneBase {
         var dx = Mouse.Position.X - cx;
         var dy = Mouse.Position.Y - cy;
         if ((long)dx * dx + (long)dy * dy >= 190L * 190L) walk |= 0x80;
-        UOLoginNet.Walk(walk);
+        IssueWalk(walk);
     }
 
     static bool OverWorld() {

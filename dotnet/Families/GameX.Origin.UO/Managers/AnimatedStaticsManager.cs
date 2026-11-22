@@ -1,20 +1,48 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using GameX.Origin.Formats.UO;
 using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO AnimatedStaticsManager. The graphic list and the frame timer stay here.
-/// animdata.mul is not opened. FrameInterval and FrameCount stay 0 until that read exists.
+/// animdata.mul is read once from the client path. A missing file leaves the list empty.
 /// </summary>
 public sealed class AnimatedStaticsManager {
     StaticAnimationInfo[] _staticInfos = Array.Empty<StaticAnimationInfo>();
+    Binary_Animdata _animdata;
+    bool _animdataTried;
     uint _processTime;
     const uint ItemEffectAnimationDelay = 50;
 
     public void Initialize() {
-        _staticInfos = Array.Empty<StaticAnimationInfo>();
+        if (_animdataTried) return;
+        var clientPath = UltimaOnline.Current?.ClientPath;
+        if (string.IsNullOrEmpty(clientPath)) return;
+        _animdataTried = true;
+        try {
+            var path = Path.Combine(clientPath, "animdata.mul");
+            if (!File.Exists(path)) return;
+            using var stream = File.OpenRead(path);
+            using var reader = new BinaryReader(stream);
+            var data = new Binary_Animdata(reader);
+            var list = new List<StaticAnimationInfo>(data.Records.Count);
+            foreach (var pair in data.Records) {
+                if (pair.Value == null || pair.Value.FrameCount == 0) continue;
+                if ((uint)pair.Key > ushort.MaxValue) continue;
+                var index = (ushort)pair.Key;
+                list.Add(new StaticAnimationInfo { Index = index, IsField = IsField(index) });
+            }
+            _animdata = data;
+            _staticInfos = list.ToArray();
+        }
+        catch {
+            _animdata = null;
+            _staticInfos = Array.Empty<StaticAnimationInfo>();
+        }
     }
 
     public void Process() {
@@ -40,6 +68,10 @@ public sealed class AnimatedStaticsManager {
                 byte offset = o.AnimIndex;
                 byte frameInterval = 0;
                 byte frameCount = 0;
+                if (_animdata != null && _animdata.Records.TryGetValue(o.Index, out var record)) {
+                    frameInterval = record.FrameInterval;
+                    frameCount = record.FrameCount;
+                }
                 if (frameInterval > 0)
                     o.Time = Time.Ticks + frameInterval * delay + 1;
                 else

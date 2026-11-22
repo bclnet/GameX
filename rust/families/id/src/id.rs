@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.ID/ID.cs
-// PORT-SHA: 9e143a7100ea21b5
+// PORT-SHA: c3dec055c01efbc2
 // PORT-STATUS: partial
 //
 // Ported: `IDArchive` constructor, `getArcBinary`, `assetFactory`, and
@@ -11,7 +11,8 @@
 // `ITransformAsset` is not wired: `UnknownTransform` is a stub, the same
 // choice as Arkane.
 // `.lmp` / `.tex` is `Binary_Lmp`, `.spr` is `Binary_Spr`, `.mdl` is the empty
-// `Binary_Mdl`. `.bsp` is `Binary_BspX::factory`.
+// `Binary_Mdl`. `.bsp` is `Binary_BspX::factory`. `.pak` uses `Binary_Pak`,
+// the same arm as `.arc`.
 
 use std::io::{self, Error, ErrorKind};
 use std::sync::Arc;
@@ -44,7 +45,7 @@ impl IDArchive {
         Ok(match extension {
             "" => None,
             ".pk3" | ".pk4" | ".zip" => Some(Binary_Zip::getArcBinary(game)),
-            ".arc" => Some(Binary_Pak::current()),
+            ".arc" | ".pak" => Some(Binary_Pak::current()),
             ".wad" => Some(Binary_Wad::current()),
             _ => return Err(Error::new(ErrorKind::InvalidInput, "ArgumentOutOfRangeException")),
         })

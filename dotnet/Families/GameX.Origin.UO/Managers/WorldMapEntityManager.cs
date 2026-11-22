@@ -27,8 +27,6 @@ public sealed class WorldMapEntityManager {
 
     bool _ackReceived;
     uint _lastUpdate, _lastPacketSend, _lastPacketRecv;
-    // Profile path is not ported.
-    bool _worldMapShowParty = true;
     readonly List<WMapEntity> _toRemove = [];
     readonly List<(uint serial, string name)> _party = [];
     readonly List<UOMobileState> _mobiles = [];
@@ -39,11 +37,10 @@ public sealed class WorldMapEntityManager {
 
     public bool Enabled {
         get {
-            // Profile path is not ported.
             var clear = UltimaOnline.Current == null || UltimaOnline.Current.Plain;
             return ((UOLoginNet.Features & NewMovement) == 0 || _ackReceived)
                 && clear
-                && _worldMapShowParty
+                && UOSettings.GetBool("WorldMapShowParty", true)
                 && UIManager.GetGump<WorldMapGump>() != null;
         }
     }

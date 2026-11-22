@@ -1,5 +1,6 @@
 using GameX;
 using GameX.Engines.Mirage;
+using Mirage;
 using OpenX;
 using OpenX.Gfx;
 using System;
@@ -100,14 +101,18 @@ static class Review {
             var used = RendererType(type, asset);
             string error = null;
             if (asset == null) error = "asset was null";
-            else if (used == null) error = "no renderer for " + (type ?? asset.GetType().Name);
+            else if (used == null) { if (!Describe(asset)) error = "no renderer for " + (type ?? asset.GetType().Name); }
             else {
                 try {
                     var renderer = MirageRenderer.CreateRenderer(null, EngineX.Gfx, archive, asset, used);
-                    if (renderer == null) error = "no renderer for " + used;
+                    if (renderer == null) { if (!Describe(asset)) error = "no renderer for " + used; }
                     else renderer.Start();
                 }
-                catch (Exception e) { error = e.GetBaseException().Message; }
+                catch (Exception e) {
+                    var msg = e.GetBaseException().Message;
+                    // Missing-builder is not a failure when the asset can describe itself. Any other throw stays an error.
+                    if (!MissingBuilder(msg) || !Describe(asset)) error = msg;
+                }
             }
             return Shot(family.Id, uri, path, used, sampleNote, error, asset);
         }
@@ -192,21 +197,58 @@ static class Review {
     }
 
     static string RendererType(string type, object asset) {
-        var mapped = Map(type);
+        var mapped = Fits(Map(type), asset);
         if (mapped != null) return mapped;
         if (asset is IHaveMetaInfo info) {
             try {
                 var nodes = info.GetInfoNodes();
                 var content = nodes?.Select(n => n.Tag as MetaContent).FirstOrDefault(c => c != null);
-                mapped = Map(content?.Type);
+                mapped = Fits(Map(content?.Type), asset);
                 if (mapped != null) return mapped;
             }
             catch { /* the asset can still be a texture without a meta tree */ }
         }
         if (asset is ITexture) return "Texture";
         if (asset is GameX.Arkane.Formats.Danae.Binary_Ftl or GameX.Gamebryo.Formats.Binary_Nif) return "Model";
-        if (asset is GameX.Arkane.Formats.Danae.Binary_Fts) return "Level";
+        if (asset is GameX.Arkane.Formats.Danae.Binary_Fts or GameX.ID.Formats.Binary_BspX) return "Level";
         return null;
+    }
+
+    // Level is an FTS or an idTech BSP, Model is an FTL or a NIF, Texture is an ITexture, Object is a registered builder. Anything else falls through.
+    static string Fits(string renderer, object asset) => renderer switch {
+        null => null,
+        "Texture" => asset is ITexture ? renderer : null,
+        "Model" => asset is GameX.Arkane.Formats.Danae.Binary_Ftl or GameX.Gamebryo.Formats.Binary_Nif ? renderer : null,
+        "Level" => asset is GameX.Arkane.Formats.Danae.Binary_Fts or GameX.ID.Formats.Binary_BspX ? renderer : null,
+        "Object" => asset != null && OpenX.Gfx.Mirage.MirageX.BuildersByType.ContainsKey(asset.GetType()) ? renderer : null,
+        _ => renderer,
+    };
+
+    static bool MissingBuilder(string message) => message != null && message.Contains("No Mirage builder registered", StringComparison.Ordinal);
+
+    static bool Describe(object asset) {
+        if (asset is not IHaveMetaInfo info) return false;
+        var node = Line(MirageEngine.Tree.Root, asset.ToString());
+        try {
+            var nodes = info.GetInfoNodes();
+            if (nodes != null) foreach (var n in nodes) AddInfo(node, n);
+        }
+        catch { /* the asset line is already in the tree */ }
+        return true;
+    }
+
+    static void AddInfo(Node parent, MetaInfo info) {
+        if (info == null) return;
+        var node = parent;
+        if (!string.IsNullOrEmpty(info.Name)) node = Line(parent, info.Name);
+        else if (info.Tag is MetaContent content && content.Value is string text && text.Length > 0) node = Line(parent, text);
+        foreach (var child in info.Items) AddInfo(node, child);
+    }
+
+    static Node Line(Node parent, string text) {
+        var line = string.IsNullOrEmpty(text) ? "meta" : text.Replace('\r', ' ').Replace('\n', ' ');
+        MirageEngine.Tree.Log(line);
+        return parent.AddChild(line);
     }
 
     static string Map(string type) => type switch {

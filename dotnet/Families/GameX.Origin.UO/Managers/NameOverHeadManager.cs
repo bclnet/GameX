@@ -23,9 +23,8 @@ public enum NameOverheadTypeAllowed {
 public sealed class NameOverHeadManager {
     readonly World _world;
 
-    // Profile path is not ported.
     public NameOverheadTypeAllowed TypeAllowed;
-    public bool IsToggled;
+    public bool IsToggled = UOSettings.GetBool("NameOverheadToggled", false);
 
     public bool IsEnabled;
     public bool IsVisible;
@@ -38,7 +37,8 @@ public sealed class NameOverHeadManager {
         }
 
         if (SerialHelper.IsItem(serial)) {
-            // IsCorpse is not on Item
+            if (_world.Items.TryGetValue(serial, out var raw) && raw is Item item && item.IsCorpse)
+                return TypeAllowed.HasFlag(NameOverheadTypeAllowed.Corpses);
             return TypeAllowed.HasFlag(NameOverheadTypeAllowed.Items);
         }
 

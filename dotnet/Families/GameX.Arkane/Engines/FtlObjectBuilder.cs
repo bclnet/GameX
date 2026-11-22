@@ -1,5 +1,7 @@
-﻿using GameX.Arkane.Formats.Danae;
+﻿using GameX;
+using GameX.Arkane.Formats.Danae;
 using OpenX.Gfx;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -25,6 +27,32 @@ public static class FtlObjectBuilder {
         if (obj.Textures == null) yield break;
         foreach (var t in obj.Textures)
             if (t != null && !string.IsNullOrEmpty(t.Path)) yield return t.Path;
+    }
+
+    // A game archive opens a pak file as "name:path". Arx tries png, jpg, jpeg, bmp, tga when the stored extension is missing.
+    public static void FixTexturePaths(Archive source, E_3DOBJ obj) {
+        if (source == null || obj?.Textures == null) return;
+        var name = source.Name;
+        foreach (var t in obj.Textures) {
+            if (t == null || string.IsNullOrEmpty(t.Path)) continue;
+            var stored = t.Path.Replace('\\', '/');
+            string hit = null;
+            foreach (var candidate in TextureCandidates(stored))
+                if (source.Contains(candidate)) { hit = candidate; break; }
+            t.Path = hit != null && !string.IsNullOrEmpty(name) ? name + ":" + hit : hit ?? stored;
+        }
+    }
+
+    static IEnumerable<string> TextureCandidates(string stored) {
+        yield return stored;
+        var slash = stored.LastIndexOf('/');
+        var dir = slash >= 0 ? stored[..(slash + 1)] : "";
+        var file = slash >= 0 ? stored[(slash + 1)..] : stored;
+        var dot = file.LastIndexOf('.');
+        var stem = dot >= 0 ? file[..dot] : file;
+        var ext = dot >= 0 ? file[dot..] : "";
+        foreach (var alt in new[] { ".png", ".jpg", ".jpeg", ".bmp", ".tga" })
+            if (!ext.Equals(alt, StringComparison.OrdinalIgnoreCase)) yield return dir + stem + alt;
     }
 
     public static MaterialStd2Prop ToMaterialProp(E_TEXTURE tex) {

@@ -1,6 +1,7 @@
 ﻿using GameX.Origin.Clients.UO;
 using GameX.Origin.Formats.UO;
 using GameX.Origin.Netcode.UO;
+using OpenX;
 using OpenX.Client;
 using System;
 using System.IO;
@@ -30,6 +31,7 @@ public static class UOLogin {
             Host = Opt(options, "ip"),
             Port = int.TryParse(Opt(options, "port"), out var port) ? port : 0,
             Plain = enc == null || enc == "0",
+            Settings = options as YamlDict,
         };
         var assets = client.Assets;
         UOLoginNet.StepHeight = (x, y, z) => assets != null ? assets.StepZ(x, y, z) : z;

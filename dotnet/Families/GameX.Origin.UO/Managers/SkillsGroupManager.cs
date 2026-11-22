@@ -100,8 +100,8 @@ public sealed class SkillsGroup {
 }
 
 /// <summary>
-/// ClassicUO SkillsGroupManager. The profile file is not read or written.
-/// A missing file keeps the default groups in memory.
+/// ClassicUO SkillsGroupManager. ClassicUO writes skillsgroups.xml. That body is the yaml key skillsgroups.
+/// A missing key keeps the default groups in memory.
 /// </summary>
 public sealed class SkillsGroupManager {
     // FileManager.Skills.SkillsCount is not in this file. The group list holds 60.
@@ -126,7 +126,7 @@ public sealed class SkillsGroupManager {
 
     public void Load() {
         Groups.Clear();
-        // Profile path is not ported.
+        if (string.IsNullOrEmpty(_xml)) _xml = UOSettings.Get("skillsgroups", "");
         if (string.IsNullOrEmpty(_xml)) {
             MakeDefault();
             return;
@@ -155,7 +155,6 @@ public sealed class SkillsGroupManager {
     }
 
     public void Save() {
-        // Profile path is not ported.
         var sb = new StringBuilder();
         using (var xml = new XmlTextWriter(new StringWriter(sb)) {
             Formatting = Formatting.Indented,
@@ -170,6 +169,7 @@ public sealed class SkillsGroupManager {
             xml.WriteEndDocument();
         }
         _xml = sb.ToString();
+        UOSettings.Set("skillsgroups", _xml);
     }
 
     public void MakeDefault() {

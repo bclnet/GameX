@@ -4,6 +4,8 @@ using GameX.Origin.Formats.UO;
 using GameX.Origin.Netcode.UO;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 
 namespace GameX.Origin.UO;
 
@@ -22,6 +24,9 @@ public sealed class AudioManager {
     readonly Dictionary<int, Track> _music = new Dictionary<int, Track>();
     readonly Track[] _currentMusic = { null, null };
     readonly int[] _currentMusicIndices = { 0, 0 };
+    static MethodInfo _playEffect;
+    static MethodInfo _playScore;
+    static bool _uoMusicLooked;
 
     public int LoginMusicIndex { get; private set; }
     public int DeathMusicIndex { get; } = 42;
@@ -30,15 +35,14 @@ public sealed class AudioManager {
     public float MasterVolume => _masterVolume;
     public bool IsActive { get; private set; } = true;
 
-    // Profile path is not ported.
-    public bool EnableSound { get; set; } = true;
-    public int SoundVolume { get; set; } = 100;
-    public bool EnableMusic { get; set; } = true;
-    public int MusicVolume { get; set; } = 100;
-    public bool EnableCombatMusic { get; set; } = true;
+    public bool EnableSound => UOSettings.GetBool("EnableSound", true);
+    public int SoundVolume => UOSettings.GetInt("SoundVolume", 100);
+    public bool EnableMusic => UOSettings.GetBool("EnableMusic", true);
+    public int MusicVolume => UOSettings.GetInt("MusicVolume", 100);
+    public bool EnableCombatMusic => UOSettings.GetBool("EnableCombatMusic", true);
     public bool ReproduceSoundsInBackground { get; set; }
-    public bool LoginMusic { get; set; } = true;
-    public int LoginMusicVolume { get; set; } = 70;
+    public bool LoginMusic => UOSettings.GetBool("loginMusic", true);
+    public int LoginMusicVolume => UOSettings.GetInt("loginMusicVolume", 70);
 
     public void Initialize() {
         // device playback stays on UoMp3
@@ -238,6 +242,36 @@ public sealed class AudioManager {
         return music;
     }
 
+    // Origin.UO cannot reference GameX.Origin.Mg because that project is net10.0. The players live on UoMusic.
+    static void InvokeUoMusic(bool music, int index) {
+        try {
+            var method = UoMusicMethod(music);
+            method?.Invoke(null, new object[] { index });
+        }
+        catch { }
+    }
+
+    static MethodInfo UoMusicMethod(bool music) {
+        if (!_uoMusicLooked) {
+            try {
+                Assembly asm = null;
+                foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+                    if (loaded.GetName().Name == "GameX.Origin.Mg") { asm = loaded; break; }
+                if (asm == null) {
+                    var file = Path.Combine(AppContext.BaseDirectory, "GameX.Origin.Mg.dll");
+                    if (!File.Exists(file)) return null;
+                    asm = Assembly.LoadFrom(file);
+                }
+                var type = asm.GetType("GameX.Origin.Mg.UO.UoMusic");
+                _playEffect = type?.GetMethod("PlayEffect");
+                _playScore = type?.GetMethod("PlayScore");
+                _uoMusicLooked = true;
+            }
+            catch { _uoMusicLooked = true; }
+        }
+        return music ? _playScore : _playEffect;
+    }
+
     sealed class Track {
         readonly uint Delay;
         uint _lastPlayed;
@@ -277,11 +311,14 @@ public sealed class AudioManager {
 
         public bool Play(uint curTime, float volume = 1.0f, float volumeFactor = 0.0f) {
             if (_lastPlayed > curTime) return false;
-            // device playback stays on UoMp3
             _lastPlayed = curTime + Delay;
             VolumeFactor = volumeFactor;
             Volume = volume;
             Playing = true;
+            if (Volume > 0f) {
+                if (Delay == 250) InvokeUoMusic(false, Index);
+                else if (Delay == 0) InvokeUoMusic(true, Index);
+            }
             return true;
         }
 

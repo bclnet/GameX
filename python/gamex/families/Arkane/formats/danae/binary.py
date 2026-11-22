@@ -20,7 +20,11 @@ type Vector3 = ndarray
 # Binary_Ftl
 class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Ftl(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive):
+        ftl = Binary_Ftl(r)
+        from gamex.families.Arkane.engines.ftlObjectBuilder import fixTexturePaths
+        fixTexturePaths(s, ftl.obj)
+        return ftl
 
     #region Headers
 

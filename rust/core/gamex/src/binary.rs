@@ -701,6 +701,10 @@ impl Archive for BinaryArchive {
                 }
             };
             if self.base.game.isArcPath(&f.path) { return Ok(Tag::None); }
+            // C# `Fix()` writes `FileSize` on the same object the factory reads. `fix` returns
+            // that entry (a copy when `Lazy` ran). The archive's `Arc` still has `fileSize` 0,
+            // and `ReadBytes(fileSize)` on it is an empty buffer.
+            let f = f.fix();
             let Some(mut data) = self.getData(&Tag::File(f.clone()), option, throwOnError).await? else { return Ok(Tag::None) };
             if let Some(assetFactory) = self.ensureCachedAssetFactory(&f) {
                 let value = assetFactory(&mut data, f.clone(), self).await;

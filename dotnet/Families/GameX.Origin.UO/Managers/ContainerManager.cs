@@ -44,7 +44,6 @@ public sealed class ContainerManager {
         var width = (int)(gw * scale);
         var height = (int)(gh * scale);
         ClientSize(out var boundsW, out var boundsH);
-        // Profile path is not ported.
         if (ProfileOverride(out var setting, out var ox, out var oy)) {
             switch (setting) {
                 case 0:
@@ -116,7 +115,7 @@ public sealed class ContainerManager {
     }
 
     public void BuildContainerFile(bool force) {
-        // Profile path is not ported.
+        // containers.txt is not the profile. The table stays MakeDefault.
         MakeDefault();
     }
 
@@ -282,12 +281,18 @@ public sealed class ContainerManager {
         h = s.BufH > 0 ? s.BufH : 480;
     }
 
-    /// <summary>Profile OverrideContainerLocation. Defaults are off, setting 0, position 200,200. Returns false.</summary>
+    /// <summary>OverrideContainerLocation, OverrideContainerLocationSetting, and OverrideContainerLocationPosition (x,y). Off keeps the cascade.</summary>
     static bool ProfileOverride(out int setting, out int x, out int y) {
-        setting = 0;
+        setting = UOSettings.GetInt("OverrideContainerLocationSetting", 0);
         x = 200;
         y = 200;
-        return false;
+        var pos = UOSettings.Get("OverrideContainerLocationPosition", "200,200");
+        var comma = pos.IndexOf(',');
+        if (comma > 0 && int.TryParse(pos.Substring(0, comma).Trim(), out var px) && int.TryParse(pos.Substring(comma + 1).Trim(), out var py)) {
+            x = px;
+            y = py;
+        }
+        return UOSettings.GetBool("OverrideContainerLocation", false);
     }
 
     /// <summary>

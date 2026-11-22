@@ -12,7 +12,7 @@ namespace GameX.Origin.UO;
 
 /// <summary>
 /// ClassicUO MacroManager. Key is the SDL keycode number (letters are ASCII). SDL is not referenced.
-/// Profile path is not ported. The macro list stays in memory.
+/// The macro list stays in memory. The flags below are the ClassicUO profile names.
 /// </summary>
 public sealed class MacroManager : LinkedObject {
     const int Spell1 = 64;
@@ -70,15 +70,39 @@ public sealed class MacroManager : LinkedObject {
     byte _range;
     bool _rangeSet;
 
-    // Profile path is not ported. These are the flags the macros toggle.
-    public bool CircleOfTransparency { get; private set; }
-    public bool AlwaysRun { get; private set; }
-    public bool NoColorObjectsOutOfRange { get; private set; }
-    public bool UseNewTargetSystem { get; private set; }
-    public bool DrawRoofs { get; private set; } = true;
-    public bool TreeToStumps { get; private set; }
-    public bool HideVegetation { get; private set; }
-    public bool EnableCaveBorder { get; private set; }
+    // Missing keys keep the defaults this file already used. UseNewTargetSystem is false here.
+    public bool CircleOfTransparency {
+        get => UOSettings.GetBool("UseCircleOfTransparency", false);
+        private set => UOSettings.Set("UseCircleOfTransparency", value);
+    }
+    public bool AlwaysRun {
+        get => UOSettings.GetBool("AlwaysRun", false);
+        private set => UOSettings.Set("AlwaysRun", value);
+    }
+    public bool NoColorObjectsOutOfRange {
+        get => UOSettings.GetBool("NoColorObjectsOutOfRange", false);
+        private set => UOSettings.Set("NoColorObjectsOutOfRange", value);
+    }
+    public bool UseNewTargetSystem {
+        get => UOSettings.GetBool("UseNewTargetSystem", false);
+        private set => UOSettings.Set("UseNewTargetSystem", value);
+    }
+    public bool DrawRoofs {
+        get => UOSettings.GetBool("DrawRoofs", true);
+        private set => UOSettings.Set("DrawRoofs", value);
+    }
+    public bool TreeToStumps {
+        get => UOSettings.GetBool("TreeToStumps", false);
+        private set => UOSettings.Set("TreeToStumps", value);
+    }
+    public bool HideVegetation {
+        get => UOSettings.GetBool("HideVegetation", false);
+        private set => UOSettings.Set("HideVegetation", value);
+    }
+    public bool EnableCaveBorder {
+        get => UOSettings.GetBool("EnableCaveBorder", false);
+        private set => UOSettings.Set("EnableCaveBorder", value);
+    }
     public string SystemLine { get; private set; }
     public ushort SystemHue { get; private set; }
 
@@ -89,13 +113,13 @@ public sealed class MacroManager : LinkedObject {
     public bool WaitingBandageTarget { get; set; }
 
     public void Load() {
-        // Profile path is not ported.
+        // The macro list stays in memory. macros.xml is not loaded.
         Clear();
         CreateDefaultMacros();
     }
 
     public void Save() {
-        // Profile path is not ported.
+        // The macro list stays in memory. macros.xml is not written.
         List<Macro> list = GetAllMacros();
         using (XmlTextWriter xml = new XmlTextWriter(Stream.Null, Encoding.UTF8) {
             Formatting = Formatting.Indented,
@@ -222,16 +246,16 @@ public sealed class MacroManager : LinkedObject {
                 string text = ((MacroObjectString)macro).Text;
                 if (!string.IsNullOrEmpty(text)) {
                     byte type = Regular;
-                    ushort hue = SpeechHue;
+                    ushort hue = (ushort)UOSettings.GetInt("SpeechHue", SpeechHue);
                     switch (macro.Code) {
                         case MacroType.Emote:
                             text = "*" + text + "*";
                             type = Emote;
-                            hue = EmoteHue;
+                            hue = (ushort)UOSettings.GetInt("EmoteHue", EmoteHue);
                             break;
                         case MacroType.Whisper:
                             type = Whisper;
-                            hue = WhisperHue;
+                            hue = (ushort)UOSettings.GetInt("WhisperHue", WhisperHue);
                             break;
                         case MacroType.Yell:
                             type = Yell;
@@ -404,7 +428,7 @@ public sealed class MacroManager : LinkedObject {
                 break;
 
             case MacroType.SaveDesktop:
-                // Profile path is not ported.
+                // Flag sets already flush. The macro list stays in memory.
                 break;
 
             case MacroType.EnableRangeColor:
@@ -805,8 +829,7 @@ public sealed class MacroManager : LinkedObject {
     }
 
     int Bandage(MacroObject macro) {
-        // BandageSelfOld is a profile flag and is not ported.
-        if (Version < ClientVersion.CV_5020) {
+        if (Version < ClientVersion.CV_5020 || UOSettings.GetBool("BandageSelfOld", false)) {
             if (WaitingBandageTarget) {
                 if (WaitForTargetTimer == 0)
                     WaitForTargetTimer = (long)Time.Ticks + WaitForTargetDelay;
@@ -919,9 +942,8 @@ public sealed class MacroManager : LinkedObject {
     void DoubleClick(uint serial) {
         uint player = UOLoginNet.PlayerSerial;
         if (serial != player && SerialHelper.IsMobile(serial) && UOLoginNet.InWarMode) {
-            // criminal query is a profile flag and is not ported
             UOLoginNet.Send(OutgoingPackets.Send_StatusRequest(serial));
-            UOLoginNet.Send(OutgoingPackets.Send_AttackRequest(serial));
+            Attack(serial);
         }
         else UOLoginNet.Send(OutgoingPackets.Send_DoubleClick(serial));
         // The human-body check is not stored, so any mobile is remembered.
@@ -930,7 +952,16 @@ public sealed class MacroManager : LinkedObject {
     }
 
     void Attack(uint serial) {
-        // criminal query is a profile flag and is not ported
+        if (UOSettings.GetBool("EnabledCriminalActionQuery", false)) {
+            var playerNoto = (NotorietyFlag)UOLoginNet.Notoriety;
+            var mobileNoto = (NotorietyFlag)UOLoginNet.MobileNotoriety(serial);
+            if (serial != UOLoginNet.PlayerSerial && (playerNoto == NotorietyFlag.Innocent || playerNoto == NotorietyFlag.Ally) && mobileNoto == NotorietyFlag.Innocent && UIManager.GetGump<QuestionGump>() == null) {
+                UIManager.Add(new QuestionGump(_world, "This may flag\nyou criminal!", s => {
+                    if (s) UOLoginNet.Send(OutgoingPackets.Send_AttackRequest(serial));
+                }));
+                return;
+            }
+        }
         UOLoginNet.Send(OutgoingPackets.Send_AttackRequest(serial));
     }
 

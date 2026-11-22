@@ -24,21 +24,17 @@ public class BlackArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     #region Factories
 
     static ArcBinary GetArcBinary(FamilyGame game, string extension)
-        => Binary_Dat.Current;
-
-    //string.IsNullOrEmpty(extension)
-    //? PakBinary_Dat.Instance
-    //: extension switch
-    //{
-    //    ".dat" => PakBinary_Dat.Instance,
-    //    _ => throw new ArgumentOutOfRangeException(nameof(extension)),
-    //};
+        => extension switch {
+            ".dat" => Binary_Dat.Current,
+            _ => throw new ArgumentOutOfRangeException(nameof(extension)),
+        };
 
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             var x when x.StartsWith(".fr") => (0, Binary_Frm.Factory),
             ".pal" => (0, Binary_Pal2.Factory),
             ".rix" => (0, Binary_Rix.Factory),
+            ".map" => (0, Binary_Map.Factory),
             _ => (0, null),
         };
 

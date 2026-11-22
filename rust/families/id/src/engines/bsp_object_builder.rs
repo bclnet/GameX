@@ -1,8 +1,9 @@
 // PORT-SOURCE: Families/GameX.ID/Engines/BspObjectBuilder.cs
-// PORT-STATUS: partial
+// PORT-SHA: d08ebbbdaa08d173
+// PORT-STATUS: done
 //
 // Shared Quake BSP mesh. Quake is Z-up: a point is (x, z, y) * WorldScale,
-// a direction is (x, z, y). The C# file was not on disk, so PORT-SHA is not set.
+// a direction is (x, z, y).
 // Python twin: python/gamex/families/ID/engines/bspObjectBuilder.py.
 
 use std::collections::HashMap;

@@ -1,5 +1,6 @@
 ﻿using GameX.Origin.Clients.UO;
 using GameX.Origin.Formats.UO;
+using OpenX;
 using System.Threading.Tasks;
 
 namespace GameX.Origin.UO;
@@ -49,6 +50,9 @@ public class UltimaOnline {
 
     /// <summary>True when FamilyGame.Options encryption is 0. The 0x80 stays clear.</summary>
     public bool Plain { get; set; }
+
+    /// <summary>FamilyGame.Options, the yaml on the UO game.</summary>
+    public YamlDict Settings { get; set; }
 
     /// <summary>
     /// ClassicUO folders and the GameX home for each. Not a port of those trees.

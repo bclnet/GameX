@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.Arkane/Engines/FtlObjectBuilder.cs
-// PORT-SHA: 1971770a048b3a14
+// PORT-SHA: 9c74802850c19f35
 // PORT-STATUS: done
 //
 // Shared FTL mesh. Danae is Y-up, so positions stay as stored.
@@ -7,10 +7,14 @@
 // A null `E_FACE` element is not representable (`Vec<E_FACE>`).
 
 use std::collections::HashMap;
+use std::io;
 use std::sync::Arc;
 
 use glam::{Vec2, Vec3};
 use openx_gfx::gfx::{AnyArc, MaterialStd2Prop};
+
+use gamex::binary::Archive;
+use gamex::meta::Tag;
 
 use crate::formats::danae::eerie_types::{E_3DOBJ, E_TEXTURE, POLY};
 
@@ -38,6 +42,44 @@ pub fn getTexturePaths(obj: &E_3DOBJ) -> Vec<String> {
         if !t.Path.is_empty() { r.push(t.Path.clone()); }
     }
     r
+}
+
+/// C# `FixTexturePaths`. A game archive opens a pak file as "name:path".
+/// Arx tries png, jpg, jpeg, bmp, tga when the stored extension is missing.
+pub fn fixTexturePaths(s: &dyn Archive, obj: &mut E_3DOBJ) -> io::Result<()> {
+    let Some(textures) = obj.Textures.as_mut() else { return Ok(()) };
+    let name = s.base().name.clone();
+    for t in textures.iter_mut() {
+        if t.Path.is_empty() { continue; }
+        let stored = t.Path.replace('\\', "/");
+        let mut hit: Option<String> = None;
+        for candidate in textureCandidates(&stored) {
+            if s.contains(&Tag::Str(candidate.clone()))? { hit = Some(candidate); break; }
+        }
+        t.Path = match &hit {
+            Some(h) if !name.is_empty() => format!("{name}:{h}"),
+            Some(h) => h.clone(),
+            None => stored,
+        };
+    }
+    Ok(())
+}
+
+fn textureCandidates(stored: &str) -> Vec<String> {
+    let mut out = vec![stored.to_string()];
+    let (dir, file) = match stored.rfind('/') {
+        Some(i) => (&stored[..=i], &stored[i + 1..]),
+        None => ("", stored),
+    };
+    let (stem, ext) = match file.rfind('.') {
+        Some(i) => (&file[..i], &file[i..]),
+        None => (file, ""),
+    };
+    for alt in [".png", ".jpg", ".jpeg", ".bmp", ".tga"] {
+        if ext.eq_ignore_ascii_case(alt) { continue; }
+        out.push(format!("{dir}{stem}{alt}"));
+    }
+    out
 }
 
 /// C# `ToMaterialProp`. A null texture is `None`.

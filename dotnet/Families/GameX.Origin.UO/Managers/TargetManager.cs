@@ -193,8 +193,8 @@ public sealed class TargetManager {
                     var playerNoto = (NotorietyFlag)UOLoginNet.Notoriety;
                     if (playerNoto == NotorietyFlag.Innocent || playerNoto == NotorietyFlag.Ally) {
                         var mobileNoto = (NotorietyFlag)UOLoginNet.MobileNotoriety(serial);
-                        // Profile overrides are not ported. Harmful query defaults on. Beneficial query defaults off.
-                        var showCriminalQuery = TargetingType == TargetType.Harmful && mobileNoto == NotorietyFlag.Innocent;
+                        var showCriminalQuery = TargetingType == TargetType.Harmful && UOSettings.GetBool("EnabledCriminalActionQuery", true) && mobileNoto == NotorietyFlag.Innocent
+                            || TargetingType == TargetType.Beneficial && UOSettings.GetBool("EnabledBeneficialCriminalActionQuery", false) && (mobileNoto == NotorietyFlag.Criminal || mobileNoto == NotorietyFlag.Murderer || mobileNoto == NotorietyFlag.Gray);
 
                         if (showCriminalQuery && UIManager.GetGump<QuestionGump>() == null) {
                             var messageBox = new QuestionGump(_world, "This may flag\nyou criminal!", s => {
@@ -330,7 +330,7 @@ public sealed class TargetManager {
         else if (kind == 0x01 && serial == 0)
             UOLoginNet.Send(OutgoingPackets.Send_TargetXYZ(graphic, x, y, z, _targetCursorId, (byte)TargetingType));
         else {
-            // no Send_* in this tree
+            UOLoginNet.Send(OutgoingPackets.Send_TargetObject(serial, graphic, x, y, z, _targetCursorId, (byte)TargetingType));
         }
 
         Mouse.CancelDoubleClick = true;

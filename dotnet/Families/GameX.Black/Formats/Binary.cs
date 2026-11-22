@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GameX.Black.Formats;
@@ -359,6 +360,99 @@ public unsafe class Binary_Rix : IHaveMetaInfo, ITexture {
             new($"{nameof(Binary_Rix)}", items: [
                 new($"Width: {Width}"),
                 new($"Height: {Height}"),
+            ])
+    ];
+}
+
+#endregion
+
+#region Binary_Map
+
+// https://falloutmods.fandom.com/wiki/MAP_File_Format
+public class MapLevel {
+    public int Elevation;
+    public ushort[] Floor;
+    public ushort[] Roof;
+}
+
+public class Binary_Map : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Map(r));
+
+    #region Headers
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe struct MapHeader {
+        public static (string, int) Struct = (">I16s10I44I", sizeof(MapHeader));
+        public int Version;
+        public fixed byte Name[16];
+        public int EnteringTile;
+        public int EnteringElevation;
+        public int EnteringRotation;
+        public int LocalVarsCount;
+        public int ScriptIndex;
+        public int Flags;
+        public int Darkness;
+        public int GlobalVarsCount;
+        public int MapIndex;
+        public uint LastVisitTime;
+        public fixed int Skip[44];
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct MapTile {
+        public static (string, int) Struct = (">I", sizeof(MapTile));
+        public uint Entry;
+    }
+
+    #endregion
+
+    public int Version;
+    public string Name;
+    public int EnteringTile;
+    public int EnteringElevation;
+    public int EnteringRotation;
+    public int Flags;
+    public int MapIndex;
+    public MapLevel[] Levels;
+
+    public unsafe Binary_Map(BinaryReader r) {
+        var header = r.ReadS<MapHeader>();
+        if (header.Version != 19 && header.Version != 20) throw new InvalidOperationException($"MAP version {header.Version}");
+        var n = 0;
+        while (n < 16 && header.Name[n] != 0) n++;
+        var raw = n == 0 ? [] : new byte[n];
+        for (var i = 0; i < n; i++) raw[i] = header.Name[i];
+        Version = header.Version;
+        Name = n == 0 ? string.Empty : Encoding.ASCII.GetString(raw).TrimEnd(' ');
+        EnteringTile = header.EnteringTile;
+        EnteringElevation = header.EnteringElevation;
+        EnteringRotation = header.EnteringRotation;
+        Flags = header.Flags;
+        MapIndex = header.MapIndex;
+        var globalCount = header.GlobalVarsCount > 0 ? header.GlobalVarsCount : 0;
+        var localCount = header.LocalVarsCount > 0 ? header.LocalVarsCount : 0;
+        r.Skip(((long)globalCount + localCount) * 4);
+        var levels = new List<MapLevel>(3);
+        for (var elevation = 0; elevation < 3; elevation++) {
+            if ((header.Flags & (0x2 << elevation)) != 0) continue;
+            var floor = new ushort[10000];
+            var roof = new ushort[10000];
+            for (var i = 0; i < 10000; i++) {
+                var entry = r.ReadS<MapTile>().Entry;
+                roof[i] = (ushort)((entry >> 16) & 0x0FFF);
+                floor[i] = (ushort)(entry & 0x0FFF);
+            }
+            levels.Add(new MapLevel { Elevation = elevation, Floor = floor, Roof = roof });
+        }
+        Levels = [.. levels];
+    }
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Object", Name = Path.GetFileName(file.Path), Value = this }),
+            new($"{nameof(Binary_Map)}", items: [
+                new($"Version: {Version}"),
+                new($"Name: {Name}"),
+                new($"Levels: {Levels.Length}"),
             ])
     ];
 }

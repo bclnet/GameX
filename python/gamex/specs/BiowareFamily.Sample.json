@@ -1,11 +1,21 @@
 ﻿{
   "SS": {
     "name": "Shattered Steel",
-    "files": []
+    "files": [
+      {
+        "path": "0BOT.DAT",
+        "type": "Unknown"
+      }
+    ]
   },
   "BG": {
     "name": "Baldur's Gate",
-    "files": []
+    "files": [
+      {
+        "path": "chitin.key",
+        "type": "Key"
+      }
+    ]
   },
   "MDK2": {
     "name": "MDK2",
@@ -22,38 +32,103 @@
   },
   "BG2": {
     "name": "Baldur's Gate II: Shadows of Amn",
-    "files": []
+    "files": [
+      {
+        "path": "chitin.key",
+        "type": "Key"
+      }
+    ]
   },
   "NWN": {
     "name": "Neverwinter Nights",
-    "files": []
+    "files": [
+      {
+        "path": "nwn_base.key",
+        "type": "Key"
+      },
+      {
+        "path": "nwn_retail.key",
+        "type": "Key"
+      }
+    ]
   },
   "KotOR": {
     "name": "Star Wars: Knights of the Old Republic",
-    "files": []
+    "files": [
+      {
+        "path": "chitin.key",
+        "type": "Key"
+      }
+    ]
   },
   "JE": {
     "name": "Jade Empire",
-    "files": []
+    "files": [
+      {
+        "path": "chitin.key",
+        "type": "Key"
+      }
+    ]
   },
   "ME": {
     "name": "Mass Effect",
-    "files": []
+    "files": [
+      {
+        "path": "BioGame/CookedPC/BIOG_ASA_ARM_CTH_R.upk",
+        "type": "Upk"
+      }
+    ]
   },
   "NWN2": {
     "name": "Neverwinter Nights 2",
+    "files": [
+      {
+        "path": "2DA.zip:2DA/actions.2da",
+        "type": "Text"
+      }
+    ]
+  },
+  "SC:TDB": {
+    "name": "Sonic Chronicles: The Dark Brotherhood",
+    "files": []
+  },
+  "ME:G": {
+    "name": "Mass Effect Galaxy",
     "files": []
   },
   "DA:O": {
     "name": "Dragon Age: Origins",
-    "files": []
+    "files": [
+      {
+        "path": "modules/single player/data/designerareas.erf",
+        "type": "Erf"
+      },
+      {
+        "path": "modules/single player/data/al_arl01al_redcliffe_villag.rim",
+        "type": "Rim"
+      }
+    ]
   },
   "ME2": {
     "name": "Mass Effect 2",
-    "files": []
+    "files": [
+      {
+        "path": "BioGame/CookedPC/BioA_BchLmL.pcc",
+        "type": "Pcc"
+      }
+    ]
   },
   "DA2": {
     "name": "Dragon Age II",
+    "files": [
+      {
+        "path": "modules/campaign_base/data/designerareas.erf",
+        "type": "Erf"
+      }
+    ]
+  },
+  "DA:L": {
+    "name": "Dragon Age Legends",
     "files": []
   },
   "SWTOR": {
@@ -67,15 +142,58 @@
   },
   "ME3": {
     "name": "Mass Effect 3",
+    "files": [
+      {
+        "path": "BIOGame/CookedPCConsole/AreaMap_CitHub_Camps.pcc",
+        "type": "Pcc"
+      },
+      {
+        "path": "BIOGame/Patches/PCConsole/Patch_001.sfar",
+        "type": "Sfar"
+      }
+    ]
+  },
+  "WO": {
+    "name": "Warhammer Online: Wrath of Heroes (Cancelled)",
+    "files": []
+  },
+  "CC": {
+    "name": "Command & Conquer: Generals 2 (Cancelled)",
     "files": []
   },
   "DA:I": {
     "name": "Dragon Age: Inquisition",
+    "files": [
+      {
+        "path": "Data/layout.toc",
+        "type": "Toc"
+      },
+      {
+        "path": "Data/Win32/abilities.sb",
+        "type": "Sb"
+      },
+      {
+        "path": "Data/cas_01.cas",
+        "type": "Cas"
+      }
+    ]
+  },
+  "SR": {
+    "name": "Shadow Realms (Cancelled)",
     "files": []
   },
   "ME:A": {
     "name": "Mass Effect: Andromeda",
-    "files": []
+    "files": [
+      {
+        "path": "ambsibling.toc",
+        "type": "Toc"
+      },
+      {
+        "path": "ambsibling.sb",
+        "type": "Sb"
+      }
+    ]
   },
   "A": {
     "name": "Anthem",
@@ -83,7 +201,12 @@
   },
   "ME:LE": {
     "name": "Mass Effect: Legendary Edition",
-    "files": []
+    "files": [
+      {
+        "path": "arcelia_ss.pcc",
+        "type": "Pcc"
+      }
+    ]
   },
   "DA:D": {
     "name": "Dragon Age: Dreadwolf (future)",

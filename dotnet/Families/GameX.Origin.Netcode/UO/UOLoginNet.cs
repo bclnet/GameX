@@ -386,6 +386,9 @@ public static class UOLoginNet {
         lock (Gate) _out.Enqueue(UOGamePackets.CastSpell(index));
     }
 
+    public static Action<byte> WalkFailHook;
+    public static Action WalkResetHook;
+
     /// <summary>Queues 0x02 once the game stream is up. Ignored before 0x5D. A bad confirm stops the queue until 0x20 or 0x21.</summary>
     public static void Walk(byte direction) {
         if (!_gameReady || _walkFailed) return;
@@ -394,6 +397,39 @@ public static class UOLoginNet {
             _walks.Enqueue(direction);
         }
     }
+
+    /// <summary>Sends one 0x02 for a tile the walker already accepted. The run bit is already in direction. Does not predict.</summary>
+    public static bool CommitWalk(byte direction, int x, int y, int z) {
+        if (!_gameReady || _walkFailed) return false;
+        lock (Gate) {
+            if (_unaccepted >= 5) return false;
+            var key = UOGamePackets.TakeFastWalk(_fastKeys);
+            var seq = _seq;
+            if (_seq == 0xFF) _seq = 1;
+            else _seq++;
+            _out.Enqueue(OutgoingPackets.Send_WalkRequest(direction, seq, false, key));
+            if (_sentCount < _sent.Length) _sent[_sentCount++] = seq;
+            _unaccepted++;
+            var facing = (byte)(direction & 7);
+            var turn = facing != (_pdir & 7);
+            var run = (direction & 0x80) != 0;
+            _stepRun = !turn && run;
+            var now = Environment.TickCount;
+            _stepUntil = turn ? now : unchecked(now + (Mounted() ? (run ? 100 : 200) : (run ? 200 : 400)));
+            _pdir = facing;
+            if (!turn) {
+                _px = x;
+                _py = y;
+                _pz = z;
+            }
+            if (_player != 0 && _mobiles.TryGetValue(_player, out var m))
+                _mobiles[_player] = new UOMobileState(_player, m.Body, _px, _py, _pz, _pdir, m.Notoriety, m.Flags);
+            _revision++;
+        }
+        return true;
+    }
+
+    public static bool PlayerMounted() => Mounted();
 
     public static uint PlayerSerial { get { lock (Gate) return _player; } }
     public static ushort PlayerBody { get { lock (Gate) return _pbody; } }
@@ -1458,6 +1494,7 @@ public static class UOLoginNet {
         if (found < 0) {
             if (!_resyncSent) {
                 lock (Gate) _out.Enqueue(OutgoingPackets.Send_Resync());
+                WalkFailHook?.Invoke(sequence);
                 _resyncSent = true;
             }
             _walkFailed = true;
@@ -1479,6 +1516,7 @@ public static class UOLoginNet {
         _resyncSent = false;
         _stepUntil = 0;
         lock (Gate) _walks.Clear();
+        WalkResetHook?.Invoke();
     }
 
     static void Face(byte facing) {

@@ -24,7 +24,7 @@ class IDArchive(BinaryArchive):
         match extension:
             case '': return None
             case '.pk3' | '.pk4' | '.zip': return Binary_Zip()
-            case '.arc': return Binary_Pak()
+            case '.arc' | '.pak': return Binary_Pak()
             case '.wad': return Binary_Wad()
             case _: raise Exception(f'Unknown: {extension}')
 

@@ -126,6 +126,7 @@
       "searchBy": "Arc",
       "arcExt": [
         ".arc",
+        ".pak",
         ".wad"
       ],
       "path": "id1",
@@ -174,6 +175,7 @@
       "searchBy": "Arc",
       "arcExt": [
         ".arc",
+        ".pak",
         ".wad"
       ],
       "path": "baseq2",

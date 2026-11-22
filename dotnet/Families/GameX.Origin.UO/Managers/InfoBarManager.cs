@@ -9,8 +9,8 @@ using System.Xml;
 namespace GameX.Origin.UO;
 
 /// <summary>
-/// ClassicUO InfoBarManager. The profile file is not read or written.
-/// A missing file keeps the default rows in memory.
+/// ClassicUO InfoBarManager. ClassicUO writes infobar.xml. That body is the yaml key infobar.
+/// A missing key keeps the default rows in memory.
 /// </summary>
 public sealed class InfoBarManager {
     readonly List<InfoBarItem> infoBarItems;
@@ -32,7 +32,6 @@ public sealed class InfoBarManager {
     public void Clear() => infoBarItems.Clear();
 
     public void Save() {
-        // Profile path is not ported.
         var sb = new StringBuilder();
         using (var xml = new XmlTextWriter(new StringWriter(sb)) {
             Formatting = Formatting.Indented,
@@ -47,10 +46,11 @@ public sealed class InfoBarManager {
             xml.WriteEndDocument();
         }
         _xml = sb.ToString();
+        UOSettings.Set("infobar", _xml);
     }
 
     public void Load() {
-        // Profile path is not ported.
+        if (string.IsNullOrEmpty(_xml)) _xml = UOSettings.Get("infobar", "");
         if (string.IsNullOrEmpty(_xml)) {
             CreateDefault();
             Save();

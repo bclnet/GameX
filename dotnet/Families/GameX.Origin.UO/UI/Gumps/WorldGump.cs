@@ -356,11 +356,6 @@ public class WorldGump : Gump {
     }
 
     void Paint() {
-        var mobiles = new List<UOMobileState>();
-        var items = new List<UOItemState>();
-        UOLoginNet.CopyActors(mobiles, items);
-        World.Mobiles.Clear();
-        World.Items.Clear();
         var px = UOLoginNet.PlayerX;
         var py = UOLoginNet.PlayerY;
         var pz = UOLoginNet.PlayerZ;
@@ -384,17 +379,17 @@ public class WorldGump : Gump {
         var you = UOLoginNet.NameOf(UOLoginNet.PlayerSerial);
         Place(ref n, string.IsNullOrEmpty(you) ? "You" : you, NotorietyHue(UOLoginNet.Notoriety), 0, 0, 0, UOLoginNet.PlayerSerial);
         seen.Add(UOLoginNet.PlayerSerial);
-        foreach (var m in mobiles) {
-            World.Mobiles[m.Serial] = new Mobile(m.Serial, m.Body, m.X, m.Y, m.Z, m.Direction);
+        foreach (var kv in World.Mobiles) {
+            if (kv.Value is not Mobile m) continue;
             if (m.Serial == UOLoginNet.PlayerSerial) continue;
             if (!seen.Add(m.Serial)) continue;
             var name = UOLoginNet.NameOf(m.Serial);
-            var noto = UOLoginNet.MobileNotoriety(m.Serial);
+            var noto = m.Notoriety;
             var hue = noto >= 1 && noto <= 7 ? NotorietyHue(noto) : (ushort)0x0481;
             Place(ref n, string.IsNullOrEmpty(name) ? $"M {m.Body:X4}" : name, hue, m.X - px, m.Y - py, m.Z - pz, m.Serial);
         }
-        foreach (var it in items) {
-            World.Items[it.Serial] = new Item(it.Serial, it.Graphic, it.X, it.Y, it.Z);
+        foreach (var kv in World.Items) {
+            if (kv.Value is not Item it || !it.OnGround) continue;
             if (!seen.Add(it.Serial) || !ShowOverhead(it.Graphic)) continue;
             var name = ItemName(it.Serial);
             if (string.IsNullOrEmpty(name)) continue;

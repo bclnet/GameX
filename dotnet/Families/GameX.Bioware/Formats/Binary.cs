@@ -1,4 +1,4 @@
-using GameX.Uncore.Formats;
+﻿using GameX.Uncore.Formats;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +7,20 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace GameX.Bioware.Formats;
+
+static class KeyPath {
+    internal static string Bif(string binPath, string rel) {
+        var dir = Path.GetDirectoryName(binPath) ?? "";
+        var full = Path.GetFullPath(Path.Combine(dir, rel));
+        if (File.Exists(full)) return full;
+        var parent = Path.GetDirectoryName(dir);
+        var folder = Path.GetFileName(dir);
+        var slash = rel.Replace('\\', '/');
+        if (!string.IsNullOrEmpty(parent) && slash.StartsWith(folder + "/", StringComparison.OrdinalIgnoreCase))
+            return Path.GetFullPath(Path.Combine(parent, rel));
+        return full;
+    }
+}
 
 #region Binary_Aurora
 
@@ -208,76 +222,170 @@ public unsafe class Binary_Aurora : ArcBinary<Binary_Aurora> {
 
     #endregion
 
+    const uint BIFC_MAGIC = 0x43464942; // "BIFC"
+    const uint BIFC_VERSION = 0x302E3156; // "V1.0"
+
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        FileSource[] files; List<FileSource> files2;
-
-        // KEY
+        var files = new List<FileSource>();
         var magic = source.Magic = r.ReadUInt32();
-        if (magic == KEY_MAGIC) // Signature("KEY ")
-        {
-            var header = r.ReadS<KEY_Header>();
-            if (header.Version != KEY_VERSION) throw new FormatException("BAD MAGIC");
-            source.Version = header.Version;
-            source.Files = files = new FileSource[header.NumFiles];
-
-            // parts
-            r.Seek(header.FilesOffset);
-            var headerFiles = r.ReadSArray<KEY_HeaderFile>((int)header.NumFiles).Select(x => {
-                r.Seek(x.FileNameOffset);
-                return (file: x, path: r.ReadFAString(x.FileNameSize - 1));
-            }).ToArray();
-            r.Seek(header.KeysOffset);
-            var headerKeys = r.ReadSArray<KEY_HeaderKey>((int)header.NumKeys).ToDictionary(x => x.Id, x => UnsafeX.FixedAString(x.Name, 0x10));
-
-            // combine
-            var subPathFormat = Path.Combine(Path.GetDirectoryName(source.BinPath), "{0}");
-            for (var i = 0; i < header.NumFiles; i++) {
-                var (file, path) = headerFiles[i];
-                var subPath = string.Format(subPathFormat, path);
-                if (!File.Exists(subPath)) continue;
-                files[i] = new FileSource {
-                    Path = path,
-                    FileSize = file.FileSize,
-                    Arc = new SubArchive(source, null, subPath, (headerKeys, (uint)i)),
-                };
-            }
-        }
-        // BIFF
-        else if (magic == BIFF_MAGIC) // Signature("BIFF")
-        {
-            if (source.Tag == null) throw new FormatException("BIFF files can only be processed through KEY files");
-            var (keys, bifId) = ((Dictionary<uint, string> keys, uint bifId))source.Tag;
-            var header = r.ReadS<BIFF_Header>();
-            if (header.Version != BIFF_VERSION) throw new FormatException("BAD MAGIC");
-            source.Version = header.Version;
-            source.Files = files2 = [];
-
-            // files
-            r.Seek(header.FilesOffset);
-            var headerFiles = r.ReadSArray<BIFF_HeaderFile>((int)header.NumFiles);
-            for (var i = 0; i < headerFiles.Length; i++) {
-                var headerFile = headerFiles[i];
-                if (headerFile.Id > i) continue;
-                var path = $"{(keys.TryGetValue(headerFile.Id, out var key) ? key : $"{i}")}{(BIFF_FileTypes.TryGetValue((int)headerFile.FileType, out var z) ? $".{z}" : string.Empty)}".Replace('\\', '/');
-                files2.Add(new FileSource {
-                    Id = (int)headerFile.Id,
-                    Path = path,
-                    FileSize = headerFile.FileSize,
-                    Offset = headerFile.Offset,
-                });
-            }
-        }
-        else throw new FormatException($"Unknown File Type {magic}");
+        if (magic == KEY_MAGIC) ReadKey(source, r, files);
+        else if (magic == BIFF_MAGIC) ReadBiff(source, r, files, null, null, null, true);
+        else if (magic == BIFC_MAGIC) ReadBifc(source, r, files, null, null, null, true);
+        else throw new FormatException($"Unknown File Type {magic:X8}");
+        source.Files = files;
         return Task.CompletedTask;
     }
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        Stream fileData;
+        if (file.Tag is string path) return Task.FromResult(ReadPath(path, file.Offset, file.FileSize));
+        if (source.Tag is byte[] inflated) return Task.FromResult<Stream>(new MemoryStream(Slice(inflated, file.Offset, file.FileSize)));
+        if (source.Magic == BIFC_MAGIC) {
+            r.Seek(0);
+            var magic = r.ReadUInt32();
+            if (magic != BIFC_MAGIC) throw new FormatException($"Unknown File Type {magic:X8}");
+            return Task.FromResult<Stream>(new MemoryStream(Slice(InflateBifc(r), file.Offset, file.FileSize)));
+        }
         r.Seek(file.Offset);
-        if (source.Version == BIFF_VERSION) fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
-        else throw new ArgumentOutOfRangeException(nameof(source.Version), $"{source.Version}");
-        return Task.FromResult(fileData);
+        return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
+
+    // Resource index is the low 20 bits. Bif index is bits 31-20. No tileset field.
+    // The BIFF fixed-resource count is not read.
+    static void ReadKey(BinaryArchive source, BinaryReader r, List<FileSource> files) {
+        var header = r.ReadS<KEY_Header>();
+        if (header.Version != KEY_VERSION) throw new FormatException("BAD MAGIC");
+        source.Version = header.Version;
+
+        var raw = new List<(uint nameOfs, ushort nameLen)>();
+        r.Seek(header.FilesOffset);
+        for (var i = 0u; i < header.NumFiles; i++) {
+            var row = r.ReadS<KEY_HeaderFile>();
+            raw.Add((row.FileNameOffset, row.FileNameSize));
+        }
+        var bifs = new List<string>(raw.Count);
+        foreach (var s in raw) bifs.Add(ReadName(r, s.nameOfs, s.nameLen));
+
+        var byBif = new Dictionary<int, Dictionary<int, (string resref, ushort type)>>();
+        r.Seek(header.KeysOffset);
+        for (var i = 0u; i < header.NumKeys; i++) {
+            var resref = ResRef(r.ReadBytes(16));
+            var resType = r.ReadUInt16();
+            var id = r.ReadUInt32();
+            var bif = (int)((id >> 20) & 0xFFF);
+            var index = (int)(id & 0xFFFFF);
+            if (!byBif.TryGetValue(bif, out var map)) byBif[bif] = map = new Dictionary<int, (string, ushort)>();
+            if (!map.ContainsKey(index)) map[index] = (resref, resType);
+        }
+
+        for (var i = 0; i < bifs.Count; i++) {
+            var rel = bifs[i];
+            var full = KeyPath.Bif(source.BinPath, rel);
+            if (!File.Exists(full)) continue;
+            if (!byBif.TryGetValue(i, out var map)) map = new Dictionary<int, (string, ushort)>();
+            OpenBif(source, files, full, rel, map);
+        }
+    }
+
+    static void OpenBif(BinaryArchive source, List<FileSource> files, string full, string rel, Dictionary<int, (string resref, ushort type)> map) {
+        using var br = new BinaryReader(File.OpenRead(full));
+        var magic = br.ReadUInt32();
+        if (magic == BIFF_MAGIC) ReadBiff(source, br, files, rel, full, map, false);
+        else if (magic == BIFC_MAGIC) ReadBifc(source, br, files, rel, full, map, false);
+        else throw new FormatException($"Unknown File Type {magic:X8}");
+    }
+
+    static void ReadBifc(BinaryArchive source, BinaryReader r, List<FileSource> files, string rel, string tagPath, Dictionary<int, (string resref, ushort type)> map, bool setVersion) {
+        var inflated = InflateBifc(r);
+        if (setVersion && source.Tag is not System.Collections.IDictionary) source.Tag = inflated;
+        using var inner = new BinaryReader(new MemoryStream(inflated));
+        var magic = inner.ReadUInt32();
+        if (magic != BIFF_MAGIC) throw new FormatException($"Unknown File Type {magic:X8}");
+        ReadBiff(source, inner, files, rel, tagPath, map, setVersion);
+    }
+
+    static void ReadBiff(BinaryArchive source, BinaryReader r, List<FileSource> files, string rel, string tagPath, Dictionary<int, (string resref, ushort type)> map, bool setVersion) {
+        var header = r.ReadS<BIFF_Header>();
+        if (header.Version != BIFF_VERSION) throw new FormatException("BAD MAGIC");
+        if (setVersion) source.Version = header.Version;
+        r.Seek(header.FilesOffset);
+        var headerFiles = r.ReadSArray<BIFF_HeaderFile>((int)header.NumFiles);
+        for (var i = 0; i < headerFiles.Length; i++) {
+            var headerFile = headerFiles[i];
+            if (map != null) {
+                var index = (int)(headerFile.FileId & 0xFFFFF);
+                if (!map.TryGetValue(index, out var res)) continue;
+                files.Add(new FileSource {
+                    Path = $"{rel}/{res.resref}{Ext(res.type)}",
+                    Offset = headerFile.Offset,
+                    FileSize = headerFile.FileSize,
+                    Tag = tagPath,
+                });
+            }
+            else files.Add(new FileSource {
+                Path = $"{i:D4}{Ext((int)headerFile.FileType)}",
+                Offset = headerFile.Offset,
+                FileSize = headerFile.FileSize,
+            });
+        }
+    }
+
+    // BIFC V1.0. Cap the copy at the stated uncompressed size.
+    static byte[] InflateBifc(BinaryReader r) {
+        var version = r.ReadUInt32();
+        if (version != BIFC_VERSION) throw new FormatException("BAD MAGIC");
+        var uncompressed = r.ReadUInt32();
+        if (uncompressed > int.MaxValue) throw new FormatException("zlib");
+        var output = new byte[uncompressed];
+        var filled = 0;
+        while (filled < uncompressed) {
+            var declen = r.ReadUInt32();
+            var complen = r.ReadUInt32();
+            if (declen == 0 || complen == 0 || declen > int.MaxValue || complen > int.MaxValue) throw new FormatException("zlib");
+            var chunk = r.DecompressZlib((int)complen, (int)declen);
+            if (chunk.Length < declen) throw new FormatException("zlib");
+            var take = (int)declen;
+            if (filled + take > uncompressed) take = (int)uncompressed - filled;
+            Buffer.BlockCopy(chunk, 0, output, filled, take);
+            filled += take;
+        }
+        return output;
+    }
+
+    static Stream ReadPath(string path, long offset, long size) {
+        using var br = new BinaryReader(File.OpenRead(path));
+        var magic = br.ReadUInt32();
+        if (magic == BIFC_MAGIC) return new MemoryStream(Slice(InflateBifc(br), offset, size));
+        br.Seek(offset);
+        return new MemoryStream(br.ReadBytes((int)size));
+    }
+
+    static byte[] Slice(byte[] data, long offset, long size) {
+        var o = checked((int)offset);
+        var n = checked((int)size);
+        var s = new byte[n];
+        Buffer.BlockCopy(data, o, s, 0, n);
+        return s;
+    }
+
+    static string ReadName(BinaryReader r, uint offset, ushort length) {
+        if (length == 0) return "";
+        r.Seek(offset);
+        return BifName(r.ReadBytes(length));
+    }
+
+    static string BifName(byte[] b) {
+        var n = 0;
+        while (n < b.Length && b[n] != 0) n++;
+        return System.Text.Encoding.ASCII.GetString(b, 0, n).Replace('\\', '/');
+    }
+
+    static string ResRef(byte[] b) {
+        var n = 0;
+        while (n < b.Length && b[n] != 0) n++;
+        return System.Text.Encoding.ASCII.GetString(b, 0, n).Trim();
+    }
+
+    static string Ext(int type) => BIFF_FileTypes.TryGetValue(type, out var z) ? "." + z : "";
 }
 
 #endregion
@@ -389,6 +497,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct GFF_Header {
+        public static (string, int) Struct = ("<13I", 52);
         public uint Version;            // Version ("V3.3")
         public uint StructOffset;       // Offset of Struct array as bytes from the beginning of the file
         public uint StructCount;        // Number of elements in Struct array
@@ -406,6 +515,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct GFF_Struct {
+        public static (string, int) Struct = ("<3I", 12);
         public uint Id;                 // Programmer-defined integer ID.
         public uint DataOrDataOffset;   // If FieldCount = 1, this is an index into the Field Array.
                                         // If FieldCount > 1, this is a byte offset into the Field Indices array.
@@ -414,6 +524,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct GFF_Field {
+        public static (string, int) Struct = ("<3I", 12);
         public uint Type;               // Data type
         public uint LabelIndex;         // Index into the Label Array
         public uint DataOrDataOffset;   // If Type is a simple data type, then this is the value actual of the field.
@@ -422,6 +533,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     unsafe struct GFF_Label {
+        public static (string, int) Struct = ("<16s", 16);
         public fixed byte Name[0x10];     // Label
     }
 
@@ -527,6 +639,243 @@ public unsafe class Binary_Gff : IHaveMetaInfo {
             new($"Type: {Type}"),
         ])
     ];
+}
+
+#endregion
+
+#region Binary_Key
+
+/// <summary>
+/// Infinity Engine chitin.key, BIFF V1, and block-compressed BIFC V1.0.
+/// 8-byte resref. Locator low 14 bits are the file index. Bits 31-20 are the bif index.
+/// Bits 19-14 are tileset rows and are skipped.
+/// </summary>
+public class Binary_Key : ArcBinary<Binary_Key> {
+    const uint KEY_MAGIC = 0x2059454B; // "KEY "
+    const uint KEY_VERSION = 0x20203156; // "V1  "
+    const uint BIFF_MAGIC = 0x46464942; // "BIFF"
+    const uint BIFF_VERSION = 0x20203156; // "V1  "
+    const uint BIFC_MAGIC = 0x43464942; // "BIFC"
+    const uint BIFC_VERSION = 0x302E3156; // "V1.0"
+
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
+        var files = new List<FileSource>();
+        var magic = source.Magic = r.ReadUInt32();
+        if (magic == KEY_MAGIC) ReadKey(source, r, files);
+        else if (magic == BIFF_MAGIC) ReadBiff(source, r, files, null, null, null, true);
+        else if (magic == BIFC_MAGIC) ReadBifc(source, r, files, null, null, null, true);
+        else throw new FormatException($"Unknown File Type {magic}");
+        source.Files = files;
+        return Task.CompletedTask;
+    }
+
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
+        if (file.Tag is string path) return Task.FromResult(ReadPath(path, file.Offset, file.FileSize));
+        if (source.Tag is byte[] inflated) return Task.FromResult<Stream>(new MemoryStream(Slice(inflated, file.Offset, file.FileSize)));
+        if (source.Magic == BIFC_MAGIC) {
+            r.Seek(0);
+            var magic = r.ReadUInt32();
+            if (magic != BIFC_MAGIC) throw new FormatException($"Unknown File Type {magic}");
+            return Task.FromResult<Stream>(new MemoryStream(Slice(InflateBifc(r), file.Offset, file.FileSize)));
+        }
+        r.Seek(file.Offset);
+        return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
+    }
+
+    static void ReadKey(BinaryArchive source, BinaryReader r, List<FileSource> files) {
+        var version = r.ReadUInt32();
+        if (version != KEY_VERSION) throw new FormatException("BAD MAGIC");
+        source.Version = version;
+        var bifCount = r.ReadUInt32();
+        var resourceCount = r.ReadUInt32();
+        var bifOffset = r.ReadUInt32();
+        var resourceOffset = r.ReadUInt32();
+
+        var raw = new List<(uint nameOfs, ushort nameLen)>();
+        r.Seek(bifOffset);
+        for (var i = 0u; i < bifCount; i++) {
+            _ = r.ReadUInt32();
+            var nameOfs = r.ReadUInt32();
+            var nameLen = r.ReadUInt16();
+            _ = r.ReadUInt16();
+            raw.Add((nameOfs, nameLen));
+        }
+        var bifs = new List<string>(raw.Count);
+        foreach (var s in raw) bifs.Add(ReadName(r, s.nameOfs, s.nameLen));
+
+        var byBif = new Dictionary<int, Dictionary<int, (string resref, ushort type)>>();
+        r.Seek(resourceOffset);
+        for (var i = 0u; i < resourceCount; i++) {
+            var resref = ResRef(r.ReadBytes(8));
+            var resType = r.ReadUInt16();
+            var locator = r.ReadUInt32();
+            if (((locator >> 14) & 0x3F) != 0) continue;
+            var bif = (int)((locator >> 20) & 0xFFF);
+            var index = (int)(locator & 0x3FFF);
+            if (!byBif.TryGetValue(bif, out var map)) byBif[bif] = map = new Dictionary<int, (string, ushort)>();
+            if (!map.ContainsKey(index)) map[index] = (resref, resType);
+        }
+
+        for (var i = 0; i < bifs.Count; i++) {
+            var rel = bifs[i];
+            var full = KeyPath.Bif(source.BinPath, rel);
+            if (!File.Exists(full)) continue;
+            if (!byBif.TryGetValue(i, out var map)) map = new Dictionary<int, (string, ushort)>();
+            OpenBif(source, files, full, rel, map);
+        }
+    }
+
+    static void OpenBif(BinaryArchive source, List<FileSource> files, string full, string rel, Dictionary<int, (string resref, ushort type)> map) {
+        using var br = new BinaryReader(File.OpenRead(full));
+        var magic = br.ReadUInt32();
+        if (magic == BIFF_MAGIC) ReadBiff(source, br, files, rel, full, map, false);
+        else if (magic == BIFC_MAGIC) ReadBifc(source, br, files, rel, full, map, false);
+        else throw new FormatException($"Unknown File Type {magic}");
+    }
+
+    static void ReadBifc(BinaryArchive source, BinaryReader r, List<FileSource> files, string rel, string tagPath, Dictionary<int, (string resref, ushort type)> map, bool setVersion) {
+        var inflated = InflateBifc(r);
+        if (setVersion && source.Tag is not System.Collections.IDictionary) source.Tag = inflated;
+        using var inner = new BinaryReader(new MemoryStream(inflated));
+        var magic = inner.ReadUInt32();
+        if (magic != BIFF_MAGIC) throw new FormatException($"Unknown File Type {magic}");
+        ReadBiff(source, inner, files, rel, tagPath, map, setVersion);
+    }
+
+    static void ReadBiff(BinaryArchive source, BinaryReader r, List<FileSource> files, string rel, string tagPath, Dictionary<int, (string resref, ushort type)> map, bool setVersion) {
+        var version = r.ReadUInt32();
+        if (version != BIFF_VERSION) throw new FormatException("BAD MAGIC");
+        if (setVersion) source.Version = version;
+        var fileCount = r.ReadUInt32();
+        _ = r.ReadUInt32();
+        var fileTableOffset = r.ReadUInt32();
+        r.Seek(fileTableOffset);
+        for (var i = 0u; i < fileCount; i++) {
+            var locator = r.ReadUInt32();
+            var offset = r.ReadUInt32();
+            var size = r.ReadUInt32();
+            var resType = r.ReadUInt16();
+            _ = r.ReadUInt16();
+            if (map != null) {
+                var index = (int)(locator & 0x3FFF);
+                if (!map.TryGetValue(index, out var res)) continue;
+                files.Add(new FileSource {
+                    Path = $"{rel}/{res.resref}{Ext(res.type)}",
+                    Offset = offset,
+                    FileSize = size,
+                    Tag = tagPath,
+                });
+            }
+            else files.Add(new FileSource {
+                Path = $"{i:D4}{Ext(resType)}",
+                Offset = offset,
+                FileSize = size,
+            });
+        }
+    }
+
+    static byte[] InflateBifc(BinaryReader r) {
+        var version = r.ReadUInt32();
+        if (version != BIFC_VERSION) throw new FormatException("BAD MAGIC");
+        var uncompressed = r.ReadUInt32();
+        if (uncompressed > int.MaxValue) throw new FormatException("zlib");
+        var output = new byte[uncompressed];
+        var filled = 0;
+        while (filled < uncompressed) {
+            var declen = r.ReadUInt32();
+            var complen = r.ReadUInt32();
+            if (declen == 0 || complen == 0 || declen > int.MaxValue || complen > int.MaxValue) throw new FormatException("zlib");
+            var chunk = r.DecompressZlib((int)complen, (int)declen);
+            if (chunk.Length < declen) throw new FormatException("zlib");
+            var take = (int)declen;
+            if (filled + take > uncompressed) take = (int)uncompressed - filled;
+            Buffer.BlockCopy(chunk, 0, output, filled, take);
+            filled += take;
+        }
+        return output;
+    }
+
+    static Stream ReadPath(string path, long offset, long size) {
+        using var br = new BinaryReader(File.OpenRead(path));
+        var magic = br.ReadUInt32();
+        if (magic == BIFC_MAGIC) return new MemoryStream(Slice(InflateBifc(br), offset, size));
+        br.Seek(offset);
+        return new MemoryStream(br.ReadBytes((int)size));
+    }
+
+    static byte[] Slice(byte[] data, long offset, long size) {
+        var o = checked((int)offset);
+        var n = checked((int)size);
+        var s = new byte[n];
+        Buffer.BlockCopy(data, o, s, 0, n);
+        return s;
+    }
+
+    static string ReadName(BinaryReader r, uint offset, ushort length) {
+        if (length == 0) return "";
+        r.Seek(offset);
+        return BifName(r.ReadBytes(length));
+    }
+
+    static string BifName(byte[] b) {
+        var n = 0;
+        while (n < b.Length && b[n] != 0) n++;
+        return System.Text.Encoding.ASCII.GetString(b, 0, n).Replace('\\', '/');
+    }
+
+    static string ResRef(byte[] b) {
+        var n = 0;
+        while (n < b.Length && b[n] != 0) n++;
+        return System.Text.Encoding.ASCII.GetString(b, 0, n).Trim();
+    }
+
+    static string Ext(int type) => type switch {
+        0x0001 => ".bmp",
+        0x0002 => ".mve",
+        0x0004 => ".wav",
+        0x0005 => ".wfx",
+        0x0006 => ".plt",
+        0x03e8 => ".bam",
+        0x03e9 => ".wed",
+        0x03ea => ".chu",
+        0x03eb => ".tis",
+        0x03ec => ".mos",
+        0x03ed => ".itm",
+        0x03ee => ".spl",
+        0x03ef => ".bcs",
+        0x03f0 => ".ids",
+        0x03f1 => ".cre",
+        0x03f2 => ".are",
+        0x03f3 => ".dlg",
+        0x03f4 => ".2da",
+        0x03f5 => ".gam",
+        0x03f6 => ".sto",
+        0x03f7 => ".wmp",
+        0x03f8 => ".eff",
+        0x03f9 => ".bs",
+        0x03fa => ".chr",
+        0x03fb => ".vvc",
+        0x03fc => ".vef",
+        0x03fd => ".pro",
+        0x03fe => ".bio",
+        0x03ff => ".wbm",
+        0x0400 => ".fnt",
+        0x0402 => ".gui",
+        0x0403 => ".sql",
+        0x0404 => ".pvrz",
+        0x0405 => ".glsl",
+        0x0406 => ".tot",
+        0x0407 => ".toh",
+        0x0408 => ".menu",
+        0x0409 => ".lua",
+        0x040a => ".ttf",
+        0x040b => ".png",
+        0x044c => ".bah",
+        0x0802 => ".ini",
+        0x0803 => ".src",
+        0x0804 => ".maze",
+        _ => "",
+    };
 }
 
 #endregion

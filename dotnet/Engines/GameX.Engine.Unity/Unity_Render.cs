@@ -1,6 +1,7 @@
 ﻿#if ARKANE
 using GameX.Arkane.Formats.Danae;
 #endif
+using GameX.Black.Formats;
 using GameX.Gamebryo.Formats;
 using GameX.ID.Formats;
 using OpenX;
@@ -19,6 +20,7 @@ public static class UnityRenderer {
         UnityX.BuildersByType[typeof(Binary_Fts)] = UnityFtsObjectBuilder.BuildObject;
 #endif
         UnityX.BuildersByType[typeof(Binary_BspX)] = UnityBspObjectBuilder.BuildObject;
+        UnityX.BuildersByType[typeof(Binary_Map)] = UnityMapObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (gfx == null) return null;

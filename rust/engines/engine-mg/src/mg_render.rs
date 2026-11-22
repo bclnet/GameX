@@ -12,9 +12,11 @@ use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex, Once};
 
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use gamex_id::formats::binary::Binary_BspX;
 
 use crate::mg_arkane::mg_ftl_object_builder;
 use crate::mg_arkane::mg_fts_object_builder;
+use crate::mg_arkane::mg_bsp_object_builder;
 use crate::mg_object_holder::MgObjectHolder;
 
 pub type ObjectBuilder = fn(&dyn Any, bool, Option<&dyn Any>) -> MgObjectHolder;
@@ -31,6 +33,7 @@ fn register() {
         let mut map = BuildersByType().lock().unwrap();
         map.insert(TypeId::of::<Binary_Ftl>(), mg_ftl_object_builder::buildObject);
         map.insert(TypeId::of::<Binary_Fts>(), mg_fts_object_builder::buildObject);
+        map.insert(TypeId::of::<Binary_BspX>(), mg_bsp_object_builder::buildObject);
     });
 }
 

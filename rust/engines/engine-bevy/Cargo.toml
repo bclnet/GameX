@@ -12,5 +12,6 @@ workspace = true
 gamex = { path = "../../core/gamex" }
 openx-engine-bevy = { path = "../../../OpenX/rust/engines/bevy" }
 gamex-arkane = { path = "../../families/arkane" }
+gamex-id = { path = "../../families/id" }
 glam = { workspace = true }
 openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }

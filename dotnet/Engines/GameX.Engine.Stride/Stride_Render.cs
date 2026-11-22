@@ -2,6 +2,7 @@
 using OpenX.Gfx;
 using OpenX.Gfx.Stride;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Formats;
 #pragma warning disable CS9113
 
@@ -12,6 +13,7 @@ public static class StrideRenderer {
         StrideX.BuildersByType[typeof(Binary_Nif)] = StrideNifObjectBuilder.BuildObject;
         StrideX.BuildersByType[typeof(Binary_Ftl)] = StrideFtlObjectBuilder.BuildObject;
         StrideX.BuildersByType[typeof(Binary_Fts)] = StrideFtsObjectBuilder.BuildObject;
+        StrideX.BuildersByType[typeof(Binary_BspX)] = StrideBspObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

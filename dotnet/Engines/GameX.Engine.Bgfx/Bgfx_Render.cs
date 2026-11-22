@@ -3,6 +3,7 @@ using OpenX.Gfx;
 using OpenX.Gfx.Bgfx;
 using GameX.Arkane.Engines;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Engines;
 using GameX.Gamebryo.Formats;
 using GameX.Gamebryo.Formats.Nif;
@@ -20,6 +21,7 @@ public static class BgfxRenderer {
         BgfxX.BuildersByType[typeof(Binary_Nif)] = BuildNif;
         BgfxX.BuildersByType[typeof(Binary_Ftl)] = BuildFtl;
         BgfxX.BuildersByType[typeof(Binary_Fts)] = BuildFts;
+        BgfxX.BuildersByType[typeof(Binary_BspX)] = BgfxBspObjectBuilder.BuildObject;
     }
 
     /// <summary>

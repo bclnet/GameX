@@ -2,6 +2,7 @@
 using OpenX.Gfx;
 using OpenX.Gfx.Unreal;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Formats;
 using System.Collections.Generic;
 #pragma warning disable CS9113, CS0169
@@ -13,6 +14,7 @@ public static class UnrealRenderer {
         UnrealEngine.BuildersByType[typeof(Binary_Nif)] = UnrealNifObjectBuilder.BuildObject;
         UnrealEngine.BuildersByType[typeof(Binary_Ftl)] = UnrealFtlObjectBuilder.BuildObject;
         UnrealEngine.BuildersByType[typeof(Binary_Fts)] = UnrealFtsObjectBuilder.BuildObject;
+        UnrealEngine.BuildersByType[typeof(Binary_BspX)] = UnrealBspObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

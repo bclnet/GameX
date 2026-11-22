@@ -105,6 +105,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public static E_FACE To(FTL_FACE s) => new() {
             FaceType = s.FaceType,
             TexId = s.TexId,
+            Vid = s.Vid,
             U = s.U,
             V = s.V,
             Ou = s.Ou,
@@ -862,6 +863,383 @@ public unsafe class Binary_Tea : IHaveMetaInfo {
         new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
         new("TEA", items: [
             new($"Anim: {Anim}"),
+        ])
+    ];
+}
+
+#endregion
+
+#region Binary_Cin
+// https://github.com/arx/ArxLibertatis/blob/master/src/cinematic/CinematicLoad.cpp
+// https://github.com/arx/ArxLibertatis/blob/ArxFatalis-1.21/Sources/DANAE/ARX_C_loadsave.cpp
+
+public class Binary_Cin : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Cin(r));
+
+    public const int Version175 = (1 << 16) | 75;
+    public const int Version176 = (1 << 16) | 76;
+
+    public class C_BITMAP { public int Scale; public string Path; }
+    public class C_SOUND { public short Id; public string Path; }
+    public class C_LIGHT { public Vector3 Pos, Color; public float Fallin, Fallout, Intensity, Intensiternd; }
+    public class C_KEY {
+        public int Frame, NumBitmap, Fx;
+        public short TypeInterp, Force;
+        public Vector3 Pos;
+        public float AngZ;
+        public int Color, ColorD, ColorF;
+        public float Speed;
+        public C_LIGHT Light;
+        public Vector3 PosGrille;
+        public float AngZGrille, SpeedTrack;
+        public int[] IdSound;
+    }
+
+    public readonly int Version;
+    public readonly C_BITMAP[] Bitmaps;
+    public readonly C_SOUND[] Sounds;
+    public readonly int StartFrame, EndFrame, NbKey, Pause;
+    public readonly float CurrFrame, Fps;
+    public readonly C_KEY[] Keys;
+
+    static string ReadZ(BinaryReader r) {
+        var s = "";
+        byte b;
+        while ((b = r.ReadByte()) != 0) s += (char)b;
+        return s;
+    }
+
+    static Vector3 ReadVec(BinaryReader r) => new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+
+    static C_LIGHT ReadLight(BinaryReader r) {
+        var l = new C_LIGHT {
+            Pos = ReadVec(r),
+            Fallin = r.ReadSingle(),
+            Fallout = r.ReadSingle(),
+            Color = ReadVec(r),
+            Intensity = r.ReadSingle(),
+            Intensiternd = r.ReadSingle(),
+        };
+        r.ReadInt32(); r.ReadInt32();
+        return l;
+    }
+
+    public Binary_Cin(BinaryReader r) {
+        var magic = ReadZ(r);
+        if (magic != "KFA") throw new FormatException($"BAD MAGIC: {magic}");
+        Version = r.ReadInt32();
+        if (Version != Version175 && Version != Version176) throw new FormatException($"Invalid CIN Version: {Version}");
+        ReadZ(r);
+        var nbitmaps = r.ReadInt32();
+        Bitmaps = new C_BITMAP[nbitmaps];
+        for (var i = 0; i < nbitmaps; i++) Bitmaps[i] = new C_BITMAP { Scale = r.ReadInt32(), Path = ReadZ(r) };
+        var nsounds = r.ReadInt32();
+        Sounds = new C_SOUND[nsounds];
+        for (var i = 0; i < nsounds; i++) {
+            short id = 0;
+            if (Version >= Version176) id = r.ReadInt16();
+            Sounds[i] = new C_SOUND { Id = id, Path = ReadZ(r) };
+        }
+        StartFrame = r.ReadInt32();
+        EndFrame = r.ReadInt32();
+        CurrFrame = r.ReadSingle();
+        Fps = r.ReadSingle();
+        NbKey = r.ReadInt32();
+        Pause = r.ReadInt32();
+        Keys = new C_KEY[NbKey];
+        for (var i = 0; i < NbKey; i++) {
+            var k = new C_KEY {
+                Frame = r.ReadInt32(),
+                NumBitmap = r.ReadInt32(),
+                Fx = r.ReadInt32(),
+                TypeInterp = r.ReadInt16(),
+                Force = r.ReadInt16(),
+                Pos = ReadVec(r),
+                AngZ = r.ReadSingle(),
+                Color = r.ReadInt32(),
+                ColorD = r.ReadInt32(),
+                ColorF = r.ReadInt32(),
+            };
+            if (Version <= Version175) {
+                k.IdSound = [r.ReadInt32()];
+                k.Speed = r.ReadSingle();
+                k.Light = ReadLight(r);
+                k.PosGrille = ReadVec(r);
+                k.AngZGrille = r.ReadSingle();
+                k.SpeedTrack = r.ReadSingle();
+            }
+            else {
+                k.Speed = r.ReadSingle();
+                k.Light = ReadLight(r);
+                k.PosGrille = ReadVec(r);
+                k.AngZGrille = r.ReadSingle();
+                k.SpeedTrack = r.ReadSingle();
+                k.IdSound = new int[16];
+                for (var n = 0; n < 16; n++) k.IdSound[n] = r.ReadInt32();
+            }
+            Keys[i] = k;
+        }
+    }
+
+    public override string ToString() => $"KFA {Version} bitmaps={Bitmaps.Length} sounds={Sounds.Length} keys={NbKey}";
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
+        new("CIN", items: [
+            new($"Version: {Version}"),
+            new($"Bitmaps: {Bitmaps.Length}"),
+            new($"Sounds: {Sounds.Length}"),
+            new($"Keys: {NbKey}"),
+        ])
+    ];
+}
+
+#endregion
+
+#region Binary_Flt
+// https://github.com/arx/ArxLibertatis/blob/master/src/scene/LoadLevel.cpp
+// https://github.com/arx/ArxLibertatis/blob/master/src/scene/LevelFormat.h
+
+public class Binary_Flt : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Flt(r));
+
+    public class L_LIGHT {
+        public Vector3 Pos, Rgb, ExFlicker;
+        public float Fallstart, Fallend, Intensity, I, ExRadius, ExFrequency, ExSize, ExSpeed, ExFlaresize;
+        public int Extras;
+    }
+
+    public readonly float Version;
+    public readonly string Ident, LastUser;
+    public readonly int Time, NbShadow, NbIgnored, NbBkg, ViewMode, ModeLight;
+    public readonly L_LIGHT[] Lights;
+    public readonly uint[] Colors;
+
+    static string ReadFixed(BinaryReader r, int n) {
+        var b = r.ReadBytes(n);
+        var z = Array.IndexOf(b, (byte)0);
+        if (z < 0) z = b.Length;
+        var s = "";
+        for (var i = 0; i < z; i++) s += (char)b[i];
+        return s;
+    }
+
+    public Binary_Flt(BinaryReader r) {
+        var length = (int)(r.BaseStream.Length - r.BaseStream.Position);
+        var raw = r.DecompressBlast(length, length);
+        using var r2 = new BinaryReader(new MemoryStream(raw));
+        Version = r2.ReadSingle();
+        Ident = ReadFixed(r2, 16);
+        if (Ident != "DANAE_LLH_FILE") throw new FormatException($"BAD MAGIC: {Ident}");
+        LastUser = ReadFixed(r2, 256);
+        Time = r2.ReadInt32();
+        var nbLights = r2.ReadInt32();
+        NbShadow = r2.ReadInt32();
+        NbIgnored = r2.ReadInt32();
+        NbBkg = r2.ReadInt32();
+        r2.Skip(256 * 4 + 256 * 4 + 4096 + 256 * 4);
+        Lights = new L_LIGHT[nbLights];
+        for (var i = 0; i < nbLights; i++) {
+            var light = new L_LIGHT {
+                Pos = new Vector3(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle()),
+                Rgb = new Vector3(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle()),
+                Fallstart = r2.ReadSingle(),
+                Fallend = r2.ReadSingle(),
+                Intensity = r2.ReadSingle(),
+                I = r2.ReadSingle(),
+                ExFlicker = new Vector3(r2.ReadSingle(), r2.ReadSingle(), r2.ReadSingle()),
+                ExRadius = r2.ReadSingle(),
+                ExFrequency = r2.ReadSingle(),
+                ExSize = r2.ReadSingle(),
+                ExSpeed = r2.ReadSingle(),
+                ExFlaresize = r2.ReadSingle(),
+            };
+            r2.Skip(96);
+            light.Extras = r2.ReadInt32();
+            r2.Skip(124);
+            Lights[i] = light;
+        }
+        var nbValues = r2.ReadInt32();
+        ViewMode = r2.ReadInt32();
+        ModeLight = r2.ReadInt32();
+        r2.ReadInt32();
+        var remain = (int)(r2.BaseStream.Length - r2.BaseStream.Position);
+        Colors = new uint[nbValues];
+        if (remain == nbValues * 4) {
+            var bytes = r2.ReadBytes(remain);
+            Buffer.BlockCopy(bytes, 0, Colors, 0, bytes.Length);
+        }
+        else if (remain == nbValues * 12) {
+            for (var i = 0; i < nbValues; i++) {
+                var rr = r2.ReadInt32(); var gg = r2.ReadInt32(); var bb = r2.ReadInt32();
+                Colors[i] = (uint)((bb & 255) | ((gg & 255) << 8) | ((rr & 255) << 16) | (255 << 24));
+            }
+        }
+        else throw new FormatException("BAD LIGHTING");
+    }
+
+    public override string ToString() => $"{Ident} {Version} lights={Lights.Length} colors={Colors.Length}";
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
+        new("LLF", items: [
+            new($"Version: {Version}"),
+            new($"Lights: {Lights.Length}"),
+            new($"Colors: {Colors.Length}"),
+        ])
+    ];
+}
+
+#endregion
+
+#region Binary_Teo
+// https://github.com/arx/ArxLibertatis/blob/1.1.2/src/scene/Object.cpp TheoToEerie
+// https://github.com/arx/ArxLibertatis/blob/1.1.2/src/scene/ObjectFormat.h
+
+public class Binary_Teo : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Teo(r));
+
+    public const uint VersionMin = 3003;
+    public const uint VersionMax = 3011;
+    const float THEO_ROTCONVERT = 0.087890625f;
+
+    public class T_MAP { public string Name; }
+    public class T_VERTEX { public Vector3 Pos; }
+    public class T_FACE {
+        public int Index1, Index2, Index3, NumMap, IsMap, DoubleSide;
+        public short U1, V1, U2, V2, U3, V3;
+        public float Trans;
+    }
+    public class T_GROUP { public int Origin; public int[] Indexes; public string Name; }
+    public class T_ACTION { public string Name; public int VertIndex, Action, NumSfx; }
+    public class T_SELECTED { public string Name; public int[] Indexes; }
+
+    public readonly string Identity;
+    public readonly uint Version;
+    public readonly int MapsSeek, ObjectSeek, NbMaps, TypeWrite;
+    public readonly T_MAP[] Maps;
+    public readonly T_VERTEX[] Vertexs;
+    public readonly T_FACE[] Faces;
+    public readonly T_GROUP[] Groups;
+    public readonly T_ACTION[] Actions;
+    public readonly T_SELECTED[] Selections;
+    public readonly Vector3 Pos;
+    public readonly Vector3 Angle;
+    public readonly Quaternion Quat;
+    public readonly int Origin;
+
+    static string ReadFixed(BinaryReader r, int n) {
+        var b = r.ReadBytes(n);
+        var z = Array.IndexOf(b, (byte)0);
+        if (z < 0) z = b.Length;
+        var s = "";
+        for (var i = 0; i < z; i++) s += (char)b[i];
+        return s;
+    }
+
+    public Binary_Teo(BinaryReader r) {
+        Identity = ReadFixed(r, 17);
+        Version = r.ReadUInt32();
+        MapsSeek = r.ReadInt32();
+        ObjectSeek = r.ReadInt32();
+        NbMaps = r.ReadInt32();
+        TypeWrite = r.ReadInt32();
+        if (Identity != "Theo Object File") throw new FormatException($"BAD MAGIC: {Identity}");
+        if (Version < VersionMin || Version > VersionMax) {
+            Maps = null; Vertexs = null; Faces = null; Groups = null; Actions = null; Selections = null;
+            Pos = default; Angle = default; Quat = default; Origin = 0;
+            return;
+        }
+        Maps = new T_MAP[NbMaps];
+        for (var i = 0; i < NbMaps; i++) {
+            if (TypeWrite == 0) {
+                Maps[i] = new T_MAP { Name = ReadFixed(r, 256) };
+                r.Skip(40);
+            }
+            else if ((TypeWrite & 1) != 0 || (TypeWrite & 2) != 0) {
+                Maps[i] = new T_MAP { Name = ReadFixed(r, 256) };
+                r.Skip(Version >= 3008 ? 24 : 20);
+            }
+        }
+        r.Seek(ObjectSeek);
+        var vertexSeek = r.ReadInt32();
+        var actionSeek = r.ReadInt32();
+        r.ReadInt32();
+        var facesSeek = r.ReadInt32();
+        var extrasSeek = r.ReadInt32();
+        var groupsSeek = r.ReadInt32();
+        var nbVertex = r.ReadInt32();
+        var nbAction = r.ReadInt32();
+        r.ReadInt32();
+        var nbFaces = r.ReadInt32();
+        var nbGroups = r.ReadInt32();
+        r.ReadUInt32();
+        r.Seek(vertexSeek);
+        Vertexs = new T_VERTEX[nbVertex];
+        for (var i = 0; i < nbVertex; i++) {
+            Vertexs[i] = new T_VERTEX { Pos = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) };
+            r.Skip(12);
+        }
+        r.Seek(facesSeek);
+        Faces = new T_FACE[nbFaces];
+        for (var i = 0; i < nbFaces; i++) {
+            r.ReadUInt32();
+            var face = new T_FACE { Index1 = r.ReadInt32(), Index2 = r.ReadInt32(), Index3 = r.ReadInt32(), IsMap = r.ReadInt32() };
+            face.U1 = (short)r.ReadInt32(); face.V1 = (short)r.ReadInt32();
+            face.U2 = (short)r.ReadInt32(); face.V2 = (short)r.ReadInt32();
+            face.U3 = (short)r.ReadInt32(); face.V3 = (short)r.ReadInt32();
+            r.ReadInt32();
+            face.NumMap = r.ReadInt32();
+            r.Skip(16 + 4 + 4 + 4 + 36);
+            face.DoubleSide = r.ReadInt32();
+            if (Version >= 3006) r.ReadInt32();
+            r.ReadInt32();
+            face.Trans = r.ReadSingle();
+            Faces[i] = face;
+        }
+        r.Seek(groupsSeek);
+        Groups = new T_GROUP[nbGroups];
+        for (var i = 0; i < nbGroups; i++) {
+            var origin = r.ReadInt32();
+            if (Version >= 3011) r.Skip(40);
+            var n = r.ReadInt32();
+            var idx = new int[n];
+            for (var j = 0; j < n; j++) idx[j] = r.ReadInt32();
+            Groups[i] = new T_GROUP { Origin = origin, Indexes = idx, Name = ReadFixed(r, 256) };
+        }
+        var nbSelected = r.ReadInt32();
+        Selections = new T_SELECTED[nbSelected];
+        for (var i = 0; i < nbSelected; i++) {
+            var name = ReadFixed(r, 256);
+            var n = r.ReadInt32();
+            var idx = new int[n];
+            for (var j = 0; j < n; j++) idx[j] = r.ReadInt32();
+            Selections[i] = new T_SELECTED { Name = name, Indexes = idx };
+        }
+        r.Seek(actionSeek);
+        Actions = new T_ACTION[nbAction];
+        for (var i = 0; i < nbAction; i++)
+            Actions[i] = new T_ACTION { Name = ReadFixed(r, 256), VertIndex = r.ReadInt32(), Action = r.ReadInt32(), NumSfx = r.ReadInt32() };
+        r.Seek(extrasSeek + 4);
+        var alpha = r.ReadInt32(); var beta = r.ReadInt32(); var gamma = r.ReadInt32();
+        Angle = new Vector3((alpha & 0xfff) * THEO_ROTCONVERT, (beta & 0xfff) * THEO_ROTCONVERT, (gamma & 0xfff) * THEO_ROTCONVERT);
+        if (Version >= 3005) {
+            var w = r.ReadSingle(); var x = r.ReadSingle(); var y = r.ReadSingle(); var z = r.ReadSingle();
+            Quat = new Quaternion(x, y, z, w);
+        }
+        Pos = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+        Origin = r.ReadInt32();
+    }
+
+    public override string ToString() => $"{Identity} {Version} maps={NbMaps} vertexs={Vertexs?.Length ?? 0} faces={Faces?.Length ?? 0}";
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
+        new("TEO", items: [
+            new($"Version: {Version}"),
+            new($"Maps: {NbMaps}"),
+            new($"Vertexs: {Vertexs?.Length ?? 0}"),
+            new($"Faces: {Faces?.Length ?? 0}"),
         ])
     ];
 }

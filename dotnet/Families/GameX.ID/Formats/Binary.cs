@@ -1,4 +1,4 @@
-using OpenX.Gfx;
+﻿using OpenX.Gfx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -210,6 +210,23 @@ public unsafe class Binary_BspY : ArcBinary<Binary_BspY> {
 
 #region Binary_BspX
 
+public class BspLevel {
+    public Vector3[] Vertices = [];
+    public (ushort A, ushort B)[] Edges = [];
+    public int[] SurfEdges = [];
+    public BspFace[] Faces = [];
+    public BspTexinfo[] Texinfo = [];
+    public BspPlane[] Planes = [];
+    public BspModel[] Models = [];
+    public BspTexture[] Textures = [];
+    public string Entities = "";
+}
+public class BspFace { public int PlaneNum, Side, FirstEdge, NumEdges, Texinfo; }
+public class BspTexinfo { public Vector4 Vecs0, Vecs1; public int Miptex; }
+public class BspPlane { public Vector3 Normal; public float Dist; }
+public class BspModel { public int FirstFace, NumFaces; }
+public class BspTexture { public string Name; public int Width, Height; }
+
 public unsafe class Binary_BspX : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_BspX(r, s));
 
@@ -303,8 +320,75 @@ public unsafe class Binary_BspX : IHaveMetaInfo {
             var dtexdata = CopyLump<byte>(r, fileLength, TEXTURES, null, 1, 0x200000);
             var dvisdata = CopyLump<byte>(r, fileLength, VISIBILITY, null, 1, h1 ? 0x200000 : 0x100000);
             var dlightdata = CopyLump<byte>(r, fileLength, LIGHTING, null, 1, h1 ? 0x200000 : 0x100000);
-            var dentdata = Encoding.ASCII.GetString(CopyLump<byte>(r, fileLength, ENTITIES, null, 1, h1 ? 131072 : 65536));
-            return null;
+            var entBytes = CopyLump<byte>(r, fileLength, ENTITIES, null, 1, h1 ? 131072 : 65536);
+            return new BspLevel {
+                Vertices = dvertexes ?? [],
+                Edges = ToEdges(dedges),
+                SurfEdges = dsurfedges ?? [],
+                Faces = ToFaces(dfaces),
+                Texinfo = ToTexinfo(texinfo),
+                Planes = ToPlanes(dplanes),
+                Models = ToModels(dmodels),
+                Textures = ToTextures(dtexdata),
+                Entities = entBytes == null ? "" : Encoding.ASCII.GetString(entBytes),
+            };
+
+            static (ushort A, ushort B)[] ToEdges(X_DEdge_H1S2[] src) {
+                if (src == null) return [];
+                var d = new (ushort A, ushort B)[src.Length];
+                for (var i = 0; i < src.Length; i++) d[i] = (src[i].V.X, src[i].V.Y);
+                return d;
+            }
+            static BspFace[] ToFaces(X_DFace_H12[] src) {
+                if (src == null) return [];
+                var d = new BspFace[src.Length];
+                for (var i = 0; i < src.Length; i++) {
+                    var f = src[i];
+                    d[i] = new BspFace { PlaneNum = f.PlaneNum, Side = f.Side, FirstEdge = f.FirstEdge, NumEdges = f.NumEdges, Texinfo = f.Texinfo };
+                }
+                return d;
+            }
+            static BspTexinfo[] ToTexinfo(X_Texinfo_H1[] src) {
+                if (src == null) return [];
+                var d = new BspTexinfo[src.Length];
+                for (var i = 0; i < src.Length; i++) {
+                    var t = src[i];
+                    d[i] = new BspTexinfo { Vecs0 = t.Vecs0, Vecs1 = t.Vecs1, Miptex = t.Miptex };
+                }
+                return d;
+            }
+            static BspPlane[] ToPlanes(X_DPlane_H1S2[] src) {
+                if (src == null) return [];
+                var d = new BspPlane[src.Length];
+                for (var i = 0; i < src.Length; i++) d[i] = new BspPlane { Normal = src[i].Normal, Dist = src[i].Dist };
+                return d;
+            }
+            static BspModel[] ToModels(X_DModel_H1[] src) {
+                if (src == null) return [];
+                var d = new BspModel[src.Length];
+                for (var i = 0; i < src.Length; i++) d[i] = new BspModel { FirstFace = src[i].FirstFace, NumFaces = src[i].NumFaces };
+                return d;
+            }
+            static BspTexture[] ToTextures(byte[] lump) {
+                if (lump == null || lump.Length < 4) return [];
+                var count = BitConverter.ToInt32(lump, 0);
+                if (count <= 0) return [];
+                var textures = new BspTexture[count];
+                for (var i = 0; i < count; i++) {
+                    var tex = new BspTexture { Name = "" };
+                    textures[i] = tex;
+                    var pos = 4 + (i * 4);
+                    if (pos < 4 || pos + 4 > lump.Length) continue;
+                    var ofs = BitConverter.ToInt32(lump, pos);
+                    if (ofs <= 0 || ofs + 24 > lump.Length) continue;
+                    var n = 0;
+                    while (n < 16 && lump[ofs + n] != 0) n++;
+                    tex.Name = Encoding.ASCII.GetString(lump, ofs, n);
+                    tex.Width = (int)BitConverter.ToUInt32(lump, ofs + 16);
+                    tex.Height = (int)BitConverter.ToUInt32(lump, ofs + 20);
+                }
+                return textures;
+            }
         }
     }
     [StructLayout(LayoutKind.Sequential)]
@@ -785,6 +869,8 @@ public unsafe class Binary_BspX : IHaveMetaInfo {
     object h1;
     object s2;
     object x3;
+
+    public BspLevel Level => h1 as BspLevel;
 
     public Binary_BspX(BinaryReader r, Archive s) {
         var flag = false;

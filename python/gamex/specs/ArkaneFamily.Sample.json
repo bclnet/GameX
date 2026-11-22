@@ -38,7 +38,7 @@
         "type": "Anim"
       },
       {
-        "path": "data.pak:GRAPH/obj3d/anims/Fix_Inter/fx_poison/fx_poison_missile.too",
+        "path": "data.pak:GRAPH/obj3d/interactive/Fix_inter/fx_poison/fx_poison_missile.too",
         "type": "Anim"
       }
     ]

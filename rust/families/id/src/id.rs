@@ -2,22 +2,29 @@
 // PORT-SHA: 9e143a7100ea21b5
 // PORT-STATUS: partial
 //
-// Ported: `IDArchive` constructor, `getArcBinary`, and `assetFactory`.
-// `QGame` calls `Games.Q.Database`, which is still unported. `ITransformAsset`
-// isn't wired: `UnknownTransform` is a stub. Not registered. The spec names
-// `GameX.ID.IDArchive`, and `register` waits until `QGame` is ported.
+// Ported: `IDArchive` constructor, `getArcBinary`, `assetFactory`, and
+// `register()`. `register()` exists. The Explorer must call it, or opening ID
+// fails with "unknown ArchiveType". C# finds the archive by reflection.
+// The Q database does not continue. `QGame.Loaded`'s `Games.Q.Database` call
+// is intentionally not ported. `family.rs` records `gameType` and builds the
+// base `FamilyGame`; it does not construct `QGame`.
+// `ITransformAsset` is not wired: `UnknownTransform` is a stub, the same
+// choice as Arkane.
 // `.lmp` / `.tex` is `Binary_Lmp`, `.spr` is `Binary_Spr`, `.mdl` is the empty
-// `Binary_Mdl`. `.bsp` is `Binary_BspX`: the constructor and the three header
-// `Read`s. `Ent`, miptex, and the content enums are still out.
+// `Binary_Mdl`. `.bsp` is `Binary_BspX::factory`.
 
 use std::io::{self, Error, ErrorKind};
 use std::sync::Arc;
 use gamex::binary::{newArchive, ArcBinary, Archive, AssetFactory, BinaryArchive, BinaryState};
-use gamex::family::FamilyGame;
+use gamex::family::{registerType, ArchiveFactory, FamilyGame};
 use gamex::meta::{extension, FileSource, Tag};
 use gamex_uncore::formats::binary::Binary_Zip;
 use gamex_uncore::uncore::UncoreArchive;
 use crate::formats::binary::{Binary_BspX, Binary_Lmp, Binary_Mdl, Binary_Pak, Binary_Spr, Binary_Wad};
+
+pub fn register() {
+    registerType::<ArchiveFactory>("GameX.ID.IDArchive, GameX.ID", |parent, state| Ok(IDArchive::new(parent, state)? as Arc<dyn Archive>));
+}
 
 /// IDArchive
 pub struct IDArchive;

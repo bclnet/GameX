@@ -13,5 +13,6 @@ gamex = { path = "../../core/gamex" }
 openx-engine-stride = { path = "../../../OpenX/rust/engines/stride" }
 openx-sfx = { path = "../../../OpenX/rust/sfx/sfx" }
 gamex-arkane = { path = "../../families/arkane" }
+gamex-id = { path = "../../families/id" }
 glam = { workspace = true }
 openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }

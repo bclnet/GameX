@@ -199,19 +199,21 @@ public readonly struct UOObjectState {
     public UOObjectEquip[] Equipment { get; }
 }
 
-/// <summary>One custom-house tile. Mode 2 x and y are not in the packet, so they stay 0.</summary>
+/// <summary>One custom-house tile. Mode 2 keeps the loop index and leaves x and y at 0. Modes 0 and 1 store the packet offsets and leave Index at 0.</summary>
 public readonly struct UOHouseComponent {
-    public UOHouseComponent(ushort id, sbyte x, sbyte y, sbyte z) {
+    public UOHouseComponent(ushort id, sbyte x, sbyte y, sbyte z, int index = 0) {
         Id = id;
         X = x;
         Y = y;
         Z = z;
+        Index = index;
     }
 
     public ushort Id { get; }
     public sbyte X { get; }
     public sbyte Y { get; }
     public sbyte Z { get; }
+    public int Index { get; }
 }
 
 /// <summary>One 0xD8 plane. Components are the tiles ClassicUO would add.</summary>
@@ -765,7 +767,7 @@ public static partial class PacketHandlers {
                     var x = r.I8();
                     var y = r.I8();
                     z = r.I8();
-                    if (id != 0) list.Add(new UOHouseComponent(id, x, y, z));
+                    if (id != 0) list.Add(new UOHouseComponent(id, x, y, z, 0));
                 }
                 break;
             case 1:
@@ -776,7 +778,7 @@ public static partial class PacketHandlers {
                     var id = r.U16();
                     var x = r.I8();
                     var y = r.I8();
-                    if (id != 0) list.Add(new UOHouseComponent(id, x, y, z));
+                    if (id != 0) list.Add(new UOHouseComponent(id, x, y, z, 0));
                 }
                 break;
             case 2:
@@ -785,7 +787,8 @@ public static partial class PacketHandlers {
                 if (count > data.Length / 2) count = data.Length / 2;
                 for (var i = 0; i < count; i++) {
                     var id = r.U16();
-                    if (id != 0) list.Add(new UOHouseComponent(id, 0, 0, z));
+                    // A zero id is not stored, but it still occupies this index. Dropping it before x,y moves the later tiles.
+                    if (id != 0) list.Add(new UOHouseComponent(id, 0, 0, z, i));
                 }
                 break;
         }

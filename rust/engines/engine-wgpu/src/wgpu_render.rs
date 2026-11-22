@@ -35,6 +35,8 @@ use openx_gfx::gfx::MaterialStd2Prop;
 use gamex_arkane::engines::ftl_object_builder::{self, FtlMesh};
 use gamex_arkane::engines::fts_object_builder::{self, FtsMesh};
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use gamex_id::engines::bsp_object_builder::{self, BspMesh};
+use gamex_id::formats::binary::Binary_BspX;
 use openx_engine_wgpu::gfx::wgpu::{Builder, WgpuX};
 fn mapLock() -> std::sync::MutexGuard<'static, std::collections::HashMap<TypeId, Builder>> {
     WgpuX::buildersByType()
@@ -100,12 +102,34 @@ fn buildFts(path: &(dyn Any + Send), isStatic: bool, _materialManager: &(dyn Any
     }))
 }
 
+/// Quake BSP holder. Z-up is swapped in `toGeometry`. No GPU upload.
+pub struct WgpuBspObject {
+    pub Name: String,
+    pub IsStatic: bool,
+    pub Mesh: BspMesh,
+    pub Materials: WgpuObjectMaterials,
+}
+
+fn buildBsp(path: &(dyn Any + Send), isStatic: bool, _materialManager: &(dyn Any + Send)) -> Option<Box<dyn Any + Send>> {
+    let bsp = path.downcast_ref::<Binary_BspX>()?;
+    let mesh = bsp_object_builder::toGeometry(bsp);
+    let paths = bsp_object_builder::getTexturePaths(bsp);
+    let level = bsp.level();
+    let mut props = Vec::with_capacity(mesh.Submeshes.len());
+    for sub in &mesh.Submeshes {
+        let prop = level.and_then(|l| if sub.TexId >= 0 { l.Textures.get(sub.TexId as usize) } else { None }).map(bsp_object_builder::toMaterialProp).unwrap_or_default();
+        props.push(prop);
+    }
+    Some(Box::new(WgpuBspObject { Name: "bsp".to_string(), IsStatic: isStatic, Mesh: mesh, Materials: WgpuObjectMaterials { Paths: paths, Props: props } }))
+}
+
 fn register() {
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
         let mut map = mapLock();
         map.insert(TypeId::of::<Binary_Ftl>(), buildFtl as Builder);
         map.insert(TypeId::of::<Binary_Fts>(), buildFts as Builder);
+        map.insert(TypeId::of::<Binary_BspX>(), buildBsp as Builder);
     });
 }
 

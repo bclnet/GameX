@@ -11,6 +11,7 @@ workspace = true
 [dependencies]
 gamex = { path = "../../core/gamex" }
 gamex-arkane = { path = "../../families/arkane" }
+gamex-id = { path = "../../families/id" }
 openx-engine-godot = { path = "../../../OpenX/rust/engines/godot" }
 
 [dev-dependencies]

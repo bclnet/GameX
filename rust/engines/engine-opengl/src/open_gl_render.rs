@@ -2,8 +2,8 @@
 // PORT-SHA: 85e7fd691556ba6d
 // PORT-STATUS: partial
 //
-// PARTIAL PORT: `Binary_Ftl` and `Binary_Fts` are registered on the first
-// `createRenderer` (`open_gl_arkane::open_gl_ftl_object_builder`, `open_gl_arkane::open_gl_fts_object_builder`).
+// PARTIAL PORT: `Binary_Ftl`, `Binary_Fts`, and `Binary_BspX` are registered on the first
+// `createRenderer` (`open_gl_arkane::open_gl_ftl_object_builder`, `open_gl_arkane::open_gl_fts_object_builder`, `open_gl_arkane::open_gl_bsp_object_builder`).
 // FTS is registered. `Binary_Nif` stays unregistered: Gamebryo's Nif is
 // unported (`OpenGL_Gamebryo.cs`), so an "Object" view of a NIF still
 // has no builder. The file is not `done` while NIF is unregistered.
@@ -21,6 +21,7 @@ use std::io::{Error, ErrorKind};
 use std::sync::{Arc, Once};
 use gamex::meta::Tag;
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use gamex_id::formats::binary::Binary_BspX;
 use openx_engine_opengl::gfx::open_gl::{setObjectDraw, OpenGLX};
 use openx_engine_opengl::gfx::open_gl_render::{drawPositions, EngineRenderer, MaterialRenderer, ObjectRenderer, ParticleRenderer, TestTriRenderer, TextureRenderer};
 use openx_gfx::gfx::{IOpenGfxs, MaterialProp};
@@ -36,6 +37,7 @@ impl OpenGLRenderer {
         ONCE.call_once(|| {
             OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Ftl>(), crate::open_gl_arkane::open_gl_ftl_object_builder::buildObject);
             OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_Fts>(), crate::open_gl_arkane::open_gl_fts_object_builder::buildObject);
+            OpenGLX::BuildersByType().lock().unwrap().insert(TypeId::of::<Binary_BspX>(), crate::open_gl_arkane::open_gl_bsp_object_builder::buildObject);
             setObjectDraw(drawBuilt);
         });
     }
@@ -80,6 +82,9 @@ fn drawBuilt(obj: &(dyn std::any::Any + Send + Sync)) {
         let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
         drawPositions(key, &positions, &indices);
     } else if let Some(o) = obj.downcast_ref::<crate::open_gl_arkane::open_gl_fts_object_builder::OpenGLFtsObject>() {
+        let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
+        drawPositions(key, &positions, &indices);
+    } else if let Some(o) = obj.downcast_ref::<crate::open_gl_arkane::open_gl_bsp_object_builder::OpenGLBspObject>() {
         let (positions, indices) = pack(&o.Data.Vertices, o.Data.Submeshes.iter().map(|s| s.Triangles.as_slice()));
         drawPositions(key, &positions, &indices);
     }

@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.Arkane/Arkane.cs
-// PORT-SHA: 866f5a89aa4107c9
+// PORT-SHA: 4ce1fd020e9a6aa2
 // PORT-STATUS: done
 //
 // PARTIAL PORT: CryEngine, Unreal, Source and idTech now dispatch to Crytek,
@@ -34,7 +34,7 @@ use gamex_uncore::uncore::UncoreArchive;
 use gamex_valve::formats::binary::Binary_Vpk;
 use gamex_valve::valve::ValveArchive;
 use crate::formats::binary::{Binary_Danae, Binary_Void};
-use crate::formats::danae::binary::{Binary_Ftl, Binary_Fts, Binary_Tea};
+use crate::formats::danae::binary::{Binary_Cin, Binary_Flt, Binary_Ftl, Binary_Fts, Binary_Tea, Binary_Teo};
 
 pub fn register() {
     registerType::<ArchiveFactory>("GameX.Arkane.ArkaneArchive, GameX.Arkane", |parent, state| Ok(ArkaneArchive::new(parent, state)? as Arc<dyn Archive>));
@@ -85,8 +85,9 @@ impl ArkaneArchive {
             ".ftl" => (Tag::Int(0), Some(Binary_Ftl::factory)),
             ".fts" => (Tag::Int(0), Some(Binary_Fts::factory)),
             ".tea" => (Tag::Int(0), Some(Binary_Tea::factory)),
-            //
-            //".llf" => (Tag::Int(0), Some(Binary_Flt::factory)),
+            ".cin" => (Tag::Int(0), Some(Binary_Cin::factory)),
+            ".llf" => (Tag::Int(0), Some(Binary_Flt::factory)),
+            ".too" | ".teo" => (Tag::Int(0), Some(Binary_Teo::factory)),
             //".dlf" => (Tag::Int(0), Some(Binary_Flt::factory)),
             _ => UncoreArchive::assetFactory(source, game),
         }

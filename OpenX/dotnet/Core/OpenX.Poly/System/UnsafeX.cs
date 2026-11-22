@@ -150,6 +150,8 @@ public unsafe static class UnsafeX {
         if (sizeOf > 0 && sizeOf != s) throw new Exception($"Sizes are different: {sizeOf}|{s}");
         var bytes = bytesFunc(s * count);
         if (p[0] == '>') bytes = MarshalSApply(bytes, p);
+        // A ByValTStr field is a reference, so the array cannot be pinned. PtrToStructure reads each record.
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>()) return MarshalSEach(bytes, s, count, obj);
         var typeOfT = typeof(T);
         var isEnum = typeOfT.IsEnum;
         var result = obj ?? (isEnum ? Array.CreateInstance(typeOfT.GetEnumUnderlyingType(), count) : new T[count]);
@@ -157,6 +159,14 @@ public unsafe static class UnsafeX {
         fixed (byte* _ = bytes) Memcpy((void*)hresult.AddrOfPinnedObject(), _, (uint)bytes.Length);
         hresult.Free();
         return isEnum ? result.Cast<T>().ToArray() : (T[])result;
+    }
+
+    static T[] MarshalSEach<T>(byte[] bytes, int size, int count, T[] obj) where T : struct {
+        var result = obj ?? new T[count];
+        fixed (byte* b = bytes)
+            for (var i = 0; i < count; i++)
+                result[i] = Marshal.PtrToStructure<T>((IntPtr)(b + i * size));
+        return result;
     }
 
     #endregion

@@ -597,6 +597,30 @@ public class Assets(UOGame game) {
         return 0;
     }
 
+    /// <summary>
+    /// ClassicUO GetDeathAction. second is the 0xAF running flag. The fifth argument stays true, so a sea monster uses the monster groups.
+    /// Flag 0x40 forces animal, then flag 0x20 forces monster, so both flags leave a monster. 0x02 or 0x08 on an animal is group 2. The result is not run through ReplacedAction.
+    /// </summary>
+    public byte DeathGroup(ushort body, bool second) {
+        var flags = AnimFlags(body);
+        var type = AnimType(body);
+        if ((flags & 0x40) != 0) type = 2;
+        if ((flags & 0x20) != 0) type = 0;
+        switch (type) {
+            case 2:
+                if ((flags & 0x02) != 0 || (flags & 0x08) != 0) return 2;
+                if ((flags & 0x10000) != 0) return second ? (byte)3 : (byte)2;
+                return second ? (byte)12 : (byte)8;
+            case 0:
+            case 1:
+                return second ? (byte)3 : (byte)2;
+            case 3:
+            case 4:
+                return second ? (byte)22 : (byte)21;
+        }
+        return 0;
+    }
+
     // No mount layer and no mobile Flags. ClassicUO's mounted and flying tests stay false.
     static bool Mounted() => false;
     static bool Flying() => false;

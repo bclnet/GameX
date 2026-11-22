@@ -2,6 +2,7 @@
 using OpenX.Gfx;
 using OpenX.Gfx.Mg;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Formats;
 #pragma warning disable CS9113
 
@@ -12,6 +13,7 @@ public static class MgRenderer {
         MgX.BuildersByType[typeof(Binary_Nif)] = MgNifObjectBuilder.BuildObject;
         MgX.BuildersByType[typeof(Binary_Ftl)] = MgFtlObjectBuilder.BuildObject;
         MgX.BuildersByType[typeof(Binary_Fts)] = MgFtsObjectBuilder.BuildObject;
+        MgX.BuildersByType[typeof(Binary_BspX)] = MgBspObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

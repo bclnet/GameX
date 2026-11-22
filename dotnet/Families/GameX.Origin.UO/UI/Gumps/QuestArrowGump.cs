@@ -9,7 +9,7 @@ namespace GameX.Origin.UO;
 /// ClassicUO QuestArrowGump. Shown for 0xE5 and removed for 0xE6.
 /// The graphic is 0x1194 plus (direction + 1) mod 8. Hue blinks 0 and 0x21.
 /// Screen position is the WorldGump tile, then ClassicUO's per-direction shift, then the buffer clamp.
-/// The walk glide is not on this type. Send_ClickQuestArrow is not queued.
+/// The walk glide is not on this type. A left click and a right click send Send_ClickQuestArrow, and the gump stays until 0xE6.
 /// The name is the 0xE5 string. ClassicUO draws no text on this gump, so the line sits under the arrow.
 /// </summary>
 public sealed class QuestArrowGump : Gump {
@@ -22,13 +22,22 @@ public sealed class QuestArrowGump : Gump {
 
     public QuestArrowGump(World world, UOWaypoint point) : base(world, point.Serial, point.Serial) {
         CanMove = false;
-        CanCloseWithRightClick = false;
+        CanCloseWithRightClick = true;
         AcceptMouseInput = true;
         WantUpdateSize = false;
         _name = new Label(point.Name, true, 0x0386, 1);
         Add(_name);
         Move(point);
         Place();
+    }
+
+    public override void OnMouseClick(int x, int y) {
+        UOLoginNet.Send(OutgoingPackets.Send_ClickQuestArrow(false));
+    }
+
+    public override void CloseWithRightClick() {
+        if (IsDisposed) return;
+        UOLoginNet.Send(OutgoingPackets.Send_ClickQuestArrow(true));
     }
 
     public static void Open(World world, UOWaypoint point) {

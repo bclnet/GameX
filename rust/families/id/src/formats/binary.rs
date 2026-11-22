@@ -1,24 +1,25 @@
 // PORT-SOURCE: Families/GameX.ID/Formats/Binary.cs
 // PORT-SHA: b289df2afadc91c2
-// PORT-STATUS: partial
+// PORT-STATUS: done
 //
 // Ported: `Binary_Pak`, `Binary_Wad` (the `.wad` child `Binary_Pak` opens),
 // `Binary_Lmp`, `Binary_Spr`, and `Binary_Mdl` (its constructor is empty, as in C#).
 // `Binary_BspX`'s constructor and the three header `Read`s it calls (`X_DHeader_H1`,
 // `X_DHeader_S2`, `X_DHeader_3`), plus `CopyLump` and the lump structs those reads
-// load. Each `Read` returns null, so `h1` / `s2` / `x3` stay null after a success.
-// Not ported: `Binary_BspY`, `Ent`, the miptex lumps, `PLANE` / `AMBIENT_H1` /
-// `CONTENTS_*`, and `X_LumpNO` / `X_LumpNO2` / `X_Lump2NO`. `X_DModel_S2` is only
-// its size (48): S2 loads `X_DModel_H1` with that count. PORT_MAP stays `todo`.
-// No Python twin of `Binary_BspX`.
+// load. `X_DHeader_H1::read` returns a `BspLevel` in `Tag::Any` (`Binary_BspX::level`).
+// `X_DHeader_S2` and `X_DHeader_3` still return null.
+// Also `Binary_BspY` (`Read` does not check `Version`), `X_LumpNO` / `X_LumpNO2` /
+// `X_Lump2NO`, `Ent`, `X_DModel_S2`, the miptex lumps, and `PLANE` / `AMBIENT_H1` /
+// `CONTENTS_*`. S2 still loads `X_DModel_H1` with `sizeof(X_DModel_S2)` as the
+// element size. `Binary_BspY.X_Header` is in `bspY` so it does not clash with
+// `Binary_Spr`'s `X_Header`. Python has `Binary_BspX` and `Binary_BspY`.
 //
 // `Binary_Lmp` keeps C#'s process-wide `Palette` and `Colormap`. A picture
 // with no palette throws `NotImplementedException`. `ToLightPixel(32 << 3, index)`
 // uses colormap row 0. The stored pixels are RGB plus a 0 byte, and the format
 // is still `BGRA32`. A palette lump's `Pixels` is null in C#; here it is empty.
 // `Binary_Spr.NextFrame` always returns true and then steps past the last frame.
-// Python has no `Binary_Lmp`. Python's `Binary_Spr` sizes `bytes` with `<< 4`
-// (C# is `<< 2`) and its `create` reads the name `format`.
+// Python `Binary_Lmp` and `Binary_Spr` match this (`bytes` is `width * height << 2`).
 
 use std::any::Any;
 use std::io::{self, Cursor, Error, ErrorKind, Seek, SeekFrom};
@@ -52,7 +53,7 @@ fn endsWithIgnoreCase(path: &str, suffix: &str) -> bool {
 
 /// C# `System.Numerics.Vector4` is 16 bytes aligned to 4. glam's `Vec4` is aligned to 16.
 #[repr(C)]
-#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Clone, Copy, Debug, Default, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vector4 { pub X: f32, pub Y: f32, pub Z: f32, pub W: f32 }
 
 /// C# `(int)r.BaseStream.Length`. The position is put back.
@@ -117,6 +118,269 @@ fn copyLumpBytes(r: &mut Stream, fileLength: i32, lump: X_LumpON, maxSize: i32) 
 #[repr(C)]
 #[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct X_LumpON { pub Offset: i32, pub Num: i32 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_LumpNO { pub Num: i32, pub Offset: i32 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_LumpNO2 { pub Num: i32, pub Offset: i32, pub Offset2: i32 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_Lump2NO { pub Num: i32, pub Offset: i32, pub Offset2: i32 }
+
+// #region Binary_BspY
+
+/// C# `X_BoundBox` (`Min`, `Max`). The polyfill twin is not `Pod`.
+/// Pack = 1 matches `repr(C)` here and on the headers below, except `D_Node`.
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_BoundBox { pub Min: Vec3, pub Max: Vec3 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_Model {
+    pub Bound: X_BoundBox,
+    pub Origin: Vec3,
+    pub NodeId0: i32,
+    pub NodeId1: i32,
+    pub NodeId2: i32,
+    pub NodeId3: i32,
+    pub NumLeafs: i32,
+    pub FaceId: i32,
+    pub FaceNum: i32,
+}
+impl IStruct for D_Model { const Struct: (&'static str, usize) = ("<9f7i", size_of::<D_Model>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_TexInfo {
+    pub VectorS: Vec3,
+    pub DistS: f32,
+    pub VectorT: Vec3,
+    pub DistT: f32,
+    pub TextureId: u32,
+    pub Animated: u32,
+}
+impl IStruct for D_TexInfo { const Struct: (&'static str, usize) = ("<8f2I", size_of::<D_TexInfo>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_Face {
+    pub PlaneId: u16,
+    pub Side: u16,
+    pub LedgeId: i32,
+    pub LedgeNum: u16,
+    pub TexinfoId: u16,
+    pub TypeLight: u8,
+    pub BaseLight: u8,
+    pub Light: [u8; 2],
+    pub LightMap: i32,
+}
+impl IStruct for D_Face { const Struct: (&'static str, usize) = ("<2Hi2H4Bi", size_of::<D_Face>()); }
+
+/// `Box` is one `Vector2<short>`. `PlaneId` is `long`. Pack = 1 drops the 4 bytes of tail padding an `i64` would add.
+#[repr(C, packed)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_Node {
+    pub PlaneId: i64,
+    pub Front: u16,
+    pub Back: u16,
+    pub Box: I16Vec2,
+    pub FaceId: u16,
+    pub FaceNum: u16,
+}
+impl IStruct for D_Node { const Struct: (&'static str, usize) = ("<q2H2h2H", size_of::<D_Node>()); }
+
+/// `Bound` is private in C# and is still part of the layout.
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_Leaf {
+    pub Type: i32,
+    pub VisList: i32,
+    pub Bound: I16Vec2,
+    pub LFaceId: u16,
+    pub LFaceNum: u16,
+    pub SndWater: u8,
+    pub SndSky: u8,
+    pub SndSlime: u8,
+    pub SndLava: u8,
+}
+impl IStruct for D_Leaf { const Struct: (&'static str, usize) = ("<2i2h2H4B", size_of::<D_Leaf>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_Plane { pub Normal: Vec3, pub Dist: f32, pub Type: i32 }
+impl IStruct for D_Plane { const Struct: (&'static str, usize) = ("<4fi", size_of::<D_Plane>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct D_ClipNode { pub PlaneNum: u32, pub Front: i16, pub Back: i16 }
+impl IStruct for D_ClipNode { const Struct: (&'static str, usize) = ("<I2h", size_of::<D_ClipNode>()); }
+
+/// Pack = 1 adds no padding: `Name` ends on a 4-byte boundary.
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_Texture {
+    pub Name: [u8; 16],
+    pub Width: u32,
+    pub Height: u32,
+    pub Offsets: [u32; 4],
+}
+impl IStruct for X_Texture { const Struct: (&'static str, usize) = ("<16s6I", size_of::<X_Texture>()); }
+
+/// C# `Binary_BspY.X_Header`. Nested so the name does not clash with `Binary_Spr`'s `X_Header`.
+mod bspY {
+    use std::mem::size_of;
+    use super::X_LumpON;
+    use openx_poly::prelude::IStruct;
+
+    /// Pack = 1 adds no padding: `Version` and every `X_LumpON` are 4-byte aligned.
+    #[repr(C)]
+    #[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+    pub struct X_Header {
+        pub Version: i32,
+        pub Entities: X_LumpON,
+        pub Planes: X_LumpON,
+        pub Textures: X_LumpON,
+        pub Vertices: X_LumpON,
+        pub Visibility: X_LumpON,
+        pub Nodes: X_LumpON,
+        pub TexInfo: X_LumpON,
+        pub Faces: X_LumpON,
+        pub Lighting: X_LumpON,
+        pub ClipNodes: X_LumpON,
+        pub Leaves: X_LumpON,
+        pub MarkSurfaces: X_LumpON,
+        pub Edges: X_LumpON,
+        pub SurfEdges: X_LumpON,
+        pub Models: X_LumpON,
+    }
+    impl IStruct for X_Header { const Struct: (&'static str, usize) = ("<31i", size_of::<X_Header>()); }
+    impl X_Header {
+        /// C# `ForGameId` is empty.
+        pub fn forGameId(&self, id: &str) { let _ = id; }
+    }
+}
+
+const _: () = assert!(size_of::<D_Model>() == 64 && size_of::<D_TexInfo>() == 40 && size_of::<D_Face>() == 20);
+const _: () = assert!(size_of::<D_Node>() == 20 && size_of::<D_Leaf>() == 20 && size_of::<D_Plane>() == 20 && size_of::<D_ClipNode>() == 8);
+const _: () = assert!(size_of::<X_Texture>() == 40 && size_of::<X_BoundBox>() == 24 && size_of::<bspY::X_Header>() == 124);
+const _: () = assert!(size_of::<X_LumpNO>() == 8 && size_of::<X_LumpNO2>() == 12 && size_of::<X_Lump2NO>() == 12);
+
+/// C# `UnsafeX.FixedAString`: `length` ASCII bytes, trailing NULs removed. Bytes above 127 are `?`.
+fn fixedAString(data: &[u8], length: usize) -> String {
+    data[..length].iter().map(|&c| if c < 0x80 { c as char } else { '?' }).collect::<String>().trim_end_matches('\0').to_string()
+}
+
+fn lumpFile(path: &str, lump: X_LumpON) -> Arc<FileSource> {
+    Arc::new(FileSource { path: path.into(), offset: lump.Offset as i64, fileSize: lump.Num as i64, ..Default::default() })
+}
+
+/// Quake BSP (`Binary_BspY`). `Read` does not check `Version`.
+pub struct Binary_BspY;
+
+impl Binary_BspY {
+    pub fn current() -> Arc<dyn ArcBinary> {
+        static CURRENT: LazyLock<Arc<dyn ArcBinary>> = LazyLock::new(|| Arc::new(Binary_BspY));
+        CURRENT.clone()
+    }
+}
+
+impl ArcBinary for Binary_BspY {
+    fn read<'a>(&'a self, source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, _tag: &'a Tag) -> Task<'a, ()> {
+        Box::pin(async move {
+            let r = reader(r)?;
+            let header = r.readS::<bspY::X_Header>()?;
+            header.forGameId(source.base().game.id.as_str());
+            let mut files = Vec::new();
+            files.push(lumpFile("entities.txt", header.Entities));
+            files.push(lumpFile("planes.dat", header.Planes));
+            let textures = header.Textures;
+            let start = textures.Offset;
+            r.seek(SeekFrom::Start(start as u64))?;
+            for o in r.readL32PArray::<u32>("I", false)? {
+                // C# `int + uint` promotes both to `long`.
+                r.seek(SeekFrom::Start((start as i64).wrapping_add(o as i64) as u64))?;
+                let tex = r.readS::<X_Texture>()?;
+                let name = tex.Name;
+                files.push(Arc::new(FileSource {
+                    path: format!("textures/{}.tex", fixedAString(&name, 16)),
+                    tag: Tag::Any(Arc::new(tex)),
+                    ..Default::default()
+                }));
+            }
+            files.push(lumpFile("vertices.dat", header.Vertices));
+            files.push(lumpFile("visibility.dat", header.Visibility));
+            files.push(lumpFile("nodes.dat", header.Nodes));
+            files.push(lumpFile("texInfo.dat", header.TexInfo));
+            files.push(lumpFile("faces.dat", header.Faces));
+            files.push(lumpFile("lighting.dat", header.Lighting));
+            files.push(lumpFile("clipNodes.dat", header.ClipNodes));
+            files.push(lumpFile("leaves.dat", header.Leaves));
+            files.push(lumpFile("markSurfaces.dat", header.MarkSurfaces));
+            files.push(lumpFile("edges.dat", header.Edges));
+            files.push(lumpFile("surfEdges.dat", header.SurfEdges));
+            // C# `33 + (4 << 2)` is 49, not `sizeof(D_Model)`.
+            let models = header.Models;
+            let mut o = models.Offset;
+            let stop = o.wrapping_add(models.Num);
+            let stride = 33 + (4 << 2);
+            while o < stop {
+                files.push(Arc::new(FileSource {
+                    path: format!("models/model{o}.dat"),
+                    offset: o as i64,
+                    fileSize: stride as i64,
+                    ..Default::default()
+                }));
+                o = o.wrapping_add(stride);
+            }
+            source.setFiles(Some(files));
+            Ok(())
+        })
+    }
+
+    fn readData<'a>(&'a self, _source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, file: &'a Arc<FileSource>, _option: &'a Tag) -> Task<'a, Option<Stream>> {
+        Box::pin(async move {
+            let r = reader(r)?;
+            r.seek(SeekFrom::Start(file.offset as u64))?;
+            Ok(Some(Box::new(Cursor::new(r.readBytes(file.fileSize as usize)?)) as Stream))
+        })
+    }
+}
+
+// #endregion
+
+// #region Ent
+
+/// C# `Binary_BspX.Ent`. The fields are unused.
+pub mod Ent {
+    use super::Tag;
+    use glam::Vec3;
+
+    pub const MAX_MAP_ENTITIES: i32 = 2048;
+
+    pub struct epair {
+        next: Option<Box<epair>>,
+        key: Tag,
+        value: Tag,
+    }
+
+    pub struct Entity {
+        Origin: Vec3,
+        FirstBrush: i32,
+        NumBrushes: i32,
+        epairs: Option<Vec<epair>>,
+        AreaPortalNum: i32,
+        PortalAreas: i32, // [2]
+        ModelNum: i32,
+        WasDetail: bool,
+    }
+}
+
+// #endregion
 
 #[repr(C)]
 #[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
@@ -206,12 +470,37 @@ impl IStruct for X_DModel_H1 { const Struct: (&'static str, usize) = ("<9f7i", s
 
 #[repr(C)]
 #[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_DModel_S2 {
+    pub Mins: Vec3, pub Maxs: Vec3, pub Origin: Vec3,
+    pub HeadNode: i32,
+    pub FirstFace: i32, pub NumFaces: i32,
+}
+impl IStruct for X_DModel_S2 { const Struct: (&'static str, usize) = ("<9f3i", size_of::<X_DModel_S2>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct X_DModel_3 {
     pub Mins: Vec3, pub Maxs: Vec3,
     pub FirstSurface: i32, pub NumSurfaces: i32,
     pub FirstBrush: i32, pub NumBrushes: i32,
 }
 impl IStruct for X_DModel_3 { const Struct: (&'static str, usize) = ("<6f4i", size_of::<X_DModel_3>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_DMiptexLump_H1 { pub NumMiptex: i32, pub Dataofs: [i32; 4] }
+impl IStruct for X_DMiptexLump_H1 { const Struct: (&'static str, usize) = ("<5i", size_of::<X_DMiptexLump_H1>()); }
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct X_Miptex_H1 { pub Name: [u8; 16], pub Width: u32, pub Height: u32, pub Offsets: [u32; 4] }
+impl IStruct for X_Miptex_H1 { const Struct: (&'static str, usize) = ("<16s6I", size_of::<X_Miptex_H1>()); }
+
+const _: () = assert!(size_of::<X_DMiptexLump_H1>() == 20 && size_of::<X_Miptex_H1>() == 40);
+
+#[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PLANE { X = 0, Y = 1, Z = 2, ANYX = 3, ANYY = 4, ANYZ = 5 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
@@ -340,6 +629,10 @@ pub struct X_DSurface_3 {
 }
 impl IStruct for X_DSurface_3 { const Struct: (&'static str, usize) = ("<12i6f2i", size_of::<X_DSurface_3>()); }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AMBIENT_H1 { WATER = 0, SKY = 1, SLIME = 2, LAVA = 3 }
+
 #[repr(C)]
 #[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct X_DLeaf_H1 {
@@ -422,7 +715,7 @@ pub struct X_DrawVert_3 { pub FirstSide: i32, pub NumSides: i32, pub Contents_Sh
 impl IStruct for X_DrawVert_3 { const Struct: (&'static str, usize) = ("<3i", size_of::<X_DrawVert_3>()); }
 
 const _: () = assert!(size_of::<X_DHeader_H1>() == 124 && size_of::<X_DHeader_S2>() == 176 && size_of::<X_DHeader_3>() == 144);
-const _: () = assert!(size_of::<X_DModel_H1>() == 64 && size_of::<X_DModel_3>() == 40);
+const _: () = assert!(size_of::<X_DModel_H1>() == 64 && size_of::<X_DModel_S2>() == 48 && size_of::<X_DModel_3>() == 40);
 const _: () = assert!(size_of::<X_DPlane_H1S2>() == 20 && size_of::<X_DPlane_3>() == 16);
 const _: () = assert!(size_of::<X_DNode_H1S2>() == 24 && size_of::<X_DNode_3>() == 36 && size_of::<X_DClipNode_H1>() == 8);
 const _: () = assert!(size_of::<X_Texinfo_H1>() == 40 && size_of::<X_Texinfo_S>() == 180 && size_of::<X_Texinfo_2>() == 76 && size_of::<X_Lightinfo_S>() == 60);
@@ -431,6 +724,69 @@ const _: () = assert!(size_of::<X_DLeaf_H1>() == 28 && size_of::<X_DLeaf_S2>() =
 const _: () = assert!(size_of::<X_DBrushside_2>() == 4 && size_of::<X_DBrushside_S>() == 8 && size_of::<X_DBrushside_3>() == 8 && size_of::<X_DBrush_S23>() == 12);
 const _: () = assert!(size_of::<X_DShader_3>() == 72 && size_of::<X_DAreaportal_S2>() == 8 && size_of::<X_DArea_S2>() == 8 && size_of::<X_DFog_3>() == 72 && size_of::<X_DrawVert_3>() == 12);
 const _: () = assert!(size_of::<Vector4>() == 16 && size_of::<Vec3>() == 12);
+
+/// Quake face. Every index is widened to `i32`.
+#[derive(Clone, Debug, Default)]
+pub struct BspFace {
+    pub PlaneNum: i32,
+    pub Side: i32,
+    pub FirstEdge: i32,
+    pub NumEdges: i32,
+    pub Texinfo: i32,
+}
+
+/// `Vecs0` / `Vecs1` are `X_Texinfo_H1`'s `Vector4`.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct BspTexinfo { pub Vecs0: Vector4, pub Vecs1: Vector4, pub Miptex: i32 }
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct BspPlane { pub Normal: Vec3, pub Dist: f32 }
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct BspModel { pub FirstFace: i32, pub NumFaces: i32 }
+
+#[derive(Clone, Debug, Default)]
+pub struct BspTexture { pub Name: String, pub Width: i32, pub Height: i32 }
+
+/// H1 world. A missing lump is an empty vec. S2 and X3 do not build one.
+#[derive(Clone, Debug, Default)]
+pub struct BspLevel {
+    pub Vertices: Vec<Vec3>,
+    pub Edges: Vec<(u16, u16)>,
+    pub SurfEdges: Vec<i32>,
+    pub Faces: Vec<BspFace>,
+    pub Texinfo: Vec<BspTexinfo>,
+    pub Planes: Vec<BspPlane>,
+    pub Models: Vec<BspModel>,
+    pub Textures: Vec<BspTexture>,
+    pub Entities: String,
+}
+
+/// Miptex lump: i32 count, then count i32 offsets from the start of the lump.
+/// Offset <= 0, or a header that does not fit, is an empty texture so indexes stay aligned.
+fn bspTextures(data: Option<Vec<u8>>) -> Vec<BspTexture> {
+    let Some(data) = data else { return Vec::new() };
+    if data.len() < 4 { return Vec::new() }
+    let count = i32::from_le_bytes(data[0..4].try_into().unwrap());
+    if count <= 0 { return Vec::new() }
+    let mut textures = Vec::with_capacity(count as usize);
+    for i in 0..count as usize {
+        let at = 4 + i * 4;
+        let offset = if at + 4 <= data.len() { i32::from_le_bytes(data[at..at + 4].try_into().unwrap()) } else { 0 };
+        if offset <= 0 || (offset as usize).saturating_add(24) > data.len() {
+            textures.push(BspTexture::default());
+            continue;
+        }
+        let o = offset as usize;
+        let raw = &data[o..o + 16];
+        let end = raw.iter().position(|&b| b == 0).unwrap_or(raw.len());
+        let name = fixedAString(raw, end);
+        let width = u32::from_le_bytes(data[o + 16..o + 20].try_into().unwrap()) as i32;
+        let height = u32::from_le_bytes(data[o + 20..o + 24].try_into().unwrap()) as i32;
+        textures.push(BspTexture { Name: name, Width: width, Height: height });
+    }
+    textures
+}
 
 impl X_DHeader_H1 {
     pub fn read(mut self, r: &mut Stream, id: &str, h1: bool) -> io::Result<Tag> {
@@ -452,8 +808,25 @@ impl X_DHeader_H1 {
         let dvisdata = copyLumpBytes(r, fileLength, self.VISIBILITY, if h1 { 0x200000 } else { 0x100000 })?;
         let dlightdata = copyLumpBytes(r, fileLength, self.LIGHTING, if h1 { 0x200000 } else { 0x100000 })?;
         let dentdata = asciiGetString(copyLumpBytes(r, fileLength, self.ENTITIES, if h1 { 131072 } else { 65536 })?)?;
-        let _ = (dmodels, dvertexes, dplanes, dleafs, dnodes, texinfo, dclipnodes, dfaces, dmarksurfaces, dsurfedges, dedges, dtexdata, dvisdata, dlightdata, dentdata);
-        Ok(Tag::None)
+        let _ = (dleafs, dnodes, dclipnodes, dmarksurfaces, dvisdata, dlightdata);
+        let level = BspLevel {
+            Vertices: dvertexes.unwrap_or_default(),
+            Edges: dedges.unwrap_or_default().into_iter().map(|e| (e.V.x, e.V.y)).collect(),
+            SurfEdges: dsurfedges.unwrap_or_default(),
+            Faces: dfaces.unwrap_or_default().into_iter().map(|f| BspFace {
+                PlaneNum: f.PlaneNum as i32,
+                Side: f.Side as i32,
+                FirstEdge: f.FirstEdge,
+                NumEdges: f.NumEdges as i32,
+                Texinfo: f.Texinfo as i32,
+            }).collect(),
+            Texinfo: texinfo.unwrap_or_default().into_iter().map(|t| BspTexinfo { Vecs0: t.Vecs0, Vecs1: t.Vecs1, Miptex: t.Miptex }).collect(),
+            Planes: dplanes.unwrap_or_default().into_iter().map(|p| BspPlane { Normal: p.Normal, Dist: p.Dist }).collect(),
+            Models: dmodels.unwrap_or_default().into_iter().map(|m| BspModel { FirstFace: m.FirstFace, NumFaces: m.NumFaces }).collect(),
+            Textures: bspTextures(dtexdata),
+            Entities: dentdata,
+        };
+        Ok(Tag::Any(Arc::new(level)))
     }
 }
 
@@ -463,7 +836,7 @@ impl X_DHeader_S2 {
         if self.Version != if sin { 30 } else { 38 } { return Err(Error::new(ErrorKind::InvalidData, "BAD VERSION")); }
         let fileLength = baseLength(r)?;
         // C# passes `sizeof(X_DModel_S2)` (48) and then reads `X_DModel_H1` (64).
-        let dmodels = copyLumpS::<X_DModel_H1>(r, fileLength, self.MODELS, 48, 1024)?;
+        let dmodels = copyLumpS::<X_DModel_H1>(r, fileLength, self.MODELS, size_of::<X_DModel_S2>() as i32, 1024)?;
         let dvertexes = copyLumpP::<Vec3>(r, fileLength, self.VERTEXES, "3f", size_of::<Vec3>() as i32, 65535)?;
         let dplanes = copyLumpS::<X_DPlane_H1S2>(r, fileLength, self.PLANES, size_of::<X_DPlane_H1S2>() as i32, 65535)?;
         let dleafs = copyLumpS::<X_DLeaf_S2>(r, fileLength, self.LEAFS, size_of::<X_DLeaf_S2>() as i32, 65535)?;
@@ -518,7 +891,59 @@ impl X_DHeader_3 {
     }
 }
 
-/// Quake / Half-Life / Sin / Quake 3 BSP. The three `Read`s return null, as in C#.
+#[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CONTENTS_H1 {
+    EMPTY = -1,
+    SOLID = -2,
+    WATER = -3,
+    SLIME = -4,
+    LAVA = -5,
+    SKY = -6,
+    ORIGIN = -7, // removed at csg time
+    CLIP = -8, // changed to contents_solid
+    CURRENT_0 = -9,
+    CURRENT_90 = -10,
+    CURRENT_180 = -11,
+    CURRENT_270 = -12,
+    CURRENT_UP = -13,
+    CURRENT_DOWN = -14,
+    TRANSLUCENT = -15,
+}
+
+#[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CONTENTS_S2 {
+    SOLID = 1, // an eye is never valid in a solid
+    WINDOW = 2,
+    AUX = 4,
+    LAVA = 8,
+    SLIME = 16,
+    WATER = 32,
+    MIST = 64,
+    AREAPORTAL = 0x8000,
+    PLAYERCLIP = 0x10000,
+    MONSTERCLIP = 0x20000,
+    CURRENT_0 = 0x40000,
+    CURRENT_90 = 0x80000,
+    CURRENT_180 = 0x100000,
+    CURRENT_270 = 0x200000,
+    CURRENT_UP = 0x400000,
+    CURRENT_DOWN = 0x800000,
+    ORIGIN = 0x1000000, // removed before bsping an entity
+    MONSTER = 0x2000000, // should never be on a brush, only in game
+    DEADMONSTER = 0x4000000,
+    DETAIL = 0x8000000, // brushes to be added after vis leafs
+    Q2TRANSLUCENT = 0x10000000, // auto set if any surface has trans
+    LADDER = 0x20000000,
+}
+
+impl CONTENTS_S2 {
+    /// C# `LAST_VISIBLE = 64`, the same value as `MIST`.
+    pub const LAST_VISIBLE: Self = Self::MIST;
+}
+
+/// Quake / Half-Life / Sin / Quake 3 BSP. H1 stores a `BspLevel`. S2 and X3 still return null.
 #[derive(Debug)]
 pub struct Binary_BspX {
     h1: Tag,
@@ -543,6 +968,16 @@ impl Binary_BspX {
         let s2 = if engineV == Some("3") || { flag = gameId == "Sin"; flag } { r.readS::<X_DHeader_S2>()?.read(r, gameId, flag)? } else { Tag::None };
         let x3 = if engineV == Some("3") { r.readS::<X_DHeader_3>()?.read(r, gameId)? } else { Tag::None };
         Ok(Arc::new_cyclic(|w| Self { h1, s2, x3, me: w.clone() }))
+    }
+
+    /// The H1 level, when `read` stored one. S2, X3, and a skipped header are `None`.
+    pub fn level(&self) -> Option<&BspLevel> {
+        self.h1.asAny().and_then(|z| z.downcast_ref::<BspLevel>())
+    }
+
+    #[cfg(test)]
+    pub(crate) fn withLevel(level: BspLevel) -> Arc<Self> {
+        Arc::new_cyclic(|me| Self { h1: Tag::Any(Arc::new(level)), s2: Tag::None, x3: Tag::None, me: me.clone() })
     }
 }
 
@@ -1084,7 +1519,7 @@ mod tests {
     fn bspH1ReadsVersion29UnlessGoldSrcOrHlBs() {
         let ok = bspBytes(124, 0, 29, 4, &[]);
         let bsp = openBsp(ok.clone(), "Quake", Some("idTech"), Some("2")).unwrap();
-        assert!(bsp.h1.isNone() && bsp.s2.isNone() && bsp.x3.isNone());
+        assert!(bsp.level().is_some() && bsp.s2.isNone() && bsp.x3.isNone());
         let err = openBsp(bspBytes(124, 0, 1, 4, &[]), "Quake", Some("idTech"), Some("2")).unwrap_err();
         assert!(err.to_string().contains("BAD VERSION"), "{err}");
         // v == "2" short-circuits, so GoldSrc still wants 29.
@@ -1227,5 +1662,17 @@ mod tests {
         let mut got = None;
         tex.create("", &mut |any| { got = any.downcast_ref::<TextureAsBytes>().map(|s| s.bytes.clone()); }).unwrap();
         assert_eq!(got.unwrap(), vec![9, 8, 7, 255]);
+    }
+
+    #[test]
+    fn bspYListsEntitiesFromAZeroLumpHeader() {
+        let mut bytes = vec![0u8; 31 * 4];
+        putI32(&mut bytes, 0, 29);
+        let binary = Binary_BspY::current();
+        let arc = gameArc("Quake", Some("idTech"), None);
+        let mut cursor = Cursor::new(bytes);
+        getResult(binary.read(&arc, Some(&mut cursor as &mut dyn VfsRead), &Tag::None)).unwrap();
+        let files = arc.files().unwrap();
+        assert!(files.iter().any(|f| f.path == "entities.txt"));
     }
 }

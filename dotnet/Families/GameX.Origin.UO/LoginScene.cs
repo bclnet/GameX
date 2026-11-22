@@ -88,6 +88,8 @@ public sealed class LoginScene : SceneBase {
     }
 
     public override void Update() {
+        Time.Ticks = GlobalTime.Ticks;
+        Time.Delta = GlobalTime.Delta;
         GameController.Update(this);
         base.Update();
         if (UOLoginNet.Take(out var servers, out var characters, out var message, out var phase)) {
@@ -163,7 +165,12 @@ public sealed class LoginScene : SceneBase {
         if (CurrentLoginStep == LoginSteps.InWorld) PropTip.Poll(_world);
         DriveMouse();
         DriveKeys();
-        if (CurrentLoginStep == LoginSteps.InWorld) PacketWindows.Poll();
+        if (CurrentLoginStep == LoginSteps.InWorld) {
+            PacketWindows.Poll();
+            _world.BoatMovingManager.Update();
+            _world.Macros.Update();
+        }
+        _world.Update();
     }
 
     /// <summary>
@@ -341,6 +348,7 @@ public sealed class LoginScene : SceneBase {
                 if (WorldPick.TryActor(_world, x, y, out var picked)) {
                     _hasGoal = false;
                     _path.Stop();
+                    UOLoginNet.Send(OutgoingPackets.Send_ClickRequest(picked));
                     UOLoginNet.RequestPopup(picked);
                 }
                 else {
@@ -393,10 +401,21 @@ public sealed class LoginScene : SceneBase {
 
     /// <summary>
     /// ClassicUO CreateDefaultMacros. Alt is SDL_KMOD_ALT (0x0300). Shift and Ctrl stay up.
+    /// Ctrl is 0x00C0 with Alt and Shift up: Ctrl+B bow, Ctrl+S salute. Alt+O opens settings.
     /// UoKeys.Map leaves letters as XNA Keys, which are uppercase ASCII, not SDLK.
     /// Paperdoll and backpack call Use. Journal and the radar map are the gumps TopBar opens.
     /// </summary>
     bool TryWorldKey(int key, int mod) {
+        if ((mod & 0x00C0) != 0 && (mod & 0x0303) == 0) {
+            switch (key) {
+                case 66: // Keys.B, ClassicUO default macro Bow, SDL 98, ctrl not alt
+                    UOLoginNet.Send(OutgoingPackets.Send_EmoteAction("bow"));
+                    return true;
+                case 83: // Keys.S, Salute, SDL 115, ctrl not alt
+                    UOLoginNet.Send(OutgoingPackets.Send_EmoteAction("salute"));
+                    return true;
+            }
+        }
         if ((mod & 0x0300) == 0 || (mod & 0x00C3) != 0) return false;
         switch (key) {
             case 80: // Keys.P, GameActions.OpenPaperdoll
@@ -412,6 +431,9 @@ public sealed class LoginScene : SceneBase {
                 return true;
             case 82: // Keys.R, GameActions.OpenMiniMap
                 if (UIManager.GetGump<MiniMapGump>() == null) UIManager.Add(new MiniMapGump(_world));
+                return true;
+            case 79: // Keys.O, ClassicUO OpenSettings, SDL 111, alt, shift and ctrl up
+                if (UIManager.GetGump<OptionsGump>() == null) UIManager.Add(new OptionsGump(_world));
                 return true;
             default:
                 return false;

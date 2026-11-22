@@ -6,7 +6,7 @@ max_output_bytes = 2000000
 
 [mcp_servers.mirage]
 command = "dotnet"
-args = ["exec", "F:/_GITHUB/bclnet/GameX/dotnet/Core/GameX.Mcp/bin/Debug/net10.0/GameX.Mcp.dll"]
+args = ["exec", "F:/_GITHUB/bclnet/GameX/dotnet/Core/GameX.Mcp/bin/fixed/GameX.Mcp.dll"]
 cwd = "F:/_GITHUB/bclnet/GameX"
 enabled = true
 startup_timeout_sec = 90

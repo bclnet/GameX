@@ -1,4 +1,5 @@
 ﻿using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Formats;
 using Godot;
 using OpenX;
@@ -14,6 +15,7 @@ public static class GodotRenderer {
         GodotX.BuildersByType[typeof(Binary_Nif)] = GodotNifObjectBuilder.BuildObject;
         GodotX.BuildersByType[typeof(Binary_Ftl)] = GodotFtlObjectBuilder.BuildObject;
         GodotX.BuildersByType[typeof(Binary_Fts)] = GodotFtsObjectBuilder.BuildObject;
+        GodotX.BuildersByType[typeof(Binary_BspX)] = GodotBspObjectBuilder.BuildObject;
     }
 
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {

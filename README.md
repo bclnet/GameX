@@ -108,6 +108,13 @@ The following are the current games:
 | [W:CP](https://store.steampowered.com/app/1056970) | Wolfenstein: Cyberpilot | - | - | -- -- -- | -- -- -- | -- -- --
 | [DL](https://store.steampowered.com/app/1252330) | Deathloop | - | - | -- -- -- | -- -- -- | -- -- --
 | **Beamdog** | **Beamdog**
+| [MDK2:W](https://en.wikipedia.org/wiki/MDK2#Wii_port_and_MDK2_HD) | MDK2 (wii) | - | - | -- -- -- | -- -- -- | -- -- --
+| [MDK2:HD](https://en.wikipedia.org/wiki/MDK2#Wii_port_and_MDK2_HD) | MDK2 HD | - | - | -- -- -- | -- -- -- | -- -- --
+| [P:T](https://en.wikipedia.org/wiki/Planescape:_Torment) | Planescape: Torment | open | read | -- -- -- | -- -- -- | -- -- --
+| [ID](https://en.wikipedia.org/wiki/Icewind_Dale) | Icewind Dale | open | read | -- -- -- | -- -- -- | -- -- --
+| [ID:HoW](https://en.wikipedia.org/wiki/Icewind_Dale:_Heart_of_Winter) | Icewind Dale: Heart of Winter | - | - | -- -- -- | -- -- -- | -- -- --
+| [ID2](https://en.wikipedia.org/wiki/Icewind_Dale_II) | Icewind Dale II | - | - | -- -- -- | -- -- -- | -- -- --
+| [BG:DA2](https://en.wikipedia.org/wiki/Baldur%27s_Gate:_Dark_Alliance_II) | Baldur's Gate: Dark Alliance II | - | - | -- -- -- | -- -- -- | -- -- --
 | **Bethesda** | **Bethesda Game Studios**
 | [Morrowind](https://store.steampowered.com/app/22320/The_Elder_Scrolls_III_Morrowind_Game_of_the_Year_Edition/) | The Elder Scrolls III: Morrowind | - | - | -- -- -- | -- -- -- | -- -- --
 | [Oblivion](https://store.steampowered.com/app/22330/The_Elder_Scrolls_IV_Oblivion_Game_of_the_Year_Edition/) | The Elder Scrolls IV: Oblivion | - | - | -- -- -- | -- -- -- | -- -- --

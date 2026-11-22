@@ -26,7 +26,9 @@ public class BeamdogArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> 
 
     static ArcBinary GetArcBinary(FamilyGame game, string extension)
         => extension switch {
-            ".xxx" => Binary_XXX.Current,
+            ".key" or ".bif" => Binary_Key.Current,
+            ".dat" => Binary_Dat.Current,
+            ".gob" or ".lmp" => Binary_Da2.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 

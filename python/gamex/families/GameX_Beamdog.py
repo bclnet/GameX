@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openx.core import _pathExtension
 from gamex import Archive, BinaryArchive, ITransformAsset
-from gamex.families.Beamdog.formats.binary import Binary_XXX
+from gamex.families.Beamdog.formats.binary import Binary_Da2, Binary_Dat, Binary_Key
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # BeamdogArchive
@@ -16,7 +16,9 @@ class BeamdogArchive(BinaryArchive, ITransformAsset):
     @staticmethod
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
         match extension:
-            case '.xxx': return Binary_XXX()
+            case '.key' | '.bif': return Binary_Key()
+            case '.dat': return Binary_Dat()
+            case '.gob' | '.lmp': return Binary_Da2()
             case _: raise Exception(extension)
 
     @staticmethod

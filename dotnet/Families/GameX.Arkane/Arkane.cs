@@ -54,8 +54,9 @@ public class ArkaneArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
             ".ftl" => (0, Binary_Ftl.Factory),
             ".fts" => (0, Binary_Fts.Factory),
             ".tea" => (0, Binary_Tea.Factory),
-            //
-            //".llf" => (0, Binary_Flt.Factory),
+            ".cin" => (0, Binary_Cin.Factory),
+            ".llf" => (0, Binary_Flt.Factory),
+            ".too" or ".teo" => (0, Binary_Teo.Factory),
             //".dlf" => (0, Binary_Flt.Factory),
             _ => UncoreArchive.AssetFactory(source, game),
         };

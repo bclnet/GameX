@@ -75,3 +75,34 @@ pub mod mg_fts_object_builder {
         }
     }
 }
+
+pub mod mg_bsp_object_builder {
+    use std::any::Any;
+
+    use gamex_id::engines::bsp_object_builder;
+    use gamex_id::formats::binary::Binary_BspX;
+
+    use crate::mg_object_holder::MgObjectHolder;
+
+    /// Quake BSP. Z-up is swapped in `toGeometry`.
+    pub fn buildObject(path: &dyn Any, isStatic: bool, materialManager: Option<&dyn Any>) -> MgObjectHolder {
+        let bsp = path.downcast_ref::<Binary_BspX>().unwrap_or_else(|| panic!("InvalidCastException: Binary_BspX"));
+        for texturePath in bsp_object_builder::getTexturePaths(bsp) {
+            if materialManager.is_some() { let _ = texturePath; }
+        }
+        let mesh = bsp_object_builder::toGeometry(bsp);
+        let level = bsp.level();
+        let mut materials = Vec::with_capacity(mesh.Submeshes.len());
+        for sub in &mesh.Submeshes {
+            let prop = level.and_then(|l| if sub.TexId >= 0 { l.Textures.get(sub.TexId as usize) } else { None }).map(bsp_object_builder::toMaterialProp).unwrap_or_default();
+            materials.push(prop);
+        }
+        MgObjectHolder {
+            Name: "bsp".to_string(),
+            IsStatic: isStatic,
+            Mesh: Box::new(mesh),
+            Materials: materials,
+            Groups: Vec::new(),
+        }
+    }
+}

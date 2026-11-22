@@ -200,6 +200,8 @@ pub trait BinaryReaderExt: Read + Seek {
     fn readS<T: IStruct>(&mut self) -> Result<T> { MarshalS(&mut |n| self.readBytes(n), 0) }
     /// C# `ReadPArray<T>(string pat, int count)`.
     fn readPArray<T: Pod>(&mut self, pat: &str, count: usize) -> Result<Vec<T>> { if count > 0 { MarshalPArray(pat, &mut |n| self.readBytes(n * count), count) } else { Ok(Vec::new()) } }
+    /// C# `ReadL32PArray<T>(string pat, bool big)`: a `UInt32X` count, then `ReadPArray`.
+    fn readL32PArray<T: Pod>(&mut self, pat: &str, big: bool) -> Result<Vec<T>> { let count = self.readUInt32X(big)? as usize; self.readPArray(pat, count) }
     /// C# `ReadL32SArray<T>(int sizeOf, bool big)`.
     fn readL32SArray<T: IStruct>(&mut self, sizeOf: i32, big: bool) -> Result<Vec<T>> { let count = self.readUInt32X(big)? as usize; self.readSArray(count, sizeOf) }
     /// C# `ReadSArray<T>(int count, int sizeOf)`.

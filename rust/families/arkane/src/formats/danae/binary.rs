@@ -1,5 +1,5 @@
 // PORT-SOURCE: Families/GameX.Arkane/Formats/Danae/Binary.cs
-// PORT-SHA: 065bd41b556fd195
+// PORT-SHA: e564ffd995bec5ba
 // PORT-STATUS: done
 //
 // C#'s nested header structs are module-level here (Rust has no nested types),
@@ -142,6 +142,7 @@ impl FTL_FACE {
         E_FACE {
             FaceType: s.FaceType,
             TexId: s.TexId,
+            Vid: s.Vid,
             U: s.U,
             V: s.V,
             Ou: s.Ou,
@@ -1015,6 +1016,532 @@ impl IHaveMetaInfo for Binary_Tea {
         MetaInfo::new(None, Tag::MetaContent(Arc::new(MetaContent { type_: "Text".into(), name: "Name".into(), value: Tag::Str(self.to_string()), ..Default::default() })), vec![], false),
         MetaInfo::new(Some("TEA".into()), Tag::None, vec![
             MetaInfo::new(Some(format!("Anim: {}", "GameX.Arkane.Formats.Danae.E_ANIM")), Tag::None, vec![], false),
+        ], false),
+    ] }
+}
+
+// #endregion
+
+// Display is C#'s short ToString(), not {:#?}: Binary_Flt holds every vertex color.
+// C# `(char)b` is Latin-1 stopped at the first 0, not FixedAStringScan (`?` above 0x7F).
+
+fn readZ<R: Read + Seek>(r: &mut R) -> io::Result<String> {
+    let mut s = String::new();
+    loop {
+        let b = r.readByte()?;
+        if b == 0 { return Ok(s); }
+        s.push(char::from(b));
+    }
+}
+
+fn readFixed<R: Read + Seek>(r: &mut R, n: usize) -> io::Result<String> {
+    let b = r.readBytes(n)?;
+    let z = b.iter().position(|&c| c == 0).unwrap_or(b.len());
+    Ok(b[..z].iter().map(|&c| char::from(c)).collect())
+}
+
+fn readVec<R: Read + Seek>(r: &mut R) -> io::Result<Vec3> {
+    Ok(Vec3::new(r.readSingle()?, r.readSingle()?, r.readSingle()?))
+}
+
+// #region Binary_Cin
+// https://github.com/arx/ArxLibertatis/blob/master/src/cinematic/CinematicLoad.cpp
+// https://github.com/arx/ArxLibertatis/blob/ArxFatalis-1.21/Sources/DANAE/ARX_C_loadsave.cpp
+
+#[derive(Debug)]
+pub struct C_BITMAP { pub Scale: i32, pub Path: String }
+
+#[derive(Debug)]
+pub struct C_SOUND { pub Id: i16, pub Path: String }
+
+#[derive(Debug)]
+pub struct C_LIGHT { pub Pos: Vec3, pub Color: Vec3, pub Fallin: f32, pub Fallout: f32, pub Intensity: f32, pub Intensiternd: f32 }
+
+impl C_LIGHT {
+    fn read<R: Read + Seek>(r: &mut R) -> io::Result<Self> {
+        let light = Self {
+            Pos: readVec(r)?,
+            Fallin: r.readSingle()?,
+            Fallout: r.readSingle()?,
+            Color: readVec(r)?,
+            Intensity: r.readSingle()?,
+            Intensiternd: r.readSingle()?,
+        };
+        r.readInt32()?;
+        r.readInt32()?;
+        Ok(light)
+    }
+}
+
+#[derive(Debug)]
+pub struct C_KEY {
+    pub Frame: i32,
+    pub NumBitmap: i32,
+    pub Fx: i32,
+    pub TypeInterp: i16,
+    pub Force: i16,
+    pub Pos: Vec3,
+    pub AngZ: f32,
+    pub Color: i32,
+    pub ColorD: i32,
+    pub ColorF: i32,
+    pub Speed: f32,
+    pub Light: C_LIGHT,
+    pub PosGrille: Vec3,
+    pub AngZGrille: f32,
+    pub SpeedTrack: f32,
+    pub IdSound: Vec<i32>,
+}
+
+#[derive(Debug)]
+pub struct Binary_Cin {
+    pub Version: i32,
+    pub Bitmaps: Vec<C_BITMAP>,
+    pub Sounds: Vec<C_SOUND>,
+    pub StartFrame: i32,
+    pub EndFrame: i32,
+    pub NbKey: i32,
+    pub Pause: i32,
+    pub CurrFrame: f32,
+    pub Fps: f32,
+    pub Keys: Vec<C_KEY>,
+}
+
+impl Binary_Cin {
+    pub const Version175: i32 = (1 << 16) | 75;
+    pub const Version176: i32 = (1 << 16) | 76;
+
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { Box::pin(async move { Ok(Tag::Info(Arc::new(Binary_Cin::new(r)?))) }) }
+
+    // 1.75: one i32 idsound before speed. 1.76: speed, light, grille, then 16 i32 idsound.
+    fn readKey<R: Read + Seek>(r: &mut R, version: i32) -> io::Result<C_KEY> {
+        let frame = r.readInt32()?;
+        let numBitmap = r.readInt32()?;
+        let fx = r.readInt32()?;
+        let typeInterp = r.readInt16()?;
+        let force = r.readInt16()?;
+        let pos = readVec(r)?;
+        let angZ = r.readSingle()?;
+        let color = r.readInt32()?;
+        let colorD = r.readInt32()?;
+        let colorF = r.readInt32()?;
+        let (idSound, speed, light, posGrille, angZGrille, speedTrack) = if version <= Self::Version175 {
+            let idSound = vec![r.readInt32()?];
+            let speed = r.readSingle()?;
+            let light = C_LIGHT::read(r)?;
+            let posGrille = readVec(r)?;
+            let angZGrille = r.readSingle()?;
+            let speedTrack = r.readSingle()?;
+            (idSound, speed, light, posGrille, angZGrille, speedTrack)
+        } else {
+            let speed = r.readSingle()?;
+            let light = C_LIGHT::read(r)?;
+            let posGrille = readVec(r)?;
+            let angZGrille = r.readSingle()?;
+            let speedTrack = r.readSingle()?;
+            let mut idSound = Vec::with_capacity(16);
+            for _ in 0..16 { idSound.push(r.readInt32()?); }
+            (idSound, speed, light, posGrille, angZGrille, speedTrack)
+        };
+        Ok(C_KEY {
+            Frame: frame, NumBitmap: numBitmap, Fx: fx, TypeInterp: typeInterp, Force: force,
+            Pos: pos, AngZ: angZ, Color: color, ColorD: colorD, ColorF: colorF,
+            Speed: speed, Light: light, PosGrille: posGrille, AngZGrille: angZGrille, SpeedTrack: speedTrack,
+            IdSound: idSound,
+        })
+    }
+
+    pub fn new<R: Read + Seek>(r: &mut R) -> io::Result<Self> {
+        let magic = readZ(r)?;
+        if magic != "KFA" { return Err(Error::new(ErrorKind::InvalidData, format!("BAD MAGIC: {}", magic))); }
+        let version = r.readInt32()?;
+        if version != Self::Version175 && version != Self::Version176 { return Err(Error::new(ErrorKind::InvalidData, format!("Invalid CIN Version: {}", version))); }
+        readZ(r)?;
+        let nbitmaps = r.readInt32()?;
+        let mut bitmaps = Vec::new();
+        for _ in 0..nbitmaps { bitmaps.push(C_BITMAP { Scale: r.readInt32()?, Path: readZ(r)? }); }
+        let nsounds = r.readInt32()?;
+        let mut sounds = Vec::new();
+        for _ in 0..nsounds {
+            let mut id = 0i16;
+            if version >= Self::Version176 { id = r.readInt16()?; }
+            sounds.push(C_SOUND { Id: id, Path: readZ(r)? });
+        }
+        let startFrame = r.readInt32()?;
+        let endFrame = r.readInt32()?;
+        let currFrame = r.readSingle()?;
+        let fps = r.readSingle()?;
+        let nbKey = r.readInt32()?;
+        let pause = r.readInt32()?;
+        let mut keys = Vec::new();
+        for _ in 0..nbKey { keys.push(Self::readKey(r, version)?); }
+        Ok(Self {
+            Version: version, Bitmaps: bitmaps, Sounds: sounds,
+            StartFrame: startFrame, EndFrame: endFrame, NbKey: nbKey, Pause: pause,
+            CurrFrame: currFrame, Fps: fps, Keys: keys,
+        })
+    }
+}
+
+impl fmt::Display for Binary_Cin {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "KFA {} bitmaps={} sounds={} keys={}", self.Version, self.Bitmaps.len(), self.Sounds.len(), self.NbKey)
+    }
+}
+
+impl IHaveMetaInfo for Binary_Cin {
+    fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
+        MetaInfo::new(None, Tag::MetaContent(Arc::new(MetaContent { type_: "Text".into(), name: "Name".into(), value: Tag::Str(self.to_string()), ..Default::default() })), vec![], false),
+        MetaInfo::new(Some("CIN".into()), Tag::None, vec![
+            MetaInfo::new(Some(format!("Version: {}", self.Version)), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Bitmaps: {}", self.Bitmaps.len())), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Sounds: {}", self.Sounds.len())), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Keys: {}", self.NbKey)), Tag::None, vec![], false),
+        ], false),
+    ] }
+}
+
+// #endregion
+
+// #region Binary_Flt
+// https://github.com/arx/ArxLibertatis/blob/master/src/scene/LoadLevel.cpp
+// https://github.com/arx/ArxLibertatis/blob/master/src/scene/LevelFormat.h
+
+#[derive(Debug)]
+pub struct L_LIGHT {
+    pub Pos: Vec3,
+    pub Rgb: Vec3,
+    pub ExFlicker: Vec3,
+    pub Fallstart: f32,
+    pub Fallend: f32,
+    pub Intensity: f32,
+    pub I: f32,
+    pub ExRadius: f32,
+    pub ExFrequency: f32,
+    pub ExSize: f32,
+    pub ExSpeed: f32,
+    pub ExFlaresize: f32,
+    pub Extras: i32,
+}
+
+#[derive(Debug)]
+pub struct Binary_Flt {
+    pub Version: f32,
+    pub Ident: String,
+    pub LastUser: String,
+    pub Time: i32,
+    pub NbShadow: i32,
+    pub NbIgnored: i32,
+    pub NbBkg: i32,
+    pub ViewMode: i32,
+    pub ModeLight: i32,
+    pub Lights: Vec<L_LIGHT>,
+    pub Colors: Vec<u32>,
+}
+
+impl Binary_Flt {
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { Box::pin(async move { Ok(Tag::Info(Arc::new(Binary_Flt::new(r)?))) }) }
+
+    // 296 bytes: pos, rgb, fall, intensity, i, flicker, radii, skip 96, extras, skip 124.
+    fn readLight<R: Read + Seek>(r: &mut R) -> io::Result<L_LIGHT> {
+        let pos = readVec(r)?;
+        let rgb = readVec(r)?;
+        let fallstart = r.readSingle()?;
+        let fallend = r.readSingle()?;
+        let intensity = r.readSingle()?;
+        let lightI = r.readSingle()?;
+        let exFlicker = readVec(r)?;
+        let exRadius = r.readSingle()?;
+        let exFrequency = r.readSingle()?;
+        let exSize = r.readSingle()?;
+        let exSpeed = r.readSingle()?;
+        let exFlaresize = r.readSingle()?;
+        r.skip(96)?;
+        let extras = r.readInt32()?;
+        r.skip(124)?;
+        Ok(L_LIGHT {
+            Pos: pos, Rgb: rgb, ExFlicker: exFlicker,
+            Fallstart: fallstart, Fallend: fallend, Intensity: intensity, I: lightI,
+            ExRadius: exRadius, ExFrequency: exFrequency, ExSize: exSize, ExSpeed: exSpeed, ExFlaresize: exFlaresize,
+            Extras: extras,
+        })
+    }
+
+    pub fn new<R: Read + Seek>(r: &mut R) -> io::Result<Self> {
+        let position = r.tell()?;
+        let length = r.seek(SeekFrom::End(0))?;
+        r.seek(SeekFrom::Start(position))?;
+        let compressed = (length - position) as i32;
+        let raw = r.decompressBlast(compressed, compressed)?;
+        let mut r2 = Cursor::new(raw);
+        let version = r2.readSingle()?;
+        let ident = readFixed(&mut r2, 16)?;
+        if ident != "DANAE_LLH_FILE" { return Err(Error::new(ErrorKind::InvalidData, format!("BAD MAGIC: {}", ident))); }
+        let lastUser = readFixed(&mut r2, 256)?;
+        let time = r2.readInt32()?;
+        let nbLights = r2.readInt32()?;
+        let nbShadow = r2.readInt32()?;
+        let nbIgnored = r2.readInt32()?;
+        let nbBkg = r2.readInt32()?;
+        r2.skip(256 * 4 + 256 * 4 + 4096 + 256 * 4)?;
+        let mut lights = Vec::new();
+        for _ in 0..nbLights { lights.push(Self::readLight(&mut r2)?); }
+        let nbValues = r2.readInt32()?;
+        let viewMode = r2.readInt32()?;
+        let modeLight = r2.readInt32()?;
+        r2.readInt32()?;
+        let pos = r2.tell()?;
+        let end = r2.seek(SeekFrom::End(0))?;
+        r2.seek(SeekFrom::Start(pos))?;
+        let remain = end as i64 - pos as i64;
+        let colors = if remain == nbValues as i64 * 4 {
+            let mut colors = Vec::with_capacity(nbValues as usize);
+            for _ in 0..nbValues { colors.push(r2.readUInt32()?); }
+            colors
+        } else if remain == nbValues as i64 * 12 {
+            let mut colors = Vec::with_capacity(nbValues as usize);
+            for _ in 0..nbValues {
+                let rr = r2.readInt32()?;
+                let gg = r2.readInt32()?;
+                let bb = r2.readInt32()?;
+                colors.push(((bb & 255) as u32) | (((gg & 255) as u32) << 8) | (((rr & 255) as u32) << 16) | (255u32 << 24));
+            }
+            colors
+        } else {
+            return Err(Error::new(ErrorKind::InvalidData, "BAD LIGHTING"));
+        };
+        Ok(Self {
+            Version: version, Ident: ident, LastUser: lastUser, Time: time,
+            NbShadow: nbShadow, NbIgnored: nbIgnored, NbBkg: nbBkg,
+            ViewMode: viewMode, ModeLight: modeLight, Lights: lights, Colors: colors,
+        })
+    }
+}
+
+impl fmt::Display for Binary_Flt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} lights={} colors={}", self.Ident, self.Version, self.Lights.len(), self.Colors.len())
+    }
+}
+
+impl IHaveMetaInfo for Binary_Flt {
+    fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
+        MetaInfo::new(None, Tag::MetaContent(Arc::new(MetaContent { type_: "Text".into(), name: "Name".into(), value: Tag::Str(self.to_string()), ..Default::default() })), vec![], false),
+        MetaInfo::new(Some("LLF".into()), Tag::None, vec![
+            MetaInfo::new(Some(format!("Version: {}", self.Version)), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Lights: {}", self.Lights.len())), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Colors: {}", self.Colors.len())), Tag::None, vec![], false),
+        ], false),
+    ] }
+}
+
+// #endregion
+
+// #region Binary_Teo
+// https://github.com/arx/ArxLibertatis/blob/1.1.2/src/scene/Object.cpp TheoToEerie
+// https://github.com/arx/ArxLibertatis/blob/1.1.2/src/scene/ObjectFormat.h
+
+#[derive(Debug)]
+pub struct T_MAP { pub Name: String }
+
+#[derive(Debug)]
+pub struct T_VERTEX { pub Pos: Vec3 }
+
+#[derive(Debug)]
+pub struct T_FACE {
+    pub Index1: i32,
+    pub Index2: i32,
+    pub Index3: i32,
+    pub NumMap: i32,
+    pub IsMap: i32,
+    pub DoubleSide: i32,
+    pub U1: i16,
+    pub V1: i16,
+    pub U2: i16,
+    pub V2: i16,
+    pub U3: i16,
+    pub V3: i16,
+    pub Trans: f32,
+}
+
+#[derive(Debug)]
+pub struct T_GROUP { pub Origin: i32, pub Indexes: Vec<i32>, pub Name: String }
+
+#[derive(Debug)]
+pub struct T_ACTION { pub Name: String, pub VertIndex: i32, pub Action: i32, pub NumSfx: i32 }
+
+#[derive(Debug)]
+pub struct T_SELECTED { pub Name: String, pub Indexes: Vec<i32> }
+
+#[derive(Debug)]
+pub struct Binary_Teo {
+    pub Identity: String,
+    pub Version: u32,
+    pub MapsSeek: i32,
+    pub ObjectSeek: i32,
+    pub NbMaps: i32,
+    pub TypeWrite: i32,
+    pub Maps: Vec<T_MAP>,
+    pub Vertexs: Vec<T_VERTEX>,
+    pub Faces: Vec<T_FACE>,
+    pub Groups: Vec<T_GROUP>,
+    pub Actions: Vec<T_ACTION>,
+    pub Selections: Vec<T_SELECTED>,
+    pub Pos: Vec3,
+    pub Angle: Vec3,
+    pub Quat: Quat,
+    pub Origin: i32,
+}
+
+impl Binary_Teo {
+    pub const VersionMin: u32 = 3003;
+    pub const VersionMax: u32 = 3011;
+    const THEO_ROTCONVERT: f32 = 0.087890625;
+
+    pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { Box::pin(async move { Ok(Tag::Info(Arc::new(Binary_Teo::new(r)?))) }) }
+
+    pub fn new<R: Read + Seek>(r: &mut R) -> io::Result<Self> {
+        let identity = readFixed(r, 17)?;
+        let version = r.readUInt32()?;
+        let mapsSeek = r.readInt32()?;
+        let objectSeek = r.readInt32()?;
+        let nbMaps = r.readInt32()?;
+        let typeWrite = r.readInt32()?;
+        if identity != "Theo Object File" { return Err(Error::new(ErrorKind::InvalidData, format!("BAD MAGIC: {}", identity))); }
+        if version < Self::VersionMin || version > Self::VersionMax {
+            return Ok(Self {
+                Identity: identity, Version: version, MapsSeek: mapsSeek, ObjectSeek: objectSeek, NbMaps: nbMaps, TypeWrite: typeWrite,
+                Maps: Vec::new(), Vertexs: Vec::new(), Faces: Vec::new(), Groups: Vec::new(), Actions: Vec::new(), Selections: Vec::new(),
+                Pos: Vec3::ZERO, Angle: Vec3::ZERO, Quat: Quat::from_xyzw(0.0, 0.0, 0.0, 0.0), Origin: 0,
+            });
+        }
+        let mut maps = Vec::new();
+        for _ in 0..nbMaps {
+            let name = if typeWrite == 0 {
+                let name = readFixed(r, 256)?;
+                r.skip(40)?;
+                name
+            } else if (typeWrite & 1) != 0 || (typeWrite & 2) != 0 {
+                let name = readFixed(r, 256)?;
+                r.skip(if version >= 3008 { 24 } else { 20 })?;
+                name
+            } else {
+                String::new()
+            };
+            maps.push(T_MAP { Name: name });
+        }
+        r.seek(SeekFrom::Start(objectSeek as u64))?;
+        let vertexSeek = r.readInt32()?;
+        let actionSeek = r.readInt32()?;
+        r.readInt32()?;
+        let facesSeek = r.readInt32()?;
+        let extrasSeek = r.readInt32()?;
+        let groupsSeek = r.readInt32()?;
+        let nbVertex = r.readInt32()?;
+        let nbAction = r.readInt32()?;
+        r.readInt32()?;
+        let nbFaces = r.readInt32()?;
+        let nbGroups = r.readInt32()?;
+        r.readUInt32()?;
+        r.seek(SeekFrom::Start(vertexSeek as u64))?;
+        let mut vertexs = Vec::new();
+        for _ in 0..nbVertex {
+            let pos = readVec(r)?;
+            r.skip(12)?;
+            vertexs.push(T_VERTEX { Pos: pos });
+        }
+        r.seek(SeekFrom::Start(facesSeek as u64))?;
+        let mut faces = Vec::new();
+        for _ in 0..nbFaces {
+            r.readUInt32()?;
+            let index1 = r.readInt32()?;
+            let index2 = r.readInt32()?;
+            let index3 = r.readInt32()?;
+            let isMap = r.readInt32()?;
+            let u1 = r.readInt32()? as i16;
+            let v1 = r.readInt32()? as i16;
+            let u2 = r.readInt32()? as i16;
+            let v2 = r.readInt32()? as i16;
+            let u3 = r.readInt32()? as i16;
+            let v3 = r.readInt32()? as i16;
+            r.readInt32()?;
+            let numMap = r.readInt32()?;
+            r.skip(16 + 4 + 4 + 4 + 36)?;
+            let doubleSide = r.readInt32()?;
+            if version >= 3006 { r.readInt32()?; } // hide
+            r.readInt32()?;
+            let trans = r.readSingle()?;
+            faces.push(T_FACE {
+                Index1: index1, Index2: index2, Index3: index3, NumMap: numMap, IsMap: isMap, DoubleSide: doubleSide,
+                U1: u1, V1: v1, U2: u2, V2: v2, U3: u3, V3: v3, Trans: trans,
+            });
+        }
+        r.seek(SeekFrom::Start(groupsSeek as u64))?;
+        let mut groups = Vec::new();
+        for _ in 0..nbGroups {
+            let origin = r.readInt32()?;
+            if version >= 3011 { r.skip(40)?; }
+            let n = r.readInt32()?;
+            let mut indexes = Vec::new();
+            for _ in 0..n { indexes.push(r.readInt32()?); }
+            groups.push(T_GROUP { Origin: origin, Indexes: indexes, Name: readFixed(r, 256)? });
+        }
+        let nbSelected = r.readInt32()?;
+        let mut selections = Vec::new();
+        for _ in 0..nbSelected {
+            let name = readFixed(r, 256)?;
+            let n = r.readInt32()?;
+            let mut indexes = Vec::new();
+            for _ in 0..n { indexes.push(r.readInt32()?); }
+            selections.push(T_SELECTED { Name: name, Indexes: indexes });
+        }
+        r.seek(SeekFrom::Start(actionSeek as u64))?;
+        let mut actions = Vec::new();
+        for _ in 0..nbAction {
+            actions.push(T_ACTION { Name: readFixed(r, 256)?, VertIndex: r.readInt32()?, Action: r.readInt32()?, NumSfx: r.readInt32()? });
+        }
+        r.seek(SeekFrom::Start((extrasSeek as i64 + 4) as u64))?;
+        let alpha = r.readInt32()?;
+        let beta = r.readInt32()?;
+        let gamma = r.readInt32()?;
+        let angle = Vec3::new(
+            (alpha & 0xfff) as f32 * Self::THEO_ROTCONVERT,
+            (beta & 0xfff) as f32 * Self::THEO_ROTCONVERT,
+            (gamma & 0xfff) as f32 * Self::THEO_ROTCONVERT,
+        );
+        let quat = if version >= 3005 {
+            let w = r.readSingle()?;
+            let x = r.readSingle()?;
+            let y = r.readSingle()?;
+            let z = r.readSingle()?;
+            Quat::from_xyzw(x, y, z, w)
+        } else {
+            Quat::from_xyzw(0.0, 0.0, 0.0, 0.0)
+        };
+        let pos = readVec(r)?;
+        let origin = r.readInt32()?;
+        Ok(Self {
+            Identity: identity, Version: version, MapsSeek: mapsSeek, ObjectSeek: objectSeek, NbMaps: nbMaps, TypeWrite: typeWrite,
+            Maps: maps, Vertexs: vertexs, Faces: faces, Groups: groups, Actions: actions, Selections: selections,
+            Pos: pos, Angle: angle, Quat: quat, Origin: origin,
+        })
+    }
+}
+
+impl fmt::Display for Binary_Teo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} maps={} vertexs={} faces={}", self.Identity, self.Version, self.NbMaps, self.Vertexs.len(), self.Faces.len())
+    }
+}
+
+impl IHaveMetaInfo for Binary_Teo {
+    fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
+        MetaInfo::new(None, Tag::MetaContent(Arc::new(MetaContent { type_: "Text".into(), name: "Name".into(), value: Tag::Str(self.to_string()), ..Default::default() })), vec![], false),
+        MetaInfo::new(Some("TEO".into()), Tag::None, vec![
+            MetaInfo::new(Some(format!("Version: {}", self.Version)), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Maps: {}", self.NbMaps)), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Vertexs: {}", self.Vertexs.len())), Tag::None, vec![], false),
+            MetaInfo::new(Some(format!("Faces: {}", self.Faces.len())), Tag::None, vec![], false),
         ], false),
     ] }
 }

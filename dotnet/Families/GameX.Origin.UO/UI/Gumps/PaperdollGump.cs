@@ -172,7 +172,8 @@ public sealed class PaperdollGump : Gump {
                 UOLoginNet.Send(OutgoingPackets.Send_HelpRequest());
                 break;
             case Buttons.Options:
-                // OpenSettings is not ported.
+                // ClassicUO OpenSettings; an already-open gump stays put.
+                if (UIManager.GetGump<OptionsGump>() == null) UIManager.Add(new OptionsGump(World));
                 break;
             case Buttons.LogOut:
                 if (UIManager.GetGump<QuestionGump>() == null)

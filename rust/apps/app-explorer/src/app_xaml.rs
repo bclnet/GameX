@@ -47,6 +47,8 @@ impl App {
         // C# finds archive types and explorer apps by reflection; Rust's family crates register theirs.
         gamex_uncore::uncore::register();
         gamex_arkane::arkane::register();
+        gamex_beamdog::beamdog::register();
+        gamex_id::id::register();
         gamex_cig_explorer::register();
         if let Err(e) = loadFamilies(option().family.map(|s| vec![s.to_string()]), true) { return Self::runError(e.to_string()); }
         let shell = AppShell::new();

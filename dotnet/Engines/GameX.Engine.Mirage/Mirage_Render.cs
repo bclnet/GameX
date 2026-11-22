@@ -1,4 +1,5 @@
 ﻿using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Formats;
 using OpenX;
 using OpenX.Gfx;
@@ -14,6 +15,7 @@ public static class MirageRenderer {
         MirageX.BuildersByType[typeof(Binary_Nif)] = MirageNifObjectBuilder.BuildObject;
         MirageX.BuildersByType[typeof(Binary_Ftl)] = MirageFtlObjectBuilder.BuildObject;
         MirageX.BuildersByType[typeof(Binary_Fts)] = MirageFtsObjectBuilder.BuildObject;
+        MirageX.BuildersByType[typeof(Binary_BspX)] = MirageBspObjectBuilder.BuildObject;
     }
 
     /// <summary>

@@ -112,6 +112,7 @@ public static class UOLoginNet {
     static readonly Queue<UODye> _dyes = new();
     static readonly Queue<UOGraphicEffect> _effects = new();
     static readonly Queue<(uint serial, ushort body, ushort type, ushort action, byte mode)> _newAnims = new();
+    static readonly Queue<(uint serial, ushort body, bool running)> _deathAnims = new();
     static readonly Queue<uint> _spellbooks = new();
     static readonly Queue<uint> _vendors = new();
     static readonly Queue<byte[]> _out = new();
@@ -182,6 +183,9 @@ public static class UOLoginNet {
     /// <summary>Opens the map pack for 0xBF subcommand 0x0008. Set from the UO asset slot.</summary>
     public static Action<int> FacetSwitch;
 
+    /// <summary>0xBF subcommand 0x0018. Set from the UO project. Null until that slot assigns it. True when a block was patched.</summary>
+    public static Func<byte[], int, int, bool> MapPatch;
+
     /// <summary>Connect or protocol failure.</summary>
     public static string LastError { get; private set; }
 
@@ -234,6 +238,7 @@ public static class UOLoginNet {
             _dyes.Clear();
             _effects.Clear();
             _newAnims.Clear();
+            _deathAnims.Clear();
             _spellbooks.Clear();
             _vendors.Clear();
             _out.Clear();
@@ -446,6 +451,20 @@ public static class UOLoginNet {
         frame = 0;
     }
 
+    /// <summary>0xAF death group. True only while Direct is set. The group is not run through ReplacedAction.</summary>
+    public static bool TryDirectAnim(uint serial, out ushort group, out byte frame) {
+        lock (Gate) {
+            if (_anims.TryGetValue(serial, out var anim) && anim.Direct) {
+                group = anim.Raw;
+                frame = anim.Frame;
+                return true;
+            }
+        }
+        group = 0;
+        frame = 0;
+        return false;
+    }
+
     /// <summary>ClassicUO Mobile.ProcessAnimation. The first call holds frame 0 for one interval.</summary>
     public static void StepAnim(uint serial, int fileFrames) {
         if (fileFrames <= 0) return;
@@ -475,7 +494,10 @@ public static class UOLoginNet {
             }
             else {
                 var idx = anim.Frame + 1;
-                if (idx >= fileFrames) idx = 0;
+                if (idx >= fileFrames) {
+                    idx = 0;
+                    anim.Direct = false;
+                }
                 anim.Frame = (byte)idx;
             }
             anim.Next = unchecked(now + delay);
@@ -676,9 +698,41 @@ public static class UOLoginNet {
         }
     }
 
+    /// <summary>0xAF. One moved mobile, its body, and whether it was running.</summary>
+    public static bool TakeDeathAnim(out uint serial, out ushort body, out bool running) {
+        lock (Gate) {
+            if (_deathAnims.Count == 0) {
+                serial = 0;
+                body = 0;
+                running = false;
+                return false;
+            }
+            (serial, body, running) = _deathAnims.Dequeue();
+            return true;
+        }
+    }
+
     /// <summary>0xE2 after the view has turned the packet into a group.</summary>
     public static void SetServerAnim(uint serial, ushort group, bool repeat) {
         NoteAnimation(serial, group, 0, 1, true, repeat, 0);
+    }
+
+    /// <summary>0xAF after the view has turned the body into a death group. FromServer stays false.</summary>
+    public static void SetDirectAnim(uint serial, ushort group) {
+        lock (Gate) {
+            if (!_anims.TryGetValue(serial, out var anim)) _anims[serial] = anim = new Anim();
+            anim.Direct = true;
+            anim.FromServer = false;
+            anim.Raw = group;
+            anim.Frame = 0;
+            anim.Forward = true;
+            anim.Repeat = false;
+            anim.Repeats = 1;
+            anim.PacketFrames = 0;
+            anim.Delay = 0;
+            anim.Hold = false;
+            anim.Next = unchecked(Environment.TickCount + (80 + 80 * (anim.Delay + 1)));
+        }
     }
 
     public static bool TakeContainer(out uint serial, out ushort gump) {
@@ -2114,6 +2168,7 @@ public static class UOLoginNet {
             case 0x000C: NoteCloseHealth(p, o, len); break;
             case 0x0010: NoteEquipInfo(p, o, len); break;
             case 0x0016: NoteCloseWindow(p, o, len); break;
+            case 0x0018: MapPatch?.Invoke(p, o, len); break;
             case 0x0019: NoteExtendedStats(p, o, len); break;
             case 0x001B: NoteSpellbook(p, o, len); break;
             case 0x001D: NoteHouseRevision(p, o, len); break;
@@ -2391,7 +2446,7 @@ public static class UOLoginNet {
                     if (_deaths[i].corpse == corpse) { known = true; break; }
                 if (!known) _deaths.Add((corpse, newSerial, mob.Direction, death.Running != 0));
             }
-            // GetDeathAction needs the animation index. Leave the moved mobile's group alone.
+            _deathAnims.Enqueue((newSerial, mob.Body, death.Running != 0));
             _revision++;
         }
     }
@@ -2433,7 +2488,7 @@ public static class UOLoginNet {
     }
 
     sealed class Anim {
-        public bool FromServer, Forward, Repeat;
+        public bool FromServer, Forward, Repeat, Direct;
         public ushort Raw, Repeats, RepeatReset;
         public byte Delay, PacketFrames, Frame;
         public int Next;

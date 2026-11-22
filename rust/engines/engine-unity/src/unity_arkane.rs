@@ -61,3 +61,25 @@ pub mod unity_fts_object_builder {
         })
     }
 }
+
+pub mod unity_bsp_object_builder {
+    use std::any::Any;
+    use std::io::{Error, ErrorKind};
+
+    use gamex_id::engines::bsp_object_builder;
+    use gamex_id::formats::binary::Binary_BspX;
+
+    use crate::unity_render::UnityObjectSummary;
+
+    /// Quake BSP, without a Unity `GameObject`. Z-up is swapped in `toGeometry`.
+    pub fn buildObject(path: &(dyn Any + Send + Sync)) -> Result<UnityObjectSummary, Error> {
+        let bsp = path.downcast_ref::<Binary_BspX>().ok_or_else(|| Error::new(ErrorKind::InvalidInput, "InvalidCastException: Binary_BspX"))?;
+        let data = bsp_object_builder::toGeometry(bsp);
+        Ok(UnityObjectSummary {
+            Name: "bsp".to_string(),
+            VertexCount: data.Vertices.len(),
+            SubmeshCount: data.Submeshes.len(),
+            GroupNames: Vec::new(),
+        })
+    }
+}

@@ -3,6 +3,7 @@ using OpenX.Gfx;
 using OpenX.Gfx.Diligent;
 using GameX.Arkane.Engines;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Engines;
 using GameX.Gamebryo.Formats;
 using GameX.Gamebryo.Formats.Nif;
@@ -20,6 +21,7 @@ public static class DiligentRenderer {
         DiligentX.BuildersByType[typeof(Binary_Nif)] = BuildNif;
         DiligentX.BuildersByType[typeof(Binary_Ftl)] = BuildFtl;
         DiligentX.BuildersByType[typeof(Binary_Fts)] = BuildFts;
+        DiligentX.BuildersByType[typeof(Binary_BspX)] = DiligentBspObjectBuilder.BuildObject;
     }
 
     /// <summary>

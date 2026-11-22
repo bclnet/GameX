@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openx.core import _pathExtension
 from gamex import Archive, BinaryArchive
-from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, Binary_Tea
+from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, Binary_Tea, Binary_Cin, Binary_Flt, Binary_Teo
 from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void
 from gamex.families.Valve.formats.binary import Binary_Vpk
 from gamex.families.Uncore.formats.binary import Binary_Txt
@@ -42,8 +42,10 @@ class ArkaneArchive(BinaryArchive):
             case '.ftl': return (0, Binary_Ftl.factory)
             case '.fts': return (0, Binary_Fts.factory)
             case '.tea': return (0, Binary_Tea.factory)
+            case '.cin': return (0, Binary_Cin.factory)
+            case '.llf': return (0, Binary_Flt.factory)
+            case '.too' | '.teo': return (0, Binary_Teo.factory)
             #
-            #case ".llf": return (0, Binary_Flt.factory)
             #case ".dlf": return (0, Binary_Flt.factory)
             case _: return UncoreArchive.assetFactory(source, game)
 

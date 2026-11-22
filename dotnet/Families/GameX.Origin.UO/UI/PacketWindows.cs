@@ -15,6 +15,7 @@ namespace GameX.Origin.UO;
 /// </summary>
 public static class PacketWindows {
     public static void Poll() {
+        if (UOLoginNet.MapPatch == null) UOLoginNet.MapPatch = MapPatches.Apply;
         var world = UIManager.GetGump<WorldGump>()?.World;
         if (PacketHandlers.TakeDisplayMap(out var map)) MapGump.Open(world, map);
         if (PacketHandlers.TakeMapData(out var pins)) MapGump.OnData(pins);
@@ -27,7 +28,10 @@ public static class PacketWindows {
         if (PacketHandlers.TakeRemoveWaypoint(out var gone)) QuestArrowGump.Close(gone.Serial);
         BuffGump.Refresh(world);
         if (PacketHandlers.TakeChatMessage(out var chat)) ChatGump.OnMessage(world, chat);
-        if (PacketHandlers.TakeCustomHouse(out var house)) HouseCustomizationGump.Open(world, house);
+        if (PacketHandlers.TakeCustomHouse(out var house)) {
+            HouseCustomizationGump.Open(world, house);
+            HouseManager.Load(house);
+        }
         if (PacketHandlers.TakeRaceChange(out var race)) RaceChangeGump.Open(world, race);
         PartyGump.Poll();
         while (UOLoginNet.TakeWindowClose(out var kind, out var serial)) CloseWindow(kind, serial);

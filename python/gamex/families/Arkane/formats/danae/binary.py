@@ -128,7 +128,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
                 norm = s.norm,
                 nrmls = [s.nrmls0, s.nrmls1, s.nrmls2],
                 temp = s.temp,
-                vid = array([0, 0, 0]),
+                vid = s.vid,
                 color = None)
 
     class FTL_GROUPLIST:
@@ -761,6 +761,408 @@ class Binary_Tea(IHaveMetaInfo):
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('TEA', items = [
             MetaInfo(f'Anim: {self.anim}')
+            ])
+        ]
+
+#endregion
+
+def _readZ(r: BinaryReader) -> str:
+    s = ''
+    b = r.readByte()
+    while b != 0: s += chr(b); b = r.readByte()
+    return s
+
+def _readFixed(r: BinaryReader, n: int) -> str:
+    b = r.readBytes(n)
+    z = b.find(0)
+    if z < 0: z = len(b)
+    return b[:z].decode('latin1')
+
+def _readVec(r: BinaryReader) -> Vector3: return array([r.readSingle(), r.readSingle(), r.readSingle()])
+
+# decompressBlast needs a fixed output size and raises "blast error: 1" when the buffer is short.
+# C# grows a MemoryStream. Retry, then keep only the bytes blast stored.
+class _BlastOut(bytearray):
+    def __init__(self, n: int):
+        super().__init__(n)
+        self.written = 0
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        stop = key.stop if isinstance(key, slice) else None
+        if stop is not None and stop > self.written: self.written = stop
+
+def _blastRest(data: bytes) -> bytes:
+    from gamex._LIB.compression.blast import Blast
+    n = len(data)
+    err = None
+    for mul in (2, 4, 8, 16):
+        try:
+            out = _BlastOut(n * mul)
+            Blast().decompress(data, out)
+            return bytes(out[:out.written])
+        except Exception as e:
+            err = e
+            if str(e) != 'blast error: 1': raise
+    raise err
+
+#region Binary_Cin
+
+# https://github.com/arx/ArxLibertatis/blob/master/src/cinematic/CinematicLoad.cpp
+# https://github.com/arx/ArxLibertatis/blob/ArxFatalis-1.21/Sources/DANAE/ARX_C_loadsave.cpp
+
+class Binary_Cin(IHaveMetaInfo):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Cin(r)
+
+    Version175 = (1 << 16) | 75
+    Version176 = (1 << 16) | 76
+
+    class C_BITMAP:
+        def __init__(self, scale: int, path: str): self.scale = scale; self.path = path
+
+    class C_SOUND:
+        def __init__(self, id: int, path: str): self.id = id; self.path = path
+
+    class C_LIGHT:
+        pos: Vector3
+        color: Vector3
+        fallin: float
+        fallout: float
+        intensity: float
+        intensiternd: float
+
+    class C_KEY:
+        frame: int
+        numBitmap: int
+        fx: int
+        typeInterp: int
+        force: int
+        pos: Vector3
+        angZ: float
+        color: int
+        colorD: int
+        colorF: int
+        speed: float
+        light: 'Binary_Cin.C_LIGHT'
+        posGrille: Vector3
+        angZGrille: float
+        speedTrack: float
+        idSound: list[int]
+
+    @staticmethod
+    def _readLight(r: BinaryReader) -> C_LIGHT:
+        light = Binary_Cin.C_LIGHT()
+        light.pos = _readVec(r)
+        light.fallin = r.readSingle()
+        light.fallout = r.readSingle()
+        light.color = _readVec(r)
+        light.intensity = r.readSingle()
+        light.intensiternd = r.readSingle()
+        r.readInt32(); r.readInt32()
+        return light
+
+    def __init__(self, r: BinaryReader):
+        magic = _readZ(r)
+        if magic != 'KFA': raise Exception(f'BAD MAGIC: {magic}')
+        self.version = r.readInt32()
+        if self.version != Binary_Cin.Version175 and self.version != Binary_Cin.Version176: raise Exception(f'Invalid CIN Version: {self.version}')
+        _readZ(r)
+        nbitmaps = r.readInt32()
+        self.bitmaps = [None] * nbitmaps
+        for i in range(nbitmaps): self.bitmaps[i] = Binary_Cin.C_BITMAP(r.readInt32(), _readZ(r))
+        nsounds = r.readInt32()
+        self.sounds = [None] * nsounds
+        for i in range(nsounds):
+            id = r.readInt16() if self.version >= Binary_Cin.Version176 else 0
+            self.sounds[i] = Binary_Cin.C_SOUND(id, _readZ(r))
+        self.startFrame = r.readInt32()
+        self.endFrame = r.readInt32()
+        self.currFrame = r.readSingle()
+        self.fps = r.readSingle()
+        self.nbKey = r.readInt32()
+        self.pause = r.readInt32()
+        self.keys = [None] * self.nbKey
+        for i in range(self.nbKey):
+            k = Binary_Cin.C_KEY()
+            k.frame = r.readInt32()
+            k.numBitmap = r.readInt32()
+            k.fx = r.readInt32()
+            k.typeInterp = r.readInt16()
+            k.force = r.readInt16()
+            k.pos = _readVec(r)
+            k.angZ = r.readSingle()
+            k.color = r.readInt32()
+            k.colorD = r.readInt32()
+            k.colorF = r.readInt32()
+            if self.version <= Binary_Cin.Version175:
+                k.idSound = [r.readInt32()]
+                k.speed = r.readSingle()
+                k.light = Binary_Cin._readLight(r)
+                k.posGrille = _readVec(r)
+                k.angZGrille = r.readSingle()
+                k.speedTrack = r.readSingle()
+            else:
+                k.speed = r.readSingle()
+                k.light = Binary_Cin._readLight(r)
+                k.posGrille = _readVec(r)
+                k.angZGrille = r.readSingle()
+                k.speedTrack = r.readSingle()
+                k.idSound = [r.readInt32() for _ in range(16)]
+            self.keys[i] = k
+
+    def __repr__(self): return f'KFA {self.version} bitmaps={len(self.bitmaps)} sounds={len(self.sounds)} keys={self.nbKey}'
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = 'Name', value = self)),
+        MetaInfo('CIN', items = [
+            MetaInfo(f'Version: {self.version}'),
+            MetaInfo(f'Bitmaps: {len(self.bitmaps)}'),
+            MetaInfo(f'Sounds: {len(self.sounds)}'),
+            MetaInfo(f'Keys: {self.nbKey}'),
+            ])
+        ]
+
+#endregion
+
+#region Binary_Flt
+
+# https://github.com/arx/ArxLibertatis/blob/master/src/scene/LoadLevel.cpp
+# https://github.com/arx/ArxLibertatis/blob/master/src/scene/LevelFormat.h
+
+class Binary_Flt(IHaveMetaInfo):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Flt(r)
+
+    class L_LIGHT:
+        pos: Vector3
+        rgb: Vector3
+        exFlicker: Vector3
+        fallstart: float
+        fallend: float
+        intensity: float
+        i: float
+        exRadius: float
+        exFrequency: float
+        exSize: float
+        exSpeed: float
+        exFlaresize: float
+        extras: int
+
+    def __init__(self, r: BinaryReader):
+        raw = _blastRest(r.readBytes(r.length - r.tell()))
+        with BinaryReader(BytesIO(raw)) as r2:
+            self.version = r2.readSingle()
+            self.ident = _readFixed(r2, 16)
+            if self.ident != 'DANAE_LLH_FILE': raise Exception(f'BAD MAGIC: {self.ident}')
+            self.lastUser = _readFixed(r2, 256)
+            self.time = r2.readInt32()
+            nbLights = r2.readInt32()
+            self.nbShadow = r2.readInt32()
+            self.nbIgnored = r2.readInt32()
+            self.nbBkg = r2.readInt32()
+            r2.skip(256 * 4 + 256 * 4 + 4096 + 256 * 4)
+            self.lights = [None] * nbLights
+            for i in range(nbLights):
+                light = Binary_Flt.L_LIGHT()
+                light.pos = _readVec(r2)
+                light.rgb = _readVec(r2)
+                light.fallstart = r2.readSingle()
+                light.fallend = r2.readSingle()
+                light.intensity = r2.readSingle()
+                light.i = r2.readSingle()
+                light.exFlicker = _readVec(r2)
+                light.exRadius = r2.readSingle()
+                light.exFrequency = r2.readSingle()
+                light.exSize = r2.readSingle()
+                light.exSpeed = r2.readSingle()
+                light.exFlaresize = r2.readSingle()
+                r2.skip(96)
+                light.extras = r2.readInt32()
+                r2.skip(124)
+                self.lights[i] = light
+            nbValues = r2.readInt32()
+            self.viewMode = r2.readInt32()
+            self.modeLight = r2.readInt32()
+            r2.readInt32()
+            remain = r2.length - r2.tell()
+            self.colors = [0] * nbValues
+            if remain == nbValues * 4:
+                b = r2.readBytes(remain)
+                self.colors = [int.from_bytes(b[i:i + 4], 'little') for i in range(0, remain, 4)]
+            elif remain == nbValues * 12:
+                for i in range(nbValues):
+                    rr = r2.readInt32(); gg = r2.readInt32(); bb = r2.readInt32()
+                    self.colors[i] = (bb & 255) | ((gg & 255) << 8) | ((rr & 255) << 16) | (255 << 24)
+            else: raise Exception('BAD LIGHTING')
+
+    def __repr__(self): return f'{self.ident} {self.version} lights={len(self.lights)} colors={len(self.colors)}'
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = 'Name', value = self)),
+        MetaInfo('LLF', items = [
+            MetaInfo(f'Version: {self.version}'),
+            MetaInfo(f'Lights: {len(self.lights)}'),
+            MetaInfo(f'Colors: {len(self.colors)}'),
+            ])
+        ]
+
+#endregion
+
+#region Binary_Teo
+
+# https://github.com/arx/ArxLibertatis/blob/1.1.2/src/scene/Object.cpp TheoToEerie
+# https://github.com/arx/ArxLibertatis/blob/1.1.2/src/scene/ObjectFormat.h
+
+class Binary_Teo(IHaveMetaInfo):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Teo(r)
+
+    VersionMin = 3003
+    VersionMax = 3011
+    THEO_ROTCONVERT = 0.087890625
+
+    class T_MAP:
+        def __init__(self, name: str): self.name = name
+
+    class T_VERTEX:
+        def __init__(self, pos: Vector3): self.pos = pos
+
+    class T_FACE:
+        index1: int
+        index2: int
+        index3: int
+        numMap: int
+        isMap: int
+        doubleSide: int
+        u1: int
+        v1: int
+        u2: int
+        v2: int
+        u3: int
+        v3: int
+        trans: float
+
+    class T_GROUP:
+        origin: int
+        indexes: list[int]
+        name: str
+
+    class T_ACTION:
+        name: str
+        vertIndex: int
+        action: int
+        numSfx: int
+
+    class T_SELECTED:
+        name: str
+        indexes: list[int]
+
+    def __init__(self, r: BinaryReader):
+        self.identity = _readFixed(r, 17)
+        self.version = r.readUInt32()
+        self.mapsSeek = r.readInt32()
+        self.objectSeek = r.readInt32()
+        self.nbMaps = r.readInt32()
+        self.typeWrite = r.readInt32()
+        if self.identity != 'Theo Object File': raise Exception(f'BAD MAGIC: {self.identity}')
+        if self.version < Binary_Teo.VersionMin or self.version > Binary_Teo.VersionMax:
+            self.maps = self.vertexs = self.faces = self.groups = self.actions = self.selections = None
+            self.pos = array([0., 0., 0.])
+            self.angle = array([0., 0., 0.])
+            self.quat = quaternion(0., 0., 0., 0.)
+            self.origin = 0
+            return
+        self.maps = [None] * self.nbMaps
+        for i in range(self.nbMaps):
+            if self.typeWrite == 0:
+                self.maps[i] = Binary_Teo.T_MAP(_readFixed(r, 256))
+                r.skip(40)
+            elif (self.typeWrite & 1) != 0 or (self.typeWrite & 2) != 0:
+                self.maps[i] = Binary_Teo.T_MAP(_readFixed(r, 256))
+                r.skip(24 if self.version >= 3008 else 20)
+        r.seek(self.objectSeek)
+        vertexSeek = r.readInt32()
+        actionSeek = r.readInt32()
+        r.readInt32()
+        facesSeek = r.readInt32()
+        extrasSeek = r.readInt32()
+        groupsSeek = r.readInt32()
+        nbVertex = r.readInt32()
+        nbAction = r.readInt32()
+        r.readInt32()
+        nbFaces = r.readInt32()
+        nbGroups = r.readInt32()
+        r.readUInt32()
+        r.seek(vertexSeek)
+        self.vertexs = [None] * nbVertex
+        for i in range(nbVertex):
+            self.vertexs[i] = Binary_Teo.T_VERTEX(_readVec(r))
+            r.skip(12)
+        r.seek(facesSeek)
+        self.faces = [None] * nbFaces
+        for i in range(nbFaces):
+            r.readUInt32()
+            face = Binary_Teo.T_FACE()
+            face.index1 = r.readInt32(); face.index2 = r.readInt32(); face.index3 = r.readInt32(); face.isMap = r.readInt32()
+            face.u1 = _i16(r.readInt32()); face.v1 = _i16(r.readInt32())
+            face.u2 = _i16(r.readInt32()); face.v2 = _i16(r.readInt32())
+            face.u3 = _i16(r.readInt32()); face.v3 = _i16(r.readInt32())
+            r.readInt32()
+            face.numMap = r.readInt32()
+            r.skip(16 + 4 + 4 + 4 + 36)
+            face.doubleSide = r.readInt32()
+            if self.version >= 3006: r.readInt32()
+            r.readInt32()
+            face.trans = r.readSingle()
+            self.faces[i] = face
+        r.seek(groupsSeek)
+        self.groups = [None] * nbGroups
+        for i in range(nbGroups):
+            origin = r.readInt32()
+            if self.version >= 3011: r.skip(40)
+            n = r.readInt32()
+            idx = [r.readInt32() for _ in range(n)]
+            self.groups[i] = Binary_Teo.T_GROUP()
+            self.groups[i].origin = origin
+            self.groups[i].indexes = idx
+            self.groups[i].name = _readFixed(r, 256)
+        nbSelected = r.readInt32()
+        self.selections = [None] * nbSelected
+        for i in range(nbSelected):
+            name = _readFixed(r, 256)
+            n = r.readInt32()
+            sel = Binary_Teo.T_SELECTED()
+            sel.name = name
+            sel.indexes = [r.readInt32() for _ in range(n)]
+            self.selections[i] = sel
+        r.seek(actionSeek)
+        self.actions = [None] * nbAction
+        for i in range(nbAction):
+            act = Binary_Teo.T_ACTION()
+            act.name = _readFixed(r, 256)
+            act.vertIndex = r.readInt32()
+            act.action = r.readInt32()
+            act.numSfx = r.readInt32()
+            self.actions[i] = act
+        r.seek(extrasSeek + 4)
+        alpha = r.readInt32(); beta = r.readInt32(); gamma = r.readInt32()
+        self.angle = array([(alpha & 0xfff) * Binary_Teo.THEO_ROTCONVERT, (beta & 0xfff) * Binary_Teo.THEO_ROTCONVERT, (gamma & 0xfff) * Binary_Teo.THEO_ROTCONVERT])
+        self.quat = quaternion(0., 0., 0., 0.)
+        if self.version >= 3005:
+            w = r.readSingle(); x = r.readSingle(); y = r.readSingle(); z = r.readSingle()
+            self.quat = quaternion(w, x, y, z)
+        self.pos = _readVec(r)
+        self.origin = r.readInt32()
+
+    def __repr__(self): return f'{self.identity} {self.version} maps={self.nbMaps} vertexs={0 if self.vertexs is None else len(self.vertexs)} faces={0 if self.faces is None else len(self.faces)}'
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = 'Name', value = self)),
+        MetaInfo('TEO', items = [
+            MetaInfo(f'Version: {self.version}'),
+            MetaInfo(f'Maps: {self.nbMaps}'),
+            MetaInfo(f'Vertexs: {0 if self.vertexs is None else len(self.vertexs)}'),
+            MetaInfo(f'Faces: {0 if self.faces is None else len(self.faces)}'),
             ])
         ]
 

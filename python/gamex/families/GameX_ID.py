@@ -4,7 +4,7 @@ from openx.core import _pathExtension
 from gamex import Family, FamilyGame, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Uncore.formats.binary import Binary_Zip
-from gamex.families.ID.formats.binary import Binary_Lmp, Binary_Mdl, Binary_Pak, Binary_Spr, Binary_Wad
+from gamex.families.ID.formats.binary import Binary_BspX, Binary_Lmp, Binary_Mdl, Binary_Pak, Binary_Spr, Binary_Wad
 
 # QGame
 class QGame(FamilyGame):
@@ -34,6 +34,7 @@ class IDArchive(BinaryArchive):
             case 'idTech':
                 match _pathExtension(source.path).lower():
                     case '.lmp' | '.tex': return (0, Binary_Lmp.factory)
+                    case '.bsp': return (0, Binary_BspX.factory)
                     case '.mdl': return (0, Binary_Mdl.factory)
                     case '.spr': return (0, Binary_Spr.factory)
                     case _: return UncoreArchive.assetFactory(source, game)

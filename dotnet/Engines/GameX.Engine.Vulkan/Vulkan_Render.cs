@@ -3,6 +3,7 @@ using OpenX.Gfx;
 using OpenX.Gfx.Vulkan;
 using GameX.Arkane.Engines;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Engines;
 using GameX.Gamebryo.Formats;
 using GameX.Gamebryo.Formats.Nif;
@@ -21,6 +22,7 @@ public static class VulkanRenderer {
         VulkanX.BuildersByType[typeof(Binary_Nif)] = BuildNif;
         VulkanX.BuildersByType[typeof(Binary_Ftl)] = BuildFtl;
         VulkanX.BuildersByType[typeof(Binary_Fts)] = BuildFts;
+        VulkanX.BuildersByType[typeof(Binary_BspX)] = VulkanBspObjectBuilder.BuildObject;
     }
 
     /// <summary>

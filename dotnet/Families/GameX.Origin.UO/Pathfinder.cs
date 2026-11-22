@@ -166,13 +166,15 @@ public sealed class Pathfinder {
     bool CanStand(int x, int y, int fromZ, out int z) {
         z = fromZ;
         var assets = UltimaOnline.Current?.Assets;
-        if (assets == null || !assets.TryLandTile(x, y, out var tile, out _)) return false;
+        if (assets == null) return false;
+        if (!MapPatches.TryLand(x, y, out ushort tile, out _) && !assets.TryLandTile(x, y, out tile, out _)) return false;
         var step = UOLoginNet.StepHeight;
         if (step != null) z = step(x, y, fromZ);
         LoadFlags(assets);
         var floor = false;
         _statics.Clear();
-        assets.CopyStatics(x, y, _statics);
+        if (!MapPatches.CopyStatics(x, y, _statics)) assets.CopyStatics(x, y, _statics);
+        HouseManager.CopyPieces(x, y, _statics);
         for (var i = 0; i < _statics.Count; i++) {
             var (graphic, sz) = _statics[i];
             if (!TryItem(graphic, out var data)) continue;

@@ -110,7 +110,7 @@ public sealed class TargetManager {
         if (TargetingState == CursorTarget.MultiPlacement) {
             MultiTargetInfo = null;
             TargetingState = 0;
-            // no HouseManager in this tree
+            _world.HouseManager.Remove(0);
         }
         IsTargeting = false;
     }
@@ -148,9 +148,14 @@ public sealed class TargetManager {
 
     public void CancelTarget() {
         if (TargetingState == CursorTarget.MultiPlacement) {
-            // no HouseManager in this tree
-            // no CustomHouseManager in this tree
-            UIManager.GetGump<HouseCustomizationGump>()?.Update();
+            _world.HouseManager.Remove(0);
+            if (_world.CustomHouseManager != null) {
+                _world.CustomHouseManager.Erasing = false;
+                _world.CustomHouseManager.SeekTile = false;
+                _world.CustomHouseManager.SelectedGraphic = 0;
+                _world.CustomHouseManager.CombinedStair = false;
+                UIManager.GetGump<HouseCustomizationGump>()?.Update();
+            }
         }
 
         if (TargetingState == CursorTarget.CallbackTarget)

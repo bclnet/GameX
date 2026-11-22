@@ -69,3 +69,25 @@ pub mod godot_fts_object_builder {
         Ok(GodotBuiltNode { Name: "fts".to_string(), VertexCount: vertexCount, SubmeshCount: data.Submeshes.len(), Children: children })
     }
 }
+
+pub mod godot_bsp_object_builder {
+    use std::any::Any;
+    use std::io::{Error, ErrorKind};
+
+    use gamex_id::engines::bsp_object_builder;
+    use gamex_id::formats::binary::Binary_BspX;
+
+    use crate::godot_render::GodotBuiltNode;
+
+    /// Quake BSP, without a Godot `Node`. Z-up is swapped in `toGeometry`.
+    pub fn buildObject(path: &(dyn Any + Send + Sync)) -> Result<GodotBuiltNode, Error> {
+        let bsp = path.downcast_ref::<Binary_BspX>().ok_or_else(|| Error::new(ErrorKind::InvalidInput, "InvalidCastException: Binary_BspX"))?;
+        let data = bsp_object_builder::toGeometry(bsp);
+        let vertexCount = data.Vertices.len();
+        let mut children = Vec::with_capacity(data.Submeshes.len());
+        for sub in &data.Submeshes {
+            children.push(GodotBuiltNode { Name: format!("tex{}", sub.TexId), VertexCount: vertexCount, SubmeshCount: 1, Children: Vec::new() });
+        }
+        Ok(GodotBuiltNode { Name: "bsp".to_string(), VertexCount: vertexCount, SubmeshCount: data.Submeshes.len(), Children: children })
+    }
+}

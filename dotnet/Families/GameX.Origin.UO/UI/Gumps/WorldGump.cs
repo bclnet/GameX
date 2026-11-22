@@ -121,6 +121,11 @@ public class WorldGump : Gump {
             var group = assets.ObjectNewAnimation(body, type, action, mode);
             UOLoginNet.SetServerAnim(serial, group, (type == 1 || type == 2) && body == 0x0015);
         }
+        while (UOLoginNet.TakeDeathAnim(out var dserial, out var dbody, out var drunning)) {
+            var assets = UltimaOnline.Current?.Assets;
+            if (assets == null) continue;
+            UOLoginNet.SetDirectAnim(dserial, assets.DeathGroup(dbody, drunning));
+        }
         while (UOLoginNet.TakeSpellbook(out var book)) {
             if (UIManager.GetGump<SpellbookGump>(book) == null) UIManager.Add(new SpellbookGump(book));
         }
@@ -241,13 +246,14 @@ public class WorldGump : Gump {
             for (var dx = -Radius; dx <= Radius; dx++) {
                 var wx = px + dx;
                 var wy = py + dy;
-                if (!assets.TryLandTile(wx, wy, out var tile, out var tz)) continue;
+                if (!MapPatches.TryLand(wx, wy, out ushort tile, out sbyte tz) && !assets.TryLandTile(wx, wy, out tile, out tz)) continue;
                 if (!assets.TryArtPixels(tile, out var pix, out var w, out var h)) continue;
                 var sx = cx + (dx - dy) * 22;
                 var sy = cy + (dx + dy) * 22 - (tz - pz) * 4;
                 _stamps.Add(new Stamp { Key = 0x10000 | tile, X = ox + sx - 22, Y = oy + sy - 22, W = w, H = h, Px = pix, Ord = (dx + dy + 32) * 1000 + tz });
                 _statics.Clear();
-                assets.CopyStatics(wx, wy, _statics);
+                if (!MapPatches.CopyStatics(wx, wy, _statics)) assets.CopyStatics(wx, wy, _statics);
+                HouseManager.CopyPieces(wx, wy, _statics);
                 foreach (var (graphic, z) in _statics) {
                     var id = graphic + 0x4000;
                     if (id > 0xFFFF || !assets.TryArtPixels(id, out var ap, out var aw, out var ah)) continue;
@@ -295,15 +301,24 @@ public class WorldGump : Gump {
         var moving = StepSlide(serial, dir, UOLoginNet.PlayerX + dx, UOLoginNet.PlayerY + dy, out var run, out var sox, out var soy);
         // ClassicUO MobileView still draws Hidden (0x80). That body is not skipped and hue 0x038E is not applied.
         var war = serial == UOLoginNet.PlayerSerial ? UOLoginNet.InWarMode : (UOLoginNet.MobileFlags(serial) & 0x40) != 0;
-        UOLoginNet.TryServerAnim(serial, out var fromServer, out var raw, out var frame);
         var two = TwoHanded(serial);
-        var action = assets.GroupFor((ushort)body, moving, run, war, two, fromServer, raw);
-        if (!assets.TryFrameCount(body, action, dir, out var count)) {
-            if (action == 0 || !assets.TryFrameCount(body, 0, dir, out count)) return;
-            action = 0;
+        int action;
+        byte frame;
+        int count;
+        if (UOLoginNet.TryDirectAnim(serial, out var directGroup, out frame) && assets.TryFrameCount(body, directGroup, dir, out count) && count > 0) {
+            action = directGroup;
+            frame = (byte)(frame % count);
         }
-        if (count <= 0) return;
-        frame = (byte)(frame % count);
+        else {
+            UOLoginNet.TryServerAnim(serial, out var fromServer, out var raw, out frame);
+            action = assets.GroupFor((ushort)body, moving, run, war, two, fromServer, raw);
+            if (!assets.TryFrameCount(body, action, dir, out count)) {
+                if (action == 0 || !assets.TryFrameCount(body, 0, dir, out count)) return;
+                action = 0;
+            }
+            if (count <= 0) return;
+            frame = (byte)(frame % count);
+        }
         if (!assets.TryBodyFrame(body, action, dir, frame, out var pix, out var w, out var h, out var cx, out var cy)) return;
         UOLoginNet.StepAnim(serial, count);
         ViewCenter(out var vx, out var vy);

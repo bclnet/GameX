@@ -3,6 +3,7 @@ using OpenX.Gfx;
 using OpenX.Gfx.Raylib;
 using GameX.Arkane.Engines;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Engines;
 using GameX.Gamebryo.Formats;
 using GameX.Gamebryo.Formats.Nif;
@@ -20,6 +21,7 @@ public static class RaylibRenderer {
         RaylibX.BuildersByType[typeof(Binary_Nif)] = BuildNif;
         RaylibX.BuildersByType[typeof(Binary_Ftl)] = BuildFtl;
         RaylibX.BuildersByType[typeof(Binary_Fts)] = BuildFts;
+        RaylibX.BuildersByType[typeof(Binary_BspX)] = RaylibBspObjectBuilder.BuildObject;
     }
 
     /// <summary>

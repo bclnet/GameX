@@ -246,12 +246,13 @@ public sealed class WorldMapGump : Gump {
                 var isoX = rx - ry;
                 var isoY = rx + ry;
                 if (isoX < -lim || isoX > lim || isoY < -lim || isoY > lim) continue;
-                if (!assets.TryLandTile(wx, wy, out var tile, out var landZ)) continue;
+                if (!MapPatches.TryLand(wx, wy, out ushort tile, out sbyte landZ) && !assets.TryLandTile(wx, wy, out tile, out landZ)) continue;
                 var index = (int)tile;
                 sbyte topZ = sbyte.MinValue;
                 ushort top = 0;
                 _statics.Clear();
-                assets.CopyStatics(wx, wy, _statics);
+                if (!MapPatches.CopyStatics(wx, wy, _statics)) assets.CopyStatics(wx, wy, _statics);
+                HouseManager.CopyPieces(wx, wy, _statics);
                 for (var s = 0; s < _statics.Count; s++) {
                     var graphic = _statics[s].graphic;
                     var z = _statics[s].z;

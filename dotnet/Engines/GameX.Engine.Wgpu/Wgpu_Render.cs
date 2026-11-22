@@ -3,6 +3,7 @@ using OpenX.Gfx;
 using OpenX.Gfx.Wgpu;
 using GameX.Arkane.Engines;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Engines;
 using GameX.Gamebryo.Formats;
 using GameX.Gamebryo.Formats.Nif;
@@ -20,6 +21,7 @@ public static class WgpuRenderer {
         WgpuX.BuildersByType[typeof(Binary_Nif)] = BuildNif;
         WgpuX.BuildersByType[typeof(Binary_Ftl)] = BuildFtl;
         WgpuX.BuildersByType[typeof(Binary_Fts)] = BuildFts;
+        WgpuX.BuildersByType[typeof(Binary_BspX)] = WgpuBspObjectBuilder.BuildObject;
     }
 
     /// <summary>

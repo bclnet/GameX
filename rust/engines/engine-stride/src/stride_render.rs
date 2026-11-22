@@ -12,9 +12,11 @@ use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex, Once};
 
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use gamex_id::formats::binary::Binary_BspX;
 
 use crate::stride_arkane::stride_ftl_object_builder;
 use crate::stride_arkane::stride_fts_object_builder;
+use crate::stride_arkane::stride_bsp_object_builder;
 use crate::stride_object_holder::StrideObjectHolder;
 
 pub type ObjectBuilder = fn(&dyn Any, bool, Option<&dyn Any>) -> StrideObjectHolder;
@@ -31,6 +33,7 @@ fn register() {
         let mut map = BuildersByType().lock().unwrap();
         map.insert(TypeId::of::<Binary_Ftl>(), stride_ftl_object_builder::buildObject);
         map.insert(TypeId::of::<Binary_Fts>(), stride_fts_object_builder::buildObject);
+        map.insert(TypeId::of::<Binary_BspX>(), stride_bsp_object_builder::buildObject);
     });
 }
 

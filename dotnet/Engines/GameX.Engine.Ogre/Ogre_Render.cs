@@ -2,6 +2,7 @@
 using OpenX.Gfx;
 using OpenX.Gfx.Ogre;
 using GameX.Arkane.Formats.Danae;
+using GameX.ID.Formats;
 using GameX.Gamebryo.Formats;
 #pragma warning disable CS9113, CS0169
 
@@ -12,6 +13,7 @@ public static class OgreRenderer {
         OgreX.BuildersByType[typeof(Binary_Nif)] = OgreNifObjectBuilder.BuildObject;
         OgreX.BuildersByType[typeof(Binary_Ftl)] = OgreFtlObjectBuilder.BuildObject;
         OgreX.BuildersByType[typeof(Binary_Fts)] = OgreFtsObjectBuilder.BuildObject;
+        OgreX.BuildersByType[typeof(Binary_BspX)] = OgreBspObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

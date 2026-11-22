@@ -1459,6 +1459,7 @@ dependencies = [
  "gamex",
  "gamex-all",
  "gamex-arkane",
+ "gamex-beamdog",
  "gamex-cig-explorer",
  "gamex-engine-godot",
  "gamex-engine-o3de",
@@ -1468,6 +1469,7 @@ dependencies = [
  "gamex-engine-stride",
  "gamex-engine-unity",
  "gamex-engine-unreal",
+ "gamex-id",
  "gamex-uncore",
  "image",
  "indexmap",
@@ -1509,6 +1511,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-uncore",
+ "openx-vfx",
 ]
 
 [[package]]
@@ -1655,6 +1658,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-bevy",
  "openx-gfx",
@@ -1666,6 +1670,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-bgfx",
  "openx-gfx",
@@ -1677,6 +1682,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-diligent",
  "openx-gfx",
@@ -1688,6 +1694,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-eginx",
  "openx-gfx",
@@ -1699,6 +1706,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-godot",
 ]
@@ -1709,6 +1717,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-mg",
  "openx-engine-sdl",
@@ -1721,6 +1730,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-o3de",
  "openx-gfx",
@@ -1732,6 +1742,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-ogre",
  "openx-gfx",
@@ -1744,6 +1755,7 @@ dependencies = [
  "gamex",
  "gamex-arkane",
  "gamex-gamebryo",
+ "gamex-id",
  "glam",
  "openx-engine-opengl",
  "openx-gfx",
@@ -1757,6 +1769,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-raylib",
  "openx-gfx",
@@ -1768,6 +1781,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-sdl",
  "openx-gfx",
@@ -1779,6 +1793,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-stride",
  "openx-gfx",
@@ -1792,6 +1807,7 @@ dependencies = [
  "gamex",
  "gamex-arkane",
  "gamex-gamebryo",
+ "gamex-id",
  "glam",
  "openx-engine-unity",
 ]
@@ -1802,6 +1818,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-unreal",
  "openx-gfx",
@@ -1813,6 +1830,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-vulkan",
  "openx-gfx",
@@ -1824,6 +1842,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-id",
  "glam",
  "openx-engine-wgpu",
  "openx-gfx",

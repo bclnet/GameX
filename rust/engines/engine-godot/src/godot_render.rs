@@ -21,6 +21,7 @@ use std::sync::{Arc, LazyLock, Mutex, Once};
 
 use gamex::meta::Tag;
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use gamex_id::formats::binary::Binary_BspX;
 
 /// Stand-in for a Godot `Node3D` tree. Mesh children repeat the shared vertex count.
 /// Danae positions are not stored: there is no `Node3D`.
@@ -52,7 +53,7 @@ fn builders() -> &'static Mutex<HashMap<TypeId, BuilderByType>> {
 }
 
 /// C# `GodotX.BuildersByType`, keyed by the path object's type.
-/// Filled on first use with `Binary_Ftl` and `Binary_Fts` only.
+/// Filled on first use with `Binary_Ftl`, `Binary_Fts`, and `Binary_BspX`.
 pub fn BuildersByType() -> &'static Mutex<HashMap<TypeId, BuilderByType>> {
     register();
     builders()
@@ -64,6 +65,7 @@ fn register() {
         let mut map = builders().lock().unwrap();
         map.insert(TypeId::of::<Binary_Ftl>(), crate::godot_arkane::godot_ftl_object_builder::buildObject);
         map.insert(TypeId::of::<Binary_Fts>(), crate::godot_arkane::godot_fts_object_builder::buildObject);
+        map.insert(TypeId::of::<Binary_BspX>(), crate::godot_arkane::godot_bsp_object_builder::buildObject);
     });
 }
 
@@ -86,6 +88,7 @@ fn objectHolder(obj: &Tag) -> Result<GodotObjectHolder, Error> {
     let id = any.as_ref().type_id();
     let typeName = if id == TypeId::of::<Binary_Ftl>() { "Binary_Ftl" }
         else if id == TypeId::of::<Binary_Fts>() { "Binary_Fts" }
+        else if id == TypeId::of::<Binary_BspX>() { "Binary_BspX" }
         else { "unknown" };
     let build = builders().lock().unwrap().get(&id).copied();
     let node = match build {
@@ -141,11 +144,12 @@ mod tests {
     }
 
     #[test]
-    fn registersFtlAndFtsOnly() {
+    fn registersFtlFtsAndBsp() {
         let map = BuildersByType().lock().unwrap();
         assert!(map.contains_key(&TypeId::of::<Binary_Ftl>()));
         assert!(map.contains_key(&TypeId::of::<Binary_Fts>()));
-        assert_eq!(map.len(), 2);
+        assert!(map.contains_key(&TypeId::of::<Binary_BspX>()));
+        assert_eq!(map.len(), 3);
     }
 
     #[test]

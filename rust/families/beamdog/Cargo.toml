@@ -11,3 +11,4 @@ workspace = true
 [dependencies]
 gamex = { path = "../../core/gamex" }
 gamex-uncore = { path = "../../families/uncore" }
+openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }

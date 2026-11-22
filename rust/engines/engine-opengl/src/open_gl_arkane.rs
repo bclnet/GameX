@@ -99,3 +99,43 @@ pub mod open_gl_fts_object_builder {
         })
     }
 }
+
+pub mod open_gl_bsp_object_builder {
+    use std::io::{Error, ErrorKind};
+    use std::sync::Arc;
+
+    use openx_engine_opengl::engine_open_gl::OpenGLMaterialManager;
+    use openx_gfx::gfx::{AnyArc, MaterialStd2Prop};
+    use openx_poly::core::{BoxFuture, SourcePath, SourceRef};
+
+    use gamex_id::engines::bsp_object_builder::{self, BspMesh};
+    use gamex_id::formats::binary::Binary_BspX;
+
+    /// Quake BSP kept as the shared mesh. Z-up is swapped in `toGeometry`.
+    #[derive(Clone)]
+    pub struct OpenGLBspObject {
+        pub Name: String,
+        pub IsStatic: bool,
+        pub Data: BspMesh,
+        pub Materials: Vec<MaterialStd2Prop>,
+    }
+
+    /// Builds a BSP the same way `open_gl_ftl_object_builder::buildObject` builds an FTL.
+    pub fn buildObject<'a>(source: &'a SourceRef, path: &'a (dyn std::any::Any + Send + Sync), isStatic: bool, materialManager: &'a mut OpenGLMaterialManager) -> BoxFuture<'a, Result<AnyArc, Error>> {
+        Box::pin(async move {
+            let bsp = path.downcast_ref::<Binary_BspX>().ok_or_else(|| Error::new(ErrorKind::InvalidInput, "InvalidCastException: Binary_BspX"))?;
+            for texturePath in bsp_object_builder::getTexturePaths(bsp) {
+                materialManager.textureManager.preload(source, &SourcePath::from(texturePath));
+            }
+            let data = bsp_object_builder::toGeometry(bsp);
+            let level = bsp.level();
+            let mut materials = Vec::with_capacity(data.Submeshes.len());
+            for sub in &data.Submeshes {
+                let prop = level.and_then(|l| if sub.TexId >= 0 { l.Textures.get(sub.TexId as usize) } else { None }).map(bsp_object_builder::toMaterialProp).unwrap_or_default();
+                materials.push(prop);
+            }
+            let built = OpenGLBspObject { Name: "bsp".to_string(), IsStatic: isStatic, Data: data, Materials: materials };
+            Ok(Arc::new(built) as AnyArc)
+        })
+    }
+}

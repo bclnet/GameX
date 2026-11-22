@@ -120,13 +120,13 @@ class Binary_Dat(ArcBinaryT):
 
 #endregion - end::Binary_Dat[]
 
-# C#: (0x00 << 24) | (b2 << 18) | (b1 << 10) | b0. Red is not shifted.
-def _vgaColor(b0: int, b1: int, b2: int) -> int:
-    return (0x00 << 24) | (b2 << 18) | (b1 << 10) | b0
+# VGA 6-bit channels shifted by 2. FRM index 0 stays clear. RIX is opaque.
+def _vgaColor(b0: int, b1: int, b2: int, alpha: int) -> int:
+    return (alpha << 24) | (b2 << 18) | (b1 << 10) | (b0 << 2)
 
-def _readVgaPalette(r: BinaryReader) -> list[int]:
+def _readVgaPalette(r: BinaryReader, clear0: bool) -> list[int]:
     rgb = r.readBytes(256 * 3)
-    return [_vgaColor(rgb[i], rgb[i + 1], rgb[i + 2]) for i in range(0, 256 * 3, 3)]
+    return [_vgaColor(rgb[i], rgb[i + 1], rgb[i + 2], 0 if clear0 and i == 0 else 0xFF) for i in range(0, 256 * 3, 3)]
 
 def _indexedRgba(indices: bytes, rgba32: list[int], width: int, height: int) -> bytearray:
     image = bytearray(width * height * 4)
@@ -139,7 +139,9 @@ def _indexedRgba(indices: bytes, rgba32: list[int], width: int, height: int) -> 
 class Binary_Frm(IHaveMetaInfo, ITextureFrames, ITextureSelect):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive) -> Binary_Frm:
-        return Binary_Frm(r, f, s)
+        pallet = await Binary_Frm.getPalletObjAsync(f.path, s)
+        if pallet is None: raise Exception('No pallet found')
+        return Binary_Frm(r, pallet)
 
     #region Headers
 
@@ -168,9 +170,7 @@ class Binary_Frm(IHaveMetaInfo, ITextureFrames, ITextureSelect):
 
     defaultPallet: Binary_Pal2 = None
 
-    def __init__(self, r: BinaryReader, f: FileSource, s: Archive):
-        pallet = self.getPalletObj(f.path, s)
-        if pallet is None: raise Exception('No pallet found')
+    def __init__(self, r: BinaryReader, pallet: Binary_Pal2):
         rgba32 = pallet.rgba32
         header = r.readS(self.FrmHeader)
         frames = []
@@ -187,14 +187,14 @@ class Binary_Frm(IHaveMetaInfo, ITextureFrames, ITextureSelect):
         self.maxId = 1 if len(frames) == 1 else header.framesPerDirection
         self.select(0)
 
-    @classmethod
-    def getPalletObj(cls, path: str, s: Archive) -> Binary_Pal2:
+    @staticmethod
+    async def getPalletObjAsync(path: str, s: Archive) -> Binary_Pal2:
         palletPath = f'{path[:-4]}.PAL'
-        if s.contains(palletPath): return s.getAsset(Binary_Pal2, palletPath)
-        if cls.defaultPallet is None and s.contains('COLOR.PAL'):
-            cls.defaultPallet = s.getAsset(Binary_Pal2, 'COLOR.PAL')
-            cls.defaultPallet.setColors()
-        return cls.defaultPallet
+        if s.contains(palletPath): return await s.getAsset(Binary_Pal2, palletPath)
+        if Binary_Frm.defaultPallet is None and s.contains('COLOR.PAL'):
+            Binary_Frm.defaultPallet = await s.getAsset(Binary_Pal2, 'COLOR.PAL')
+            Binary_Frm.defaultPallet.setColors()
+        return Binary_Frm.defaultPallet
 
     #region ITexture
 
@@ -236,13 +236,13 @@ class Binary_Pal2(IHaveMetaInfo):
     async def factory(r: BinaryReader, f: FileSource, s: Archive) -> Binary_Pal2: return Binary_Pal2(r, f)
 
     def __init__(self, r: BinaryReader, f: FileSource = None):
-        self.rgba32 = _readVgaPalette(r)
+        self.rgba32 = _readVgaPalette(r, True)
 
     def setColors(self) -> None:
-        for i in range(229, 233): self.rgba32[i] = 0x00ff0000 # animated green (for radioactive waste)
-        for i in range(233, 238): self.rgba32[i] = 0x0000ff00 # bright blue (computer screens)
+        for i in range(229, 233): self.rgba32[i] = 0xffff0000 # animated green (for radioactive waste)
+        for i in range(233, 238): self.rgba32[i] = 0xff00ff00 # bright blue (computer screens)
         for i in range(238, 248): self.rgba32[i] = 0xff000000 # orange, red and yellow (for fires)
-        for i in range(248, 255): self.rgba32[i] = 0x0000ff00 # bright blue (computer screens)
+        for i in range(248, 255): self.rgba32[i] = 0xff00ff00 # bright blue (computer screens)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Null', name = os.path.basename(file.path), value = self)),
@@ -273,7 +273,7 @@ class Binary_Rix(IHaveMetaInfo, ITexture):
 
     def __init__(self, r: BinaryReader, f: FileSource = None):
         header = r.readS(self.Header)
-        rgba32 = _readVgaPalette(r)
+        rgba32 = _readVgaPalette(r, False)
         data = r.readBytes(header.width * header.height)
         self.bytes = _indexedRgba(data, rgba32, header.width, header.height)
         self.width = header.width

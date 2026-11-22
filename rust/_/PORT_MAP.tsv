@@ -74,6 +74,7 @@ todo	0	8c038ec00c6ddb82	Families/GameX.Bethesda.Platform/Platforms/Stride/Stride
 todo	0	00b1c04ae5b31b3e	Families/GameX.Bethesda.Platform/Platforms/Unity/UnityObjectBuilder.cs	families/bethesda-platform/src/platforms/unity/unity_object_builder.rs	gamex-bethesda-platform
 todo	36	97d80253b9dba2a1	Families/GameX.Bioware/Bioware.cs	families/bioware/src/bioware.rs	gamex-bioware
 todo	27	406137879a6d7e97	Families/GameX.Black/Black.cs	families/black/src/black.rs	gamex-black
+partial	282	cd25c08484104a77	Families/GameX.Black/Formats/Binary.cs	families/black/src/formats/binary.rs	gamex-black
 todo	45	80754d4b11743017	Families/GameX.Blizzard/Blizzard.cs	families/blizzard/src/blizzard.rs	gamex-blizzard
 todo	56	89608adb23accd36	Families/GameX.Blizzard/Formats/Casc/CascContext.cs	families/blizzard/src/formats/casc/casc_context.rs	gamex-blizzard
 todo	336	e599c0720c172fff	Families/GameX.Blizzard/Formats/Casc/DB2Reader.cs	families/blizzard/src/formats/casc/db2_reader.rs	gamex-blizzard

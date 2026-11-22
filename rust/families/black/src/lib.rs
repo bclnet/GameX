@@ -4,3 +4,4 @@
 //! can be diffed and updated in parallel. See PORT_MAP.tsv and PORTING.md.
 
 pub mod black;
+pub mod formats;

@@ -81,7 +81,7 @@ public static class UnityMapObjectBuilder {
             if (tag is not ITexture it || it.Width <= 0 || it.Height <= 0) return null;
             var bytes = it.Create<byte[]>("UN", o => o is TextureAsBytes b ? b.Bytes : null);
             if (bytes == null) return null;
-            var tex = new Texture2D(it.Width, it.Height, TextureFormat.RGBA32, false) { name = frm };
+            var tex = new Texture2D(it.Width, it.Height, UnityEngine.TextureFormat.RGBA32, false) { name = frm };
             tex.LoadRawTextureData(bytes);
             tex.Apply();
             var sprite = Sprite.Create(tex, new Rect(0, 0, it.Width, it.Height), new Vector2(0.5f, 0f), 80f);

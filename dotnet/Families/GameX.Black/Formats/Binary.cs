@@ -278,16 +278,15 @@ public unsafe class Binary_Pal2 : IHaveMetaInfo {
         fixed (uint* d = Rgba32) {
             var _ = s;
             for (var i = 0; i < 256; i++, _ += 3)
-                d[i] = (uint)(0x00 << 24 | _[2] << (16 + 2) | _[1] << (8 + 2) | _[0]);
-            //d[0] = uint.MaxValue;
+                d[i] = (uint)((i == 0 ? 0u : 0xFF) << 24 | (uint)_[2] << 18 | (uint)_[1] << 10 | (uint)_[0] << 2);
         }
     }
 
     public void SetColors() {
-        for (var i = 229; i <= 232; i++) Rgba32[i] = 0x00ff0000; // animated green (for radioactive waste)
-        for (var i = 233; i <= 237; i++) Rgba32[i] = 0x0000ff00; // bright blue (computer screens)
+        for (var i = 229; i <= 232; i++) Rgba32[i] = 0xffff0000; // animated green (for radioactive waste)
+        for (var i = 233; i <= 237; i++) Rgba32[i] = 0xff00ff00; // bright blue (computer screens)
         for (var i = 238; i <= 247; i++) Rgba32[i] = 0xff000000; // orange, red and yellow (for fires)
-        for (var i = 248; i <= 254; i++) Rgba32[i] = 0x0000ff00; // bright blue (computer screens)
+        for (var i = 248; i <= 254; i++) Rgba32[i] = 0xff00ff00; // bright blue (computer screens)
     }
 
     // IHaveMetaInfo
@@ -328,7 +327,7 @@ public unsafe class Binary_Rix : IHaveMetaInfo, ITexture {
             var d = rgba32;
             var _ = s;
             for (var i = 0; i < 256; i++, _ += 3)
-                d[i] = (uint)(0x00 << 24 | _[2] << (16 + 2) | _[1] << (8 + 2) | _[0]);
+                d[i] = 0xFFu << 24 | (uint)_[2] << 18 | (uint)_[1] << 10 | (uint)_[0] << 2;
         }
         var data = r.ReadBytes(header.Width * header.Height);
         var image = new byte[header.Width * header.Height * 4];
@@ -399,7 +398,7 @@ public class Binary_Map : IHaveMetaInfo {
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct MapTile {
+    unsafe struct MapTile {
         public static (string, int) Struct = (">I", sizeof(MapTile));
         public uint Entry;
     }
@@ -420,7 +419,7 @@ public class Binary_Map : IHaveMetaInfo {
         if (header.Version != 19 && header.Version != 20) throw new InvalidOperationException($"MAP version {header.Version}");
         var n = 0;
         while (n < 16 && header.Name[n] != 0) n++;
-        var raw = n == 0 ? [] : new byte[n];
+        var raw = n == 0 ? Array.Empty<byte>() : new byte[n];
         for (var i = 0; i < n; i++) raw[i] = header.Name[i];
         Version = header.Version;
         Name = n == 0 ? string.Empty : Encoding.ASCII.GetString(raw).TrimEnd(' ');

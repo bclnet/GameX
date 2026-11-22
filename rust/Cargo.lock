@@ -1461,6 +1461,7 @@ dependencies = [
  "gamex-arkane",
  "gamex-beamdog",
  "gamex-bioware",
+ "gamex-black",
  "gamex-cig-explorer",
  "gamex-engine-godot",
  "gamex-engine-o3de",
@@ -1551,8 +1552,12 @@ dependencies = [
 name = "gamex-black"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "gamex",
  "gamex-uncore",
+ "openx-gfx",
+ "openx-poly",
+ "openx-vfx",
 ]
 
 [[package]]
@@ -1809,6 +1814,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-arkane",
+ "gamex-black",
  "gamex-gamebryo",
  "gamex-id",
  "glam",

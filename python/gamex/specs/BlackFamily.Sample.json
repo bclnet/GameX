@@ -17,6 +17,10 @@
       {
         "path": "MASTER.DAT:COLOR.PAL",
         "type": "Unknown"
+      },
+      {
+        "path": "MASTER.DAT:MAPS/BRODEAD.MAP",
+        "type": "Map"
       }
     ]
   },
@@ -38,6 +42,10 @@
       {
         "path": "master.dat:art/intrface/DP.FRM",
         "type": "Unknown"
+      },
+      {
+        "path": "master.dat:maps/arbridge.map",
+        "type": "Map"
       }
     ]
   },

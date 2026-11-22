@@ -3,9 +3,9 @@
 // PORT-STATUS: partial
 //
 // Ported: `createRenderer` for "Object" and C#'s default arm. That returns
-// `UnityObjectHolder`. `Binary_Ftl` and `Binary_Fts` are registered on
-// `BuildersByType` (`TypeId`) and build a summary (name, vertex count,
-// submesh count, group names), not a Unity `GameObject`.
+// `UnityObjectHolder`. `Binary_Ftl`, `Binary_Fts`, `Binary_BspX`, and
+// `Binary_Map` are registered on `BuildersByType` (`TypeId`) and build a
+// summary (name, vertex count, submesh count, group names), not a Unity `GameObject`.
 //
 // Not ported: `Binary_Nif` does not exist in Rust, so it is not registered.
 // UnityEngine (`ViewInfo`, `TestTriRenderer`, `TextureRenderer`, `EngineRenderer`,
@@ -19,6 +19,7 @@ use std::sync::{Arc, LazyLock, Mutex, Once};
 
 use gamex::meta::Tag;
 use gamex_arkane::formats::danae::binary::{Binary_Ftl, Binary_Fts};
+use gamex_black::formats::binary::Binary_Map;
 use gamex_id::formats::binary::Binary_BspX;
 
 /// Stand-in for the mesh a Unity `GameObject` would carry.
@@ -34,7 +35,7 @@ pub struct UnityObjectSummary {
 #[derive(Clone, Debug, PartialEq)]
 pub struct UnityObjectHolder {
     pub TypeName: String,
-    /// False when the value is not `Binary_Ftl` or `Binary_Fts`.
+    /// False when the value is not a registered builder (`Binary_Ftl`, `Binary_Fts`, `Binary_BspX`, `Binary_Map`).
     pub GeometryAvailable: bool,
     pub Summary: Option<UnityObjectSummary>,
 }
@@ -49,7 +50,7 @@ fn builders() -> &'static Mutex<HashMap<TypeId, BuilderByType>> {
 }
 
 /// C# `UnityX.BuildersByType`, keyed by the path object's type.
-/// Filled on first use with `Binary_Ftl`, `Binary_Fts`, and `Binary_BspX`.
+/// Filled on first use with `Binary_Ftl`, `Binary_Fts`, `Binary_BspX`, and `Binary_Map`.
 pub fn BuildersByType() -> &'static Mutex<HashMap<TypeId, BuilderByType>> {
     register();
     builders()
@@ -62,6 +63,7 @@ fn register() {
         map.insert(TypeId::of::<Binary_Ftl>(), crate::unity_arkane::unity_ftl_object_builder::buildObject);
         map.insert(TypeId::of::<Binary_Fts>(), crate::unity_arkane::unity_fts_object_builder::buildObject);
         map.insert(TypeId::of::<Binary_BspX>(), crate::unity_arkane::unity_bsp_object_builder::buildObject);
+        map.insert(TypeId::of::<Binary_Map>(), crate::unity_black::buildObject);
     });
 }
 
@@ -85,6 +87,7 @@ fn objectHolder(obj: &Tag) -> Result<UnityObjectHolder, Error> {
     let typeName = if id == TypeId::of::<Binary_Ftl>() { "Binary_Ftl" }
         else if id == TypeId::of::<Binary_Fts>() { "Binary_Fts" }
         else if id == TypeId::of::<Binary_BspX>() { "Binary_BspX" }
+        else if id == TypeId::of::<Binary_Map>() { "Binary_Map" }
         else { "unknown" };
     let build = builders().lock().unwrap().get(&id).copied();
     let summary = match build {
@@ -144,7 +147,8 @@ mod tests {
         assert!(map.contains_key(&TypeId::of::<Binary_Ftl>()));
         assert!(map.contains_key(&TypeId::of::<Binary_Fts>()));
         assert!(map.contains_key(&TypeId::of::<Binary_BspX>()));
-        assert_eq!(map.len(), 3);
+        assert!(map.contains_key(&TypeId::of::<Binary_Map>()));
+        assert_eq!(map.len(), 4);
     }
 
     #[test]

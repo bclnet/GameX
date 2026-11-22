@@ -23,6 +23,7 @@ gamex = { path = "../../core/gamex" }
 gamex-arkane = { path = "../../families/arkane" }
 gamex-beamdog = { path = "../../families/beamdog" }
 gamex-bioware = { path = "../../families/bioware" }
+gamex-black = { path = "../../families/black" }
 gamex-id = { path = "../../families/id" }
 gamex-uncore = { path = "../../families/uncore" }
 openx = { path = "../../../OpenX/rust/core/openx" }

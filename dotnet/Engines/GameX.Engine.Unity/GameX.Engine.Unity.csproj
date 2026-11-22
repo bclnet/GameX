@@ -43,6 +43,9 @@
     <Reference Include="UnityEngine.UIElementsModule">
       <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ManagedKernelModule">
+      <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.ManagedKernelModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.GridModule">
       <HintPath>$(ProgramFiles)\Unity\Hub\Editor\6000.7.0b6\Editor\Data\Managed\UnityEngine\UnityEngine.GridModule.dll</HintPath>
     </Reference>

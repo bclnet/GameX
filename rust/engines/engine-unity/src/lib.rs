@@ -5,5 +5,6 @@
 
 pub mod scripts;
 pub mod unity_arkane;
+pub mod unity_black;
 pub mod unity_gamebryo;
 pub mod unity_render;

@@ -16,12 +16,13 @@ class RaylibClientHost(IClientHost):
 
 #region Engine
 
-# RaylibGfxSprite3D
-class RaylibGfxSprite3D(IOpenGfxSprite):
+# RaylibGfxSpriteAlt
+class RaylibGfxSpriteAlt(IOpenGfxSprite):
     def __init__(self):
         self.spriteManager = None
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[object, object]: return self.spriteManager.create(source, path, parent)
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # RaylibGfxModel
 class RaylibGfxModel(IOpenGfxModel):
@@ -45,7 +46,7 @@ class RaylibEngine(Engine):
     def __init__(self):
         super().__init__('RL', 'Raylib')
         self.caps = EngineX.Caps.Drawing
-        self.gfxFactory = staticmethod(lambda: [None, None, RaylibGfxSprite3D(), RaylibGfxModel(), None, None])
+        self.gfxFactory = staticmethod(lambda: [None, None, RaylibGfxSpriteAlt(), RaylibGfxModel(), None, None])
         self.sfxFactory = staticmethod(lambda: [RaylibSfx()])
     @staticmethod
     def version() -> str: return RaylibX.version()

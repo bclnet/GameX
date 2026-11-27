@@ -2,7 +2,7 @@
 // PORT-SHA: 96a5e35f1ac093c0
 // PORT-STATUS: partial
 //
-// Not ported: `OpenGLGfxSprite3D`'s sprite manager (C# never creates it either:
+// Not ported: `OpenGLGfxSpriteAlt`'s sprite manager (C# never creates it either:
 // its constructor line is commented out). `SfxFactory` is `SystemSfx`.
 //
 // The C# managers share one `TextureManager` and one `MaterialManager` by
@@ -63,13 +63,13 @@ impl Backend for OpenGLBackend {
 
 pub type OpenGLTextureManager = TextureManager<OpenGLBackend, OpenGLTextureBuilder>;
 pub type OpenGLMaterialManager = MaterialManager<OpenGLBackend, OpenGLTextureBuilder, OpenGLMaterialBuilder>;
-pub type OpenGLObjectManager = ObjectModelManager<OpenGLBackend, OpenGLTextureBuilder, OpenGLMaterialBuilder, OpenGLObjectBuilder>;
+pub type OpenGLObjectManager = GfxModelManager<OpenGLBackend, OpenGLTextureBuilder, OpenGLMaterialBuilder, OpenGLObjectBuilder>;
 pub type OpenGLShaderManager = ShaderManager<OpenGLBackend, OpenGLShaderBuilder>;
 
 /// OpenGLObjectBuilder
 pub struct OpenGLObjectBuilder;
 
-impl ObjectModelBuilder<OpenGLBackend, OpenGLTextureBuilder, OpenGLMaterialBuilder> for OpenGLObjectBuilder {
+impl GfxModelBuilder<OpenGLBackend, OpenGLTextureBuilder, OpenGLMaterialBuilder> for OpenGLObjectBuilder {
     fn instance(&mut self, prefab: &Option<AnyArc>, parent: Option<&Option<AnyArc>>) -> Option<AnyArc> {
         let _ = parent;
         prefab.clone()
@@ -491,12 +491,12 @@ impl IOpenGfxApi<OpenGLBackend> for OpenGLGfxApi {
     fn destroy(&mut self, src: &Option<AnyArc>) {}
 }
 
-/// OpenGLGfxSprite3D: C#'s `_spriteManager` is never created (its line is
+/// OpenGLGfxSpriteAlt: C#'s `_spriteManager` is never created (its line is
 /// commented out), so every member throws `NullReferenceException`. Without a
 /// sprite builder there's nothing to put behind `IOpenGfxSprite` here.
-pub struct OpenGLGfxSprite3D;
+pub struct OpenGLGfxSpriteAlt;
 
-impl IOpenGfx for OpenGLGfxSprite3D {}
+impl IOpenGfx for OpenGLGfxSpriteAlt {}
 
 /// OpenGLGfxModel
 pub struct OpenGLGfxModel {
@@ -511,7 +511,7 @@ impl OpenGLGfxModel {
     pub fn new() -> Self {
         let _textureManager = TextureManager::new(OpenGLTextureBuilder);
         let _materialManager = MaterialManager::new(_textureManager, OpenGLMaterialBuilder);
-        let _objectManager = ObjectModelManager::new(_materialManager, OpenGLObjectBuilder);
+        let _objectManager = GfxModelManager::new(_materialManager, OpenGLObjectBuilder);
         let _shaderManager = ShaderManager::new(OpenGLShaderBuilder);
         Self { _objectManager, _shaderManager, _quadIndices: None, meshBufferCache: GlVaoCache::new() }
     }
@@ -564,7 +564,7 @@ impl OpenGLEngine {
     pub fn This() -> &'static Engine {
         static This: LazyLock<Engine> = LazyLock::new(|| Engine {
             caps: EngineX::Caps::Drawing,
-            gfxFactory: || Some(vec![Some(Arc::new(Mutex::new(OpenGLGfxApi))), None, Some(Arc::new(Mutex::new(OpenGLGfxSprite3D))), Some(Arc::new(Mutex::new(OpenGLGfxModel::new()))), None, Some(Arc::new(Mutex::new(OpenGLGfxTerrain::new())))]),
+            gfxFactory: || Some(vec![Some(Arc::new(Mutex::new(OpenGLGfxApi))), None, Some(Arc::new(Mutex::new(OpenGLGfxSpriteAlt))), Some(Arc::new(Mutex::new(OpenGLGfxModel::new()))), None, Some(Arc::new(Mutex::new(OpenGLGfxTerrain::new())))]),
             // C#: [new SystemSfx()];
             sfxFactory: || Some(vec![Some(Arc::new(Mutex::new(SystemSfx::new())))]),
             ..Engine::new("GL", "OpenGL")

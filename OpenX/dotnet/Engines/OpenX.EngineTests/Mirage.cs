@@ -58,8 +58,8 @@ public class MirageEngineTests {
         Assert.AreSame(MirageEngine.This, EngineX.Current);
         Assert.AreEqual("MR", EngineX.Current.Id);
         Assert.IsInstanceOfType<MirageGfxApi>(EngineX.Gfx[GfX.XApi]);
-        Assert.IsInstanceOfType<MirageGfxSprite2D>(EngineX.Gfx[GfX.XSprite2D]);
-        Assert.IsInstanceOfType<MirageGfxSprite3D>(EngineX.Gfx[GfX.XSprite3D]);
+        Assert.IsInstanceOfType<MirageGfxSprite>(EngineX.Gfx[GfX.XSprite]);
+        Assert.IsInstanceOfType<MirageGfxSpriteAlt>(EngineX.Gfx[GfX.XSpriteAlt]);
         Assert.IsInstanceOfType<MirageGfxModel>(EngineX.Gfx[GfX.XModel]);
         Assert.IsInstanceOfType<MirageGfxLight>(EngineX.Gfx[GfX.XLight]);
         Assert.IsInstanceOfType<MirageGfxTerrain>(EngineX.Gfx[GfX.XTerrain]);

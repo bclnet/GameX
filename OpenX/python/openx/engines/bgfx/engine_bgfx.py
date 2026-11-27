@@ -15,12 +15,13 @@ class BgfxClientHost(IClientHost):
 
 #region Engine
 
-# BgfxGfxSprite3D
-class BgfxGfxSprite3D(IOpenGfxSprite):
+# BgfxGfxSpriteAlt
+class BgfxGfxSpriteAlt(IOpenGfxSprite):
     def __init__(self):
         self.spriteManager = None
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[object, object]: return self.spriteManager.create(source, path, parent)
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # BgfxGfxModel
 class BgfxGfxModel(IOpenGfxModel):
@@ -44,7 +45,7 @@ class BgfxEngine(Engine):
     def __init__(self):
         super().__init__('BX', 'Bgfx')
         self.caps = EngineX.Caps.Drawing
-        self.gfxFactory = staticmethod(lambda: [None, None, BgfxGfxSprite3D(), BgfxGfxModel(), None, None])
+        self.gfxFactory = staticmethod(lambda: [None, None, BgfxGfxSpriteAlt(), BgfxGfxModel(), None, None])
         self.sfxFactory = staticmethod(lambda: [BgfxSfx()])
 BgfxEngine.this = BgfxEngine()
 

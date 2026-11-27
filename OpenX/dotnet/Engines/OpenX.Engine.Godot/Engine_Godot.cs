@@ -26,7 +26,7 @@ public class GodotClientHost : IClientHost {
 #region Engine
 
 // GodotObjectBuilder : MISSING
-class GodotObjectModelBuilder : ObjectModelBuilder<Node, Material, Texture2D> {
+class GodotGfxModelBuilder : GfxModelBuilder<Node, Material, Texture2D> {
     Node _prefabObj;
 
     public override Node Instance(Node src, Node parent) {
@@ -220,45 +220,55 @@ public class GodotGfxApi : IOpenGfxApi<Node3D, Material> {
     public void Destroy(Node3D src) => throw new NotImplementedException();
 }
 
-// GodotGfxSprite2D
-public class GodotGfxSprite2D : IOpenGfxSprite<Node, Sprite2D> {
+// GodotGfxSprite
+public class GodotGfxSprite : IOpenGfxSprite<Node, Sprite2D> {
     readonly SpriteManager<Sprite2D> _spriteManager;
-    public GodotGfxSprite2D() {
+    public GodotGfxSprite() {
         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
     }
 
     public SpriteManager<Sprite2D> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(Sprite2D spr, object tag)> Create(ISource source, object path, Node parent = default) => _spriteManager.Create(source, path);
+    public (Sprite2D sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) {
+        var frame = sheet.Frames[index];
+        var atlas = new AtlasTexture { Atlas = (Texture2D)texture, Region = new Rect2(frame.X, frame.Y, frame.Width, frame.Height) };
+        return (new Sprite2D { Texture = atlas, Offset = new Vector2(frame.Pivot.X * frame.Width, frame.Pivot.Y * frame.Height) }, frame);
+    }
 }
 
-// GodotGfxSprite3D
-public class GodotGfxSprite3D : IOpenGfxSprite<Node, Sprite3D> {
+// GodotGfxSpriteAlt
+public class GodotGfxSpriteAlt : IOpenGfxSprite<Node, Sprite3D> {
     readonly SpriteManager<Sprite3D> _spriteManager;
-    public GodotGfxSprite3D() {
+    public GodotGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
     }
 
     public SpriteManager<Sprite3D> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(Sprite3D spr, object tag)> Create(ISource source, object path, Node parent = default) => _spriteManager.Create(source, path);
+    public (Sprite3D sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) {
+        var frame = sheet.Frames[index];
+        var atlas = new AtlasTexture { Atlas = (Texture2D)texture, Region = new Rect2(frame.X, frame.Y, frame.Width, frame.Height) };
+        return (new Sprite3D { Texture = atlas, Offset = new Vector2(frame.Pivot.X * frame.Width, frame.Pivot.Y * frame.Height) }, frame);
+    }
 }
 
 // GodotGfxModel
 public class GodotGfxModel : IOpenGfxModel<Node, Material, Texture2D, XShader> {
     readonly MaterialManager<Material, Texture2D> _materialManager;
-    readonly ObjectModelManager<Node, Material, Texture2D> _objectManager;
+    readonly GfxModelManager<Node, Material, Texture2D> _objectManager;
     readonly ShaderManager<XShader> _shaderManager;
     readonly TextureManager<Texture2D> _textureManager;
     public GodotGfxModel() {
         _textureManager = new TextureManager<Texture2D>(new GodotTextureBuilder());
         _materialManager = new MaterialManager<Material, Texture2D>(_textureManager, new GodotMaterialBuilder(_textureManager));
-        _objectManager = new ObjectModelManager<Node, Material, Texture2D>(_materialManager, new GodotObjectModelBuilder());
+        _objectManager = new GfxModelManager<Node, Material, Texture2D>(_materialManager, new GodotGfxModelBuilder());
         //_shaderManager = new ShaderManager<int>(source, new GodotShaderBuilder());
     }
 
     public MaterialManager<Material, Texture2D> MaterialManager => _materialManager;
-    public ObjectModelManager<Node, Material, Texture2D> ObjectManager => _objectManager;
+    public GfxModelManager<Node, Material, Texture2D> ObjectManager => _objectManager;
     public ShaderManager<XShader> ShaderManager => throw new NotImplementedException(); //_shaderManager;
     public TextureManager<Texture2D> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => _objectManager.Preload(source, path);
@@ -277,7 +287,7 @@ public class GodotEngine : Engine {
     public static readonly Engine This = new GodotEngine();
     GodotEngine() : base("GD", "Godot") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [new GodotGfxApi(), new GodotGfxSprite2D(), new GodotGfxSprite3D(), new GodotGfxModel(), null, null];
+        GfxFactory = () => [new GodotGfxApi(), new GodotGfxSprite(), new GodotGfxSpriteAlt(), new GodotGfxModel(), null, null];
         SfxFactory = () => [new GodotSfx()];
         LogFunc = a => GD.Print(a?.Replace("\r", ""));
     }

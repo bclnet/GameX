@@ -63,14 +63,14 @@ public class VulkanGfxApi : IOpenGfxApi<object, object> {
 }
 
 /// <summary>
-/// VulkanGfxSprite3D
+/// VulkanGfxSpriteAlt
 /// </summary>
-public class VulkanGfxSprite3D : IOpenGfxSprite<object, object> {
+public class VulkanGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
     /// <summary>
-    /// VulkanGfxSprite3D
+    /// VulkanGfxSpriteAlt
     /// </summary>
-    public VulkanGfxSprite3D() {
+    public VulkanGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
     }
 
@@ -80,6 +80,7 @@ public class VulkanGfxSprite3D : IOpenGfxSprite<object, object> {
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     /// <summary>Create</summary>
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 /// <summary>
@@ -188,7 +189,7 @@ class VulkanTextureBuilder : TextureBuilder<VulkanTexture> {
 /// </summary>
 public class VulkanGfxModel : IOpenGfxModel<object, object, VulkanTexture, object> {
     readonly MaterialManager<object, VulkanTexture> _materialManager;
-    readonly ObjectModelManager<object, object, VulkanTexture> _objectManager;
+    readonly GfxModelManager<object, object, VulkanTexture> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<VulkanTexture> _textureManager;
     /// <summary>
@@ -204,7 +205,7 @@ public class VulkanGfxModel : IOpenGfxModel<object, object, VulkanTexture, objec
     /// <summary>MaterialManager</summary>
     public MaterialManager<object, VulkanTexture> MaterialManager => _materialManager;
     /// <summary>ObjectManager</summary>
-    public ObjectModelManager<object, object, VulkanTexture> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, VulkanTexture> ObjectManager => _objectManager;
     /// <summary>ShaderManager</summary>
     public ShaderManager<object> ShaderManager => _shaderManager;
     /// <summary>TextureManager</summary>
@@ -236,7 +237,7 @@ public class VulkanEngine : Engine {
     public static readonly Engine This = new VulkanEngine();
     VulkanEngine() : base("VK", "Vulkan") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [new VulkanGfxApi(), null, new VulkanGfxSprite3D(), new VulkanGfxModel(), null, null];
+        GfxFactory = () => [new VulkanGfxApi(), null, new VulkanGfxSpriteAlt(), new VulkanGfxModel(), null, null];
         SfxFactory = () => [new VulkanSfx()];
     }
 

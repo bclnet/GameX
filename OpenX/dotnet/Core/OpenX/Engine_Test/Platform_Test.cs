@@ -39,11 +39,12 @@ public class TestGfxSprite : IOpenGfxSprite<object, object> {
     public SpriteManager<object> SpriteManager => throw new NotImplementedException();
     public void Preload(ISource source, object path) => throw new NotSupportedException();
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = null) => throw new NotImplementedException();
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) => throw new NotImplementedException();
 }
 
 public class TestGfxModel : IOpenGfxModel<object, object, object, object> {
     public MaterialManager<object, object> MaterialManager => throw new NotImplementedException();
-    public ObjectModelManager<object, object, object> ObjectManager => throw new NotImplementedException();
+    public GfxModelManager<object, object, object> ObjectManager => throw new NotImplementedException();
     public ShaderManager<object> ShaderManager => throw new NotImplementedException();
     public TextureManager<object> TextureManager => throw new NotImplementedException();
     public void Preload(ISource source, object path) => throw new NotSupportedException();

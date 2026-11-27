@@ -26,15 +26,16 @@ public class DiligentClientHost : IClientHost {
 #region Engine
 
 /// <summary>
-/// DiligentGfxSprite3D
+/// DiligentGfxSpriteAlt
 /// </summary>
-public class DiligentGfxSprite3D : IOpenGfxSprite<object, object> {
+public class DiligentGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public DiligentGfxSprite3D() { }
+    public DiligentGfxSpriteAlt() { }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 /// <summary>
@@ -42,13 +43,13 @@ public class DiligentGfxSprite3D : IOpenGfxSprite<object, object> {
 /// </summary>
 public class DiligentGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public DiligentGfxModel() { }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -71,7 +72,7 @@ public class DiligentEngine : Engine {
     public static readonly Engine This = new DiligentEngine();
     DiligentEngine() : base("DN", "Diligent") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new DiligentGfxSprite3D(), new DiligentGfxModel(), null, null];
+        GfxFactory = () => [null, null, new DiligentGfxSpriteAlt(), new DiligentGfxModel(), null, null];
         SfxFactory = () => [new DiligentSfx()];
     }
 }

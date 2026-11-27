@@ -16,12 +16,13 @@ class WgpuClientHost(IClientHost):
 
 #region Engine
 
-# WgpuGfxSprite3D
-class WgpuGfxSprite3D(IOpenGfxSprite):
+# WgpuGfxSpriteAlt
+class WgpuGfxSpriteAlt(IOpenGfxSprite):
     def __init__(self):
         self.spriteManager = None
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[object, object]: return self.spriteManager.create(source, path, parent)
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # WgpuGfxModel
 class WgpuGfxModel(IOpenGfxModel):
@@ -45,7 +46,7 @@ class WgpuEngine(Engine):
     def __init__(self):
         super().__init__('WG', 'Wgpu')
         self.caps = EngineX.Caps.Drawing
-        self.gfxFactory = staticmethod(lambda: [None, None, WgpuGfxSprite3D(), WgpuGfxModel(), None, None])
+        self.gfxFactory = staticmethod(lambda: [None, None, WgpuGfxSpriteAlt(), WgpuGfxModel(), None, None])
         self.sfxFactory = staticmethod(lambda: [WgpuSfx()])
     @staticmethod
     def createInstance() -> WgpuInstance: return WgpuInstance.createInstance()

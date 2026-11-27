@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 860" font-family="Segoe UI, sans-serif" font-size="13">
+  <title>OpenX Gfx slots and sprite decisions</title>
+  <desc>Which engines fill GfxFactory slots. Sprite and SpriteAlt stay separate from TextureSequences.</desc>
+  <rect width="980" height="860" fill="#f7f6f3"/>
+  <text x="24" y="32" font-size="18" font-weight="600">Gfx factory slots</text>
+  <text x="24" y="52" fill="#444">Order: API, Sprite, SpriteAlt, Model, Light, Terrain. See docs/Gfx/Design.md.</text>
+
+  <rect x="24" y="68" width="14" height="14" fill="#1b7f4e"/>
+  <text x="44" y="80">live: manager is constructed</text>
+  <rect x="250" y="68" width="14" height="14" fill="#c47b00"/>
+  <text x="270" y="80">shell: class registered, manager not built</text>
+  <rect x="560" y="68" width="14" height="14" fill="#d9d6d0"/>
+  <text x="580" y="80">empty slot</text>
+  <rect x="680" y="68" width="14" height="14" fill="#4a6fa5"/>
+  <text x="700" y="80">registered, not a sprite slot</text>
+
+
+  <g transform="translate(24,124)">
+    <rect width="150" height="28" fill="#eceae4"/>
+    <text x="8" y="18" font-weight="600">Engine</text>
+    <g font-weight="600">
+      <rect x="150" width="120" height="28" fill="#eceae4"/><text x="158" y="18">API</text>
+      <rect x="270" width="120" height="28" fill="#eceae4"/><text x="278" y="18">Sprite</text>
+      <rect x="390" width="120" height="28" fill="#eceae4"/><text x="398" y="18">SpriteAlt</text>
+      <rect x="510" width="100" height="28" fill="#eceae4"/><text x="518" y="18">Model</text>
+      <rect x="610" width="90" height="28" fill="#eceae4"/><text x="618" y="18">Light</text>
+      <rect x="700" width="100" height="28" fill="#eceae4"/><text x="708" y="18">Terrain</text>
+    </g>
+
+    <!-- Mirage live across -->
+    <g transform="translate(0,28)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Mirage</text>
+      <rect x="150" width="120" height="26" fill="#1b7f4e"/><text x="158" y="17" fill="#fff">live</text>
+      <rect x="270" width="120" height="26" fill="#1b7f4e"/><text x="278" y="17" fill="#fff">live</text>
+      <rect x="390" width="120" height="26" fill="#1b7f4e"/><text x="398" y="17" fill="#fff">live</text>
+      <rect x="510" width="100" height="26" fill="#1b7f4e"/><text x="518" y="17" fill="#fff">live</text>
+      <rect x="610" width="90" height="26" fill="#1b7f4e"/><text x="618" y="17" fill="#fff">live</text>
+      <rect x="700" width="100" height="26" fill="#1b7f4e"/><text x="708" y="17" fill="#fff">live</text>
+    </g>
+    <!-- Unity shells for sprites; other slots exist as classes, not the subject -->
+    <g transform="translate(0,54)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Unity</text>
+      <rect x="150" width="120" height="26" fill="#4a6fa5"/><text x="158" y="17" fill="#fff">yes</text>
+      <rect x="270" width="120" height="26" fill="#c47b00"/><text x="278" y="17">shell</text>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#4a6fa5"/><text x="618" y="17" fill="#fff">yes</text>
+      <rect x="700" width="100" height="26" fill="#4a6fa5"/><text x="708" y="17" fill="#fff">yes</text>
+    </g>
+    <g transform="translate(0,80)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Godot</text>
+      <rect x="150" width="120" height="26" fill="#4a6fa5"/><text x="158" y="17" fill="#fff">yes</text>
+      <rect x="270" width="120" height="26" fill="#c47b00"/><text x="278" y="17">shell</text>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,106)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">MonoGame</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#c47b00"/><text x="278" y="17">shell</text>
+      <rect x="390" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="510" width="100" height="26" fill="#d9d6d0"/>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,132)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">EginX</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#c47b00"/><text x="278" y="17">shell</text>
+      <rect x="390" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="510" width="100" height="26" fill="#d9d6d0"/>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,158)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">SDL</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#c47b00"/><text x="278" y="17">shell</text>
+      <rect x="390" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="510" width="100" height="26" fill="#d9d6d0"/>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,184)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">OpenGL</text>
+      <rect x="150" width="120" height="26" fill="#4a6fa5"/><text x="158" y="17" fill="#fff">yes</text>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#4a6fa5"/><text x="708" y="17" fill="#fff">yes</text>
+    </g>
+    <g transform="translate(0,210)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Vulkan</text>
+      <rect x="150" width="120" height="26" fill="#4a6fa5"/><text x="158" y="17" fill="#fff">yes</text>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,236)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Unreal</text>
+      <rect x="150" width="120" height="26" fill="#4a6fa5"/><text x="158" y="17" fill="#fff">yes</text>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,262)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Ogre</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,288)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Stride</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,314)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">bgfx</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,340)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">wgpu</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,366)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Diligent</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,392)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">Raylib</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+    <g transform="translate(0,418)">
+      <rect width="150" height="26" fill="#fff"/><text x="8" y="17">O3DE</text>
+      <rect x="150" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="270" width="120" height="26" fill="#d9d6d0"/>
+      <rect x="390" width="120" height="26" fill="#c47b00"/><text x="398" y="17">shell</text>
+      <rect x="510" width="100" height="26" fill="#4a6fa5"/><text x="518" y="17" fill="#fff">yes</text>
+      <rect x="610" width="90" height="26" fill="#d9d6d0"/>
+      <rect x="700" width="100" height="26" fill="#d9d6d0"/>
+    </g>
+  </g>
+
+  <text x="24" y="592" font-size="16" font-weight="600">What stays separate</text>
+  <g transform="translate(24,608)">
+    <rect width="280" height="88" fill="#fff" stroke="#1b7f4e"/>
+    <text x="12" y="22" font-weight="600">ISprite</text>
+    <text x="12" y="42">One image. Width, height, Create.</text>
+    <text x="12" y="62">Shared by both sprite slots.</text>
+    <text x="12" y="78" fill="#444">OpenX.Gfx</text>
+
+    <rect x="300" width="300" height="88" fill="#fff" stroke="#1b7f4e"/>
+    <text x="312" y="22" font-weight="600">Sprite slot and SpriteAlt slot</text>
+    <text x="312" y="42">Same pixels. Different attachment.</text>
+    <text x="312" y="62">Canvas sprite, or a billboard in 3D.</text>
+    <text x="312" y="78" fill="#444">Keep both. GfX.XSprite and XSpriteAlt.</text>
+
+    <rect x="620" width="300" height="88" fill="#fff" stroke="#8a3a2a"/>
+    <text x="632" y="22" font-weight="600">TextureSequences</text>
+    <text x="632" y="42">Valve particle UV frames.</text>
+    <text x="632" y="62">Not a pivot, not a pixel rect.</text>
+    <text x="632" y="78" fill="#444">Stays. Not the GfxSpriteSheet.</text>
+  </g>
+
+  <text x="24" y="732" font-size="16" font-weight="600">Atlas, off the slot grid</text>
+  <rect x="24" y="744" width="896" height="78" fill="#fff" stroke="#c47b00"/>
+  <text x="36" y="766" font-weight="600">GfxSpriteSheet</text>
+  <text x="36" y="786">In OpenX.Gfx. Frame and Anim are nested. IOpenGfxSprite.Frame(texture, sheet, index) returns one cell.</text>
+  <text x="36" y="806" fill="#444">Usage rank is in this folder's gfx.svg. EginX is ours. Stride is the weakest host the Explorer still lists.</text>
+</svg>

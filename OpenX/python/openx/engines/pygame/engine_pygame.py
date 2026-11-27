@@ -2,7 +2,7 @@ from __future__ import annotations
 import traceback
 from numpy import ndarray, array, ones, zeros, float32
 from openx.core import ISource, Engine
-from openx.gfx import IOpenGfxModel, ObjectModelBuilder, ObjectModelManager, MaterialBuilder, MaterialManager, ShaderBuilder, ShaderManager, TextureManager, TextureBuilder
+from openx.gfx import IOpenGfxModel, GfxModelBuilder, GfxModelManager, MaterialBuilder, MaterialManager, ShaderBuilder, ShaderManager, TextureManager, TextureBuilder
 from openx.engines.pygame.gfx.pygame import PygameX
 from openx.engines.system import SystemSfx
 from openx.client import IClientHost
@@ -17,8 +17,8 @@ class PygameClientHost(IClientHost):
 
 #region Engine
 
-# PygameObjectModelBuilder
-class PygameObjectModelBuilder(ObjectModelBuilder):
+# PygameGfxModelBuilder
+class PygameGfxModelBuilder(GfxModelBuilder):
     def instance(self, src: object) -> object:
         return 'clone'
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
@@ -114,7 +114,7 @@ class PygameGfxModel(IOpenGfxModel):
     def __init__(self):
         self.textureManager: TextureManager = TextureManager(PygameTextureBuilder())
         self.materialManager: MaterialManager = MaterialManager(self.textureManager, PygameMaterialBuilder(self.textureManager))
-        self.objectManager: ObjectModelManager = ObjectModelManager(self.materialManager, PygameObjectModelBuilder())
+        self.objectManager: GfxModelManager = GfxModelManager(self.materialManager, PygameGfxModelBuilder())
         self.shaderManager: ShaderManager = ShaderManager(PygameShaderBuilder())
     def preload(self, source: ISource, path: object) -> None: self.objectManager.preload(path)
     def preloadTexture(self, source: ISource, path: object) -> None: self.textureManager.preload(path)

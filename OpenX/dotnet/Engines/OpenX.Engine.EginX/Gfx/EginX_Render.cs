@@ -6,10 +6,10 @@
 /// TestTriRenderer
 /// </summary>
 public class TestTriRenderer : Renderer {
-    readonly EginXGfxSprite2D GfxSprite;
+    readonly EginXGfxSprite GfxSprite;
 
     public TestTriRenderer(IOpenGfx[] gfx, ISource source, object obj) {
-        GfxSprite = (EginXGfxSprite2D)gfx[GfX.XSprite2D];
+        GfxSprite = (EginXGfxSprite)gfx[GfX.XSprite];
     }
 }
 
@@ -21,12 +21,12 @@ public class TestTriRenderer : Renderer {
 /// SpriteRenderer
 /// </summary>
 public class SpriteRenderer : Renderer {
-    readonly EginXGfxSprite2D GfxSprite;
+    readonly EginXGfxSprite GfxSprite;
     readonly object Obj;
     readonly object Sprite;
 
     public SpriteRenderer(IOpenGfx[] gfx, ISource source, object obj) {
-        GfxSprite = (EginXGfxSprite2D)gfx[GfX.XSprite2D];
+        GfxSprite = (EginXGfxSprite)gfx[GfX.XSprite];
         Obj = obj;
         GfxSprite.SpriteManager.Delete(source, obj);
         (Sprite, _) = GfxSprite.SpriteManager.Create(source, obj).Result;

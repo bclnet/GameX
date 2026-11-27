@@ -4,7 +4,7 @@
 //
 // Ported: `UnityXEngine`'s registration and `UnityShellEngine`: id, name and caps.
 // Not ported: the rest of the file, the Unity backend. So `GfxFactory`
-// (C#: `[new UnityGfxApi(), new UnityGfxSprite2D(), new UnityGfxSprite3D(), new UnityGfxModel(), new UnityGfxLight(), new UnityGfxTerrain()]`) and `SfxFactory` (C#: `[new UnitySfx()]`) are left at
+// (C#: `[new UnityGfxApi(), new UnityGfxSprite(), new UnityGfxSpriteAlt(), new UnityGfxModel(), new UnityGfxLight(), new UnityGfxTerrain()]`) and `SfxFactory` (C#: `[new UnitySfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

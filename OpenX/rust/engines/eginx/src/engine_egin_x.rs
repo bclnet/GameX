@@ -4,7 +4,7 @@
 //
 // Ported: `EginXEngine`'s registration: id, name and caps.
 // Not ported: the rest of the file, the EginX backend. So `GfxFactory`
-// (C#: `[null, new EginXGfxSprite2D(), null, null, null, null]`) and `SfxFactory` (C#: `[new SystemSfx()]`) are left at
+// (C#: `[null, new EginXGfxSprite(), null, null, null, null]`) and `SfxFactory` (C#: `[new SystemSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

@@ -4,7 +4,7 @@
 //
 // Ported: `OgreEngine`'s registration and `OgreShellEngine`: id, name and caps.
 // Not ported: the rest of the file, the Ogre backend. So `GfxFactory`
-// (C#: `[null, null, new OgreGfxSprite3D(), new OgreGfxModel(), null, null]`) and `SfxFactory` (C#: `[new OgreSfx()]`) are left at
+// (C#: `[null, null, new OgreGfxSpriteAlt(), new OgreGfxModel(), null, null]`) and `SfxFactory` (C#: `[new OgreSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

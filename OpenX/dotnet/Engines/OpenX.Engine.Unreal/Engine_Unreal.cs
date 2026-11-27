@@ -38,22 +38,23 @@ public class UnrealGfxApi : IOpenGfxApi<object, object> {
     public void Destroy(object src) => throw new NotImplementedException();
 }
 
-// UnrealGfxSprite3D
-public class UnrealGfxSprite3D : IOpenGfxSprite<object, object> {
+// UnrealGfxSpriteAlt
+public class UnrealGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public UnrealGfxSprite3D() {
+    public UnrealGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // UnrealGfxModel
 public class UnrealGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public UnrealGfxModel() {
@@ -65,7 +66,7 @@ public class UnrealGfxModel : IOpenGfxModel<object, object, object, object> {
     }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -85,7 +86,7 @@ public class UnrealEngine : Engine {
     public static readonly Engine This = new UnrealEngine();
     UnrealEngine() : base("UR", "Unreal") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [new UnrealGfxApi(), null, new UnrealGfxSprite3D(), new UnrealGfxModel(), null, null];
+        GfxFactory = () => [new UnrealGfxApi(), null, new UnrealGfxSpriteAlt(), new UnrealGfxModel(), null, null];
         SfxFactory = () => [new UnrealSfx()];
     }
 }

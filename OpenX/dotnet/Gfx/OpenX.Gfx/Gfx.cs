@@ -18,8 +18,8 @@ namespace OpenX.Gfx;
 /// </summary>
 public static class GfX {
     public const int XApi = 0;
-    public const int XSprite2D = 1;
-    public const int XSprite3D = 2;
+    public const int XSprite = 1;
+    public const int XSpriteAlt = 2;
     public const int XModel = 3;
     public const int XLight = 4;
     public const int XTerrain = 5;
@@ -42,28 +42,28 @@ public enum GfxBlendMode { Zero = 0, One = 1, SrcColor = 0x0300, OneMinusSrcColo
 
 #endregion
 
-#region ObjectSprite
+#region GfxUnknown
 
 /// <summary>
-/// ObjectSpriteBuilder
+/// GfxUnknownBuilder
 /// </summary>
 /// <typeparam name="B_Object"></typeparam>
 /// <typeparam name="B_Sprite"></typeparam>
-public abstract class ObjectSpriteBuilder<B_Object, B_Sprite> {
+public abstract class GfxUnknownBuilder<B_Object, B_Sprite> {
     public abstract void Ensure();
     public abstract B_Object Instance(B_Object src, B_Object parent);
     public abstract B_Object Create(object src);
 }
 
 /// <summary>
-/// ObjectSpriteManager
+/// GfxUnknownManager
 /// </summary>
 /// <typeparam name="B_Object"></typeparam>
 /// <typeparam name="B_Sprite"></typeparam>
 /// <param name="source"></param>
 /// <param name="builder"></param>
-public class ObjectSpriteManager<B_Object, B_Sprite>(ObjectSpriteBuilder<B_Object, B_Sprite> builder) {
-    readonly ObjectSpriteBuilder<B_Object, B_Sprite> Builder = builder;
+public class GfxUnknownManager<B_Object, B_Sprite>(GfxUnknownBuilder<B_Object, B_Sprite> builder) {
+    readonly GfxUnknownBuilder<B_Object, B_Sprite> Builder = builder;
     readonly Dictionary<object, Task<object>> Tasks = [];
     readonly Dictionary<object, (B_Object obj, object tag)> Cached = [];
 
@@ -92,29 +92,29 @@ public class ObjectSpriteManager<B_Object, B_Sprite>(ObjectSpriteBuilder<B_Objec
 
 #endregion
 
-#region ObjectModel
+#region GfxModel
 
 /// <summary>
-/// IObjectModel
+/// IGfxModel
 /// </summary>
-public interface IObjectModel {
+public interface IGfxModel {
     T Create<T>(string platform, Func<object, T> func);
 }
 
 /// <summary>
-/// ObjectModelBuilder
+/// GfxModelBuilder
 /// </summary>
 /// <typeparam name="B_Object"></typeparam>
 /// <typeparam name="B_Material"></typeparam>
 /// <typeparam name="B_Texture"></typeparam>
-public abstract class ObjectModelBuilder<B_Object, B_Material, B_Texture> {
+public abstract class GfxModelBuilder<B_Object, B_Material, B_Texture> {
     public abstract B_Object Instance(B_Object src, B_Object parent);
     public abstract Task<B_Object> Create(ISource source, object src, bool static_, MaterialManager<B_Material, B_Texture> materialManager);
     public abstract void Ensure();
 }
 
 /// <summary>
-/// ObjectModelManager
+/// GfxModelManager
 /// </summary>
 /// <typeparam name="B_Object"></typeparam>
 /// <typeparam name="B_Material"></typeparam>
@@ -122,9 +122,9 @@ public abstract class ObjectModelBuilder<B_Object, B_Material, B_Texture> {
 /// <param name="source"></param>
 /// <param name="materialManager"></param>
 /// <param name="builder"></param>
-public class ObjectModelManager<B_Object, B_Material, B_Texture>(MaterialManager<B_Material, B_Texture> materialManager, ObjectModelBuilder<B_Object, B_Material, B_Texture> builder) {
+public class GfxModelManager<B_Object, B_Material, B_Texture>(MaterialManager<B_Material, B_Texture> materialManager, GfxModelBuilder<B_Object, B_Material, B_Texture> builder) {
     readonly MaterialManager<B_Material, B_Texture> MaterialManager = materialManager;
-    readonly ObjectModelBuilder<B_Object, B_Material, B_Texture> Builder = builder;
+    readonly GfxModelBuilder<B_Object, B_Material, B_Texture> Builder = builder;
     readonly Dictionary<object, Task<object>> Tasks = [];
     readonly Dictionary<object, (B_Object obj, object tag)> Cached = [];
 
@@ -231,6 +231,37 @@ public class ShaderManager<B_Shader>(ShaderBuilder<B_Shader> builder) {
         var sha = Builder.Create(path, args ?? EmptyArgs);
         return Cached[key] = (sha, null);
     }
+}
+
+#endregion
+
+#region GfxSpriteSheet
+
+/// <summary>
+/// The atlas. One texture, the cells cut from it, and the animations that play those cells.
+/// </summary>
+public class GfxSpriteSheet {
+    /// <summary>
+    /// One cell. X and Y are pixels from the top left of Texture.
+    /// Pivot is 0..1, the same space as Unity Sprite.Create. Duration is seconds.
+    /// </summary>
+    public class Frame {
+        public int X, Y, Width, Height;
+        public Vector2 Pivot;
+        public float Duration;
+    }
+
+    /// <summary>
+    /// Named list of indexes into Frames.
+    /// </summary>
+    public class Anim {
+        public string Name;
+        public int[] Frames;
+    }
+
+    public ITexture Texture;
+    public Frame[] Frames;
+    public Anim[] Anims;
 }
 
 #endregion
@@ -591,6 +622,7 @@ public interface IOpenGfxSprite<B_Object, B_Sprite> : IOpenGfx {
     SpriteManager<B_Sprite> SpriteManager { get; }
     void Preload(ISource source, object path);
     Task<(B_Sprite spr, object tag)> Create(ISource source, object path, B_Object parent = default);
+    (B_Sprite sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index);
 }
 
 /// <summary>
@@ -598,7 +630,7 @@ public interface IOpenGfxSprite<B_Object, B_Sprite> : IOpenGfx {
 /// </summary>
 public interface IOpenGfxModel<B_Object, B_Material, B_Texture, B_Shader> : IOpenGfx {
     MaterialManager<B_Material, B_Texture> MaterialManager { get; }
-    ObjectModelManager<B_Object, B_Material, B_Texture> ObjectManager { get; }
+    GfxModelManager<B_Object, B_Material, B_Texture> ObjectManager { get; }
     ShaderManager<B_Shader> ShaderManager { get; }
     TextureManager<B_Texture> TextureManager { get; }
     void Preload(ISource source, object path);

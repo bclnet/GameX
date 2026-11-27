@@ -5,7 +5,7 @@ from importlib import resources
 from OpenGL.GL import *
 from OpenGL.GL.EXT import texture_compression_s3tc as s3tc
 from openx.core import ISource, Engine
-from openx.gfx import IOpenGfxSprite, IOpenGfxModel, IOpenGfxLight, IOpenGfxTerrain, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel, ObjectModelBuilder, ObjectModelManager, MaterialBuilder, MaterialManager, GfxShader, ShaderBuilder, ShaderManager, TextureBuilder, TextureManager
+from openx.gfx import IOpenGfxSprite, IOpenGfxModel, IOpenGfxLight, IOpenGfxTerrain, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel, GfxModelBuilder, GfxModelManager, MaterialBuilder, MaterialManager, GfxShader, ShaderBuilder, ShaderManager, TextureBuilder, TextureManager
 from openx.engines.opengl.egin import QuadIndexBuffer, GLMeshBufferCache, GLRenderMaterial
 from openx.engines.opengl.gfx.opengl import OpenGLX
 from openx.engines.system import SystemSfx
@@ -21,8 +21,8 @@ class OpenGLClientHost(IClientHost):
 
 #region Engine
 
-# OpenGLObjectModelBuilder
-class OpenGLObjectModelBuilder(ObjectModelBuilder):
+# OpenGLGfxModelBuilder
+class OpenGLGfxModelBuilder(GfxModelBuilder):
     def instance(self, src: object, parent: object = None) -> object:
         return src
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
@@ -34,7 +34,7 @@ class OpenGLObjectModelBuilder(ObjectModelBuilder):
     def ensure(self) -> None: pass
 
 # OpenGLObjectBuilder. Key is the type, and a missing builder is not caught.
-class OpenGLObjectBuilder(ObjectModelBuilder):
+class OpenGLObjectBuilder(GfxModelBuilder):
     def instance(self, src: object, parent: object = None) -> object:
         return src
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
@@ -362,20 +362,21 @@ class OpenGLGfxApi(IOpenGfxSprite):
     def setVisible(self, src: object, visible: bool) -> None: pass
     def destroy(self, src: object) -> None: pass
 
-# OpenGLGfxSprite3D
-class OpenGLGfxSprite3D(IOpenGfxSprite):
+# OpenGLGfxSpriteAlt
+class OpenGLGfxSpriteAlt(IOpenGfxSprite):
     def __init__(self):
         #self.spriteManager: SpriteManager = SpriteManager(OpenGLTextureBuilder())
         pass
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.sprite(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[int, object]: return self.spriteManager.create(source, path)
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # OpenGLGfxModel
 class OpenGLGfxModel(IOpenGfxModel):
     def __init__(self):
         self.textureManager: TextureManager = TextureManager(OpenGLTextureBuilder())
         self.materialManager: MaterialManager = MaterialManager(self.textureManager, OpenGLMaterialBuilder(self.textureManager))
-        self.objectManager: ObjectModelManager = ObjectModelManager(self.materialManager, OpenGLObjectBuilder())
+        self.objectManager: GfxModelManager = GfxModelManager(self.materialManager, OpenGLObjectBuilder())
         self.shaderManager: ShaderManager = ShaderManager(OpenGLShaderBuilder())
         self.meshBufferCache: GLMeshBufferCache = GLMeshBufferCache()
         self._quadIndices = None
@@ -408,7 +409,7 @@ class OpenGLGfxTerrain(IOpenGfxTerrain):
 class OpenGLEngine(Engine):
     def __init__(self):
         super().__init__('GL', 'OpenGL')
-        self.gfxFactory = staticmethod(lambda: [OpenGLGfxApi(), None, OpenGLGfxSprite3D(), OpenGLGfxModel(), OpenGLGfxLight(), OpenGLGfxTerrain()])
+        self.gfxFactory = staticmethod(lambda: [OpenGLGfxApi(), None, OpenGLGfxSpriteAlt(), OpenGLGfxModel(), OpenGLGfxLight(), OpenGLGfxTerrain()])
         self.sfxFactory = staticmethod(lambda: [SystemSfx()])
 OpenGLEngine.this = OpenGLEngine()
 

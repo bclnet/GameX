@@ -27,15 +27,16 @@ public class RaylibClientHost : IClientHost {
 #region Engine
 
 /// <summary>
-/// RaylibGfxSprite3D
+/// RaylibGfxSpriteAlt
 /// </summary>
-public class RaylibGfxSprite3D : IOpenGfxSprite<object, object> {
+public class RaylibGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public RaylibGfxSprite3D() { }
+    public RaylibGfxSpriteAlt() { }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 /// <summary>
@@ -43,13 +44,13 @@ public class RaylibGfxSprite3D : IOpenGfxSprite<object, object> {
 /// </summary>
 public class RaylibGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public RaylibGfxModel() { }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -72,7 +73,7 @@ public class RaylibEngine : Engine {
     public static readonly Engine This = new RaylibEngine();
     RaylibEngine() : base("RL", "Raylib") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new RaylibGfxSprite3D(), new RaylibGfxModel(), null, null];
+        GfxFactory = () => [null, null, new RaylibGfxSpriteAlt(), new RaylibGfxModel(), null, null];
         SfxFactory = () => [new RaylibSfx()];
     }
 

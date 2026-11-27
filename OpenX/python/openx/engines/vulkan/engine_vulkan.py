@@ -31,12 +31,13 @@ class VulkanGfxApi(IOpenGfxApi):
     def setVisible(self, src: object, visible: bool) -> None: raise NotImplementedError()
     def destroy(self, src: object) -> None: raise NotImplementedError()
 
-# VulkanGfxSprite3D
-class VulkanGfxSprite3D(IOpenGfxSprite):
+# VulkanGfxSpriteAlt
+class VulkanGfxSpriteAlt(IOpenGfxSprite):
     def __init__(self):
         self.spriteManager = None
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[object, object]: return self.spriteManager.create(source, path, parent)
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # The pixels VulkanGfxModel.textureManager keeps. No device image yet.
 class VulkanTexture:
@@ -150,7 +151,7 @@ class VulkanEngine(Engine):
     def __init__(self):
         super().__init__('VK', 'Vulkan')
         self.caps = EngineX.Caps.Drawing
-        self.gfxFactory = staticmethod(lambda: [VulkanGfxApi(), None, VulkanGfxSprite3D(), VulkanGfxModel(), None, None])
+        self.gfxFactory = staticmethod(lambda: [VulkanGfxApi(), None, VulkanGfxSpriteAlt(), VulkanGfxModel(), None, None])
         self.sfxFactory = staticmethod(lambda: [VulkanSfx()])
     @staticmethod
     def createInstance(applicationName: str = 'GameX') -> VulkanInstance: return VulkanInstance.createInstance(applicationName)

@@ -146,7 +146,7 @@ public class MaterialRenderer(IOpenGfx[] gfx, ISource source, object obj) : Mira
 /// SpriteRenderer
 /// </summary>
 public class SpriteRenderer(IOpenGfx[] gfx, ISource source, object obj) : MirageRenderer("Sprite") {
-    readonly MirageGfxSprite2D GfxSprite = (MirageGfxSprite2D)gfx[GfX.XSprite2D];
+    readonly MirageGfxSprite GfxSprite = (MirageGfxSprite)gfx[GfX.XSprite];
     public Sprite Sprite { get; private set; }
 
     public override void Start() {

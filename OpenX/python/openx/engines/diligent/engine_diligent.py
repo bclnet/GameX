@@ -15,12 +15,13 @@ class DiligentClientHost(IClientHost):
 
 #region Engine
 
-# DiligentGfxSprite3D
-class DiligentGfxSprite3D(IOpenGfxSprite):
+# DiligentGfxSpriteAlt
+class DiligentGfxSpriteAlt(IOpenGfxSprite):
     def __init__(self):
         self.spriteManager = None
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(source, path)
     def create(self, source: ISource, path: object, parent: object = None) -> tuple[object, object]: return self.spriteManager.create(source, path, parent)
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # DiligentGfxModel
 class DiligentGfxModel(IOpenGfxModel):
@@ -44,7 +45,7 @@ class DiligentEngine(Engine):
     def __init__(self):
         super().__init__('DN', 'Diligent')
         self.caps = EngineX.Caps.Drawing
-        self.gfxFactory = staticmethod(lambda: [None, None, DiligentGfxSprite3D(), DiligentGfxModel(), None, None])
+        self.gfxFactory = staticmethod(lambda: [None, None, DiligentGfxSpriteAlt(), DiligentGfxModel(), None, None])
         self.sfxFactory = staticmethod(lambda: [DiligentSfx()])
 DiligentEngine.this = DiligentEngine()
 

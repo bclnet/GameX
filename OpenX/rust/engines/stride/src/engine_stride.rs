@@ -4,7 +4,7 @@
 //
 // Ported: `StrideEngine`'s registration: id, name and caps.
 // Not ported: the rest of the file, the Stride backend. So `GfxFactory`
-// (C#: `[null, null, new StrideGfxSprite3D(), new StrideGfxModel(), null, null]`) and `SfxFactory` (C#: `[new StrideSfx()]`) are left at
+// (C#: `[null, null, new StrideGfxSpriteAlt(), new StrideGfxModel(), null, null]`) and `SfxFactory` (C#: `[new StrideSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

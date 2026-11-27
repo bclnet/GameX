@@ -23,23 +23,24 @@ public class O3deClientHost : IClientHost {
 
 #region Engine
 
-// O3deGfxSprite3D
-public class O3deGfxSprite3D : IOpenGfxSprite<object, object> {
+// O3deGfxSpriteAlt
+public class O3deGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public O3deGfxSprite3D() {
+    public O3deGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite2D>(new GodotSpriteBuilder());
-        //_objectManager = new ObjectSpriteManager<Node, Sprite2D>(new GodotObjectBuilder());
+        //_objectManager = new GfxUnknownManager<Node, Sprite2D>(new GodotObjectBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // O3deGfxModel
 public class O3deGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public O3deGfxModel() {
@@ -50,7 +51,7 @@ public class O3deGfxModel : IOpenGfxModel<object, object, object, object> {
     }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -69,7 +70,7 @@ public class O3deEngine : Engine {
     public static readonly Engine This = new O3deEngine();
     O3deEngine() : base("O3", "O3de") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new O3deGfxSprite3D(), new O3deGfxModel(), null, null];
+        GfxFactory = () => [null, null, new O3deGfxSpriteAlt(), new O3deGfxModel(), null, null];
         SfxFactory = () => [new O3deSfx()];
     }
 }

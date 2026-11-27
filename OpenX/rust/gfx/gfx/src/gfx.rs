@@ -36,7 +36,7 @@
 //   * `path is ITexture z` — the C# lets an already-decoded texture stand in
 //     for the path. That case is `createFrom`, which takes the texture and a
 //     path to cache it under. An object passed as the path (`ObjectRenderer`)
-//     is `SourcePath::Obj`, compared by identity. `ObjectModelManager` hands
+//     is `SourcePath::Obj`, compared by identity. `GfxModelManager` hands
 //     that object to the builder without re-boxing it, so `TypeId` stays the
 //     concrete type.
 //   * `ITexture.Create<T>(string platform, Func<object, T>)` is a generic, so
@@ -76,8 +76,8 @@ pub type Color = [u8; 4];
 pub mod GfX {
     use super::AtomicI32;
     pub const XAPI: i32 = 0;
-    pub const XSPRITE2D: i32 = 1;
-    pub const XSPRITE3D: i32 = 2;
+    pub const XSPRITE: i32 = 1;
+    pub const XSPRITEALT: i32 = 2;
     pub const XMODEL: i32 = 3;
     pub const XLIGHT: i32 = 4;
     pub const XTERRAIN: i32 = 5;
@@ -125,23 +125,23 @@ fn key(source: &SourceRef, path: &SourcePath) -> SourceKey { (source.clone(), pa
 
 //#endregion
 
-//#region ObjectSprite
+//#region GfxUnknown
 
-/// C# `abstract class ObjectSpriteBuilder<B_Object, B_Sprite>`.
-pub trait ObjectSpriteBuilder<B: Backend> {
+/// C# `abstract class GfxUnknownBuilder<B_Object, B_Sprite>`.
+pub trait GfxUnknownBuilder<B: Backend> {
     fn ensure(&mut self);
     fn instance(&mut self, src: &B::Object, parent: Option<&B::Object>) -> B::Object;
     fn create(&mut self, src: &(dyn Any + Send + Sync)) -> B::Object;
 }
 
-/// C# `class ObjectSpriteManager<B_Object, B_Sprite>`.
-pub struct ObjectSpriteManager<B: Backend, OB: ObjectSpriteBuilder<B>> {
+/// C# `class GfxUnknownManager<B_Object, B_Sprite>`.
+pub struct GfxUnknownManager<B: Backend, OB: GfxUnknownBuilder<B>> {
     builder: OB,
     tasks: HashMap<SourceKey, LoadTask<AnyBox>>,
     cached: HashMap<SourceKey, (B::Object, AnyArc)>,
 }
 
-impl<B: Backend, OB: ObjectSpriteBuilder<B>> ObjectSpriteManager<B, OB> {
+impl<B: Backend, OB: GfxUnknownBuilder<B>> GfxUnknownManager<B, OB> {
     pub fn new(builder: OB) -> Self {
         Self { builder, tasks: HashMap::new(), cached: HashMap::new() }
     }
@@ -177,30 +177,30 @@ impl<B: Backend, OB: ObjectSpriteBuilder<B>> ObjectSpriteManager<B, OB> {
 
 //#endregion
 
-//#region ObjectModel
+//#region GfxModel
 
-/// C# `interface IObjectModel` — see the module header for why `Create<T>` is dropped.
-pub trait IObjectModel: Send + Sync {}
+/// C# `interface IGfxModel` — see the module header for why `Create<T>` is dropped.
+pub trait IGfxModel: Send + Sync {}
 
-/// C# `abstract class ObjectModelBuilder<B_Object, B_Material, B_Texture>`.
-pub trait ObjectModelBuilder<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>> {
+/// C# `abstract class GfxModelBuilder<B_Object, B_Material, B_Texture>`.
+pub trait GfxModelBuilder<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>> {
     fn ensure(&mut self);
     fn instance(&mut self, src: &B::Object, parent: Option<&B::Object>) -> B::Object;
     fn create<'a>(&'a mut self, source: &'a SourceRef, src: &'a (dyn Any + Send + Sync), static_: bool, materialManager: &'a mut MaterialManager<B, TB, MB>) -> BoxFuture<'a, Result<B::Object, Error>>;
 }
 
-/// C# `class ObjectModelManager<B_Object, B_Material, B_Texture>`.
+/// C# `class GfxModelManager<B_Object, B_Material, B_Texture>`.
 ///
 /// The C# `Create` swallows every exception into a log line and returns
 /// `(default, null)`; the port returns the error.
-pub struct ObjectModelManager<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>, OB: ObjectModelBuilder<B, TB, MB>> {
+pub struct GfxModelManager<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>, OB: GfxModelBuilder<B, TB, MB>> {
     builder: OB,
     pub materialManager: MaterialManager<B, TB, MB>,
     tasks: HashMap<SourceKey, LoadTask<AnyBox>>,
     cached: HashMap<SourceKey, (B::Object, AnyArc)>,
 }
 
-impl<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>, OB: ObjectModelBuilder<B, TB, MB>> ObjectModelManager<B, TB, MB, OB> {
+impl<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>, OB: GfxModelBuilder<B, TB, MB>> GfxModelManager<B, TB, MB, OB> {
     pub fn new(materialManager: MaterialManager<B, TB, MB>, builder: OB) -> Self {
         Self { builder, materialManager, tasks: HashMap::new(), cached: HashMap::new() }
     }
@@ -310,6 +310,36 @@ impl<B: Backend, SB: ShaderBuilder<B>> ShaderManager<B, SB> {
     }
 
     pub fn clear(&mut self) { self.cached.clear(); }
+}
+
+//#endregion
+
+//#region GfxSpriteSheet
+
+/// C# nested type `GfxSpriteSheet.Frame`. Rust has no nested class.
+/// `x` and `y` are pixels from the top left. `pivot` is 0..1. `duration` is seconds.
+#[derive(Clone, Debug, Default)]
+pub struct GfxSpriteSheetFrame {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub pivot: Vec2,
+    pub duration: f32,
+}
+
+/// C# nested type `GfxSpriteSheet.Anim`. Indexes into `GfxSpriteSheet.frames`.
+#[derive(Clone, Debug, Default)]
+pub struct GfxSpriteSheetAnim {
+    pub name: String,
+    pub frames: Vec<i32>,
+}
+
+/// C# `class GfxSpriteSheet`. One texture, the frames cut from it, and the animations that play those frames.
+pub struct GfxSpriteSheet {
+    pub texture: Arc<dyn ITexture>,
+    pub frames: Vec<GfxSpriteSheetFrame>,
+    pub anims: Vec<GfxSpriteSheetAnim>,
 }
 
 //#endregion
@@ -740,16 +770,18 @@ pub trait IOpenGfxSprite<B: Backend>: IOpenGfx {
     fn spriteManager(&mut self) -> &mut SpriteManager<B, Self::SpriteBuilder>;
     fn preload(&mut self, source: &SourceRef, path: &SourcePath);
     fn create<'a>(&'a mut self, source: &'a SourceRef, path: &'a SourcePath, parent: Option<&'a B::Object>) -> BoxFuture<'a, Result<(B::Sprite, Arc<dyn ISprite>), Error>>;
+    /// C# `Frame(object texture, GfxSpriteSheet sheet, int index)`. `texture` is the host texture already uploaded by TextureManager. The returned sprite is one cell. The frame is the cell's rect, pivot, and duration.
+    fn frame(&mut self, texture: &(dyn Any + Send + Sync), sheet: &GfxSpriteSheet, index: usize) -> (B::Sprite, GfxSpriteSheetFrame);
 }
 
 /// C# `interface IOpenGfxModel<B_Object, B_Material, B_Texture, B_Shader>`.
 pub trait IOpenGfxModel<B: Backend>: IOpenGfx {
     type TextureBuilder: TextureBuilder<B>;
     type MaterialBuilder: MaterialBuilder<B, Self::TextureBuilder>;
-    type ObjectBuilder: ObjectModelBuilder<B, Self::TextureBuilder, Self::MaterialBuilder>;
+    type ObjectBuilder: GfxModelBuilder<B, Self::TextureBuilder, Self::MaterialBuilder>;
     type ShaderBuilder: ShaderBuilder<B>;
     fn materialManager(&mut self) -> &mut MaterialManager<B, Self::TextureBuilder, Self::MaterialBuilder>;
-    fn objectManager(&mut self) -> &mut ObjectModelManager<B, Self::TextureBuilder, Self::MaterialBuilder, Self::ObjectBuilder>;
+    fn objectManager(&mut self) -> &mut GfxModelManager<B, Self::TextureBuilder, Self::MaterialBuilder, Self::ObjectBuilder>;
     fn shaderManager(&mut self) -> &mut ShaderManager<B, Self::ShaderBuilder>;
     fn textureManager(&mut self) -> &mut TextureManager<B, Self::TextureBuilder>;
     fn preload(&mut self, source: &SourceRef, path: &SourcePath);

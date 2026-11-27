@@ -27,15 +27,16 @@ public class WgpuClientHost : IClientHost {
 #region Engine
 
 /// <summary>
-/// WgpuGfxSprite3D
+/// WgpuGfxSpriteAlt
 /// </summary>
-public class WgpuGfxSprite3D : IOpenGfxSprite<object, object> {
+public class WgpuGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public WgpuGfxSprite3D() { }
+    public WgpuGfxSpriteAlt() { }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 /// <summary>
@@ -43,13 +44,13 @@ public class WgpuGfxSprite3D : IOpenGfxSprite<object, object> {
 /// </summary>
 public class WgpuGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public WgpuGfxModel() { }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -72,7 +73,7 @@ public class WgpuEngine : Engine {
     public static readonly Engine This = new WgpuEngine();
     WgpuEngine() : base("WG", "Wgpu") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new WgpuGfxSprite3D(), new WgpuGfxModel(), null, null];
+        GfxFactory = () => [null, null, new WgpuGfxSpriteAlt(), new WgpuGfxModel(), null, null];
         SfxFactory = () => [new WgpuSfx()];
     }
 

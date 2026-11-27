@@ -3,7 +3,7 @@ import math, traceback
 from numpy import ndarray, array, ones, zeros
 from openx.core import ISource, Engine
 from openx.client import IClientHost
-from openx.gfx import IOpenGfxApi, IOpenGfxModel, IOpenGfxLight, IOpenGfxTerrain, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel, ObjectModelBuilder, ObjectModelManager, MaterialBuilder, MaterialManager, GfxShader, ShaderBuilder, ShaderManager, TextureBuilder, TextureManager
+from openx.gfx import IOpenGfxApi, IOpenGfxModel, IOpenGfxLight, IOpenGfxTerrain, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel, GfxModelBuilder, GfxModelManager, MaterialBuilder, MaterialManager, GfxShader, ShaderBuilder, ShaderManager, TextureBuilder, TextureManager
 from openx.engines.godot.gfx.godot import GodotX
 from openx.engines.system import SystemSfx
 from panda3d.core import PandaNode, NodePath, Texture, TextureStage, PNMImage, PTAUchar, CPTAUchar, PointLight, GeoMipTerrain
@@ -21,8 +21,8 @@ class GodotClientHost(IClientHost):
 
 #region Engine
 
-# GodotObjectModelBuilder
-class GodotObjectModelBuilder(ObjectModelBuilder):
+# GodotGfxModelBuilder
+class GodotGfxModelBuilder(GfxModelBuilder):
     def instance(self, src: object) -> object:
         return src
     async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
@@ -189,7 +189,7 @@ class GodotGfxModel(IOpenGfxModel):
     def __init__(self):
         self.textureManager: TextureManager = TextureManager(GodotTextureBuilder())
         self.materialManager: MaterialManager = MaterialManager(self.textureManager, GodotMaterialBuilder(self.textureManager))
-        self.objectManager: ObjectModelManager = ObjectModelManager(self.materialManager, GodotObjectModelBuilder())
+        self.objectManager: GfxModelManager = GfxModelManager(self.materialManager, GodotGfxModelBuilder())
         self.shaderManager: ShaderManager = ShaderManager(GodotShaderBuilder())
     def preload(self, source: ISource, path: object) -> None: self.objectManager.preload(source, path)
     def preloadTexture(self, source: ISource, path: object) -> None: self.textureManager.preload(source, path)

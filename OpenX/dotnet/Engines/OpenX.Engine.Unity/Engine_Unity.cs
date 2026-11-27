@@ -41,8 +41,8 @@ public class UnityClientHost : MonoBehaviour, IClientHost {
 
 #region Engine
 
-// UnityObjectModelBuilder
-class UnityObjectModelBuilder : ObjectModelBuilder<GameObject, Material, Texture2D> {
+// UnityGfxModelBuilder
+class UnityGfxModelBuilder : GfxModelBuilder<GameObject, Material, Texture2D> {
     GameObject _prefabObj;
 
     public override GameObject Instance(GameObject src, GameObject parent) {
@@ -353,42 +353,52 @@ public class UnityGfxApi : IOpenGfxApi<GameObject, Material> {
 }
 
 // UnityGfx2dSprite
-public class UnityGfxSprite2D : IOpenGfxSprite<GameObject, Sprite> {
+public class UnityGfxSprite : IOpenGfxSprite<GameObject, Sprite> {
     readonly SpriteManager<Sprite> _spriteManager;
-    public UnityGfxSprite2D() {
+    public UnityGfxSprite() {
         //_spriteManager = new SpriteManager<Sprite>(source, new UnitySpriteBuilder());
     }
     public SpriteManager<Sprite> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(Sprite spr, object tag)> Create(ISource source, object path, GameObject parent = default) => _spriteManager.Create(source, path);
+    public (Sprite sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) {
+        var frame = sheet.Frames[index];
+        var sprite = Sprite.Create((Texture2D)texture, new Rect(frame.X, frame.Y, frame.Width, frame.Height), new Vector2(frame.Pivot.X, frame.Pivot.Y));
+        return (sprite, frame);
+    }
 }
 
-// UnityGfxSprite3D
-public class UnityGfxSprite3D : IOpenGfxSprite<GameObject, Sprite> {
+// UnityGfxSpriteAlt
+public class UnityGfxSpriteAlt : IOpenGfxSprite<GameObject, Sprite> {
     readonly SpriteManager<Sprite> _spriteManager;
-    public UnityGfxSprite3D() {
+    public UnityGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite>(source, new UnitySpriteBuilder());
     }
     public SpriteManager<Sprite> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(Sprite spr, object tag)> Create(ISource source, object path, GameObject parent = default) => _spriteManager.Create(source, path);
+    public (Sprite sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) {
+        var frame = sheet.Frames[index];
+        var sprite = Sprite.Create((Texture2D)texture, new Rect(frame.X, frame.Y, frame.Width, frame.Height), new Vector2(frame.Pivot.X, frame.Pivot.Y));
+        return (sprite, frame);
+    }
 }
 
 // UnityGfxModel
 public class UnityGfxModel : IOpenGfxModel<GameObject, Material, Texture2D, XShader> {
     readonly MaterialManager<Material, Texture2D> _materialManager;
-    readonly ObjectModelManager<GameObject, Material, Texture2D> _objectManager;
+    readonly GfxModelManager<GameObject, Material, Texture2D> _objectManager;
     readonly ShaderManager<XShader> _shaderManager;
     readonly TextureManager<Texture2D> _textureManager;
     public UnityGfxModel() {
         _textureManager = new TextureManager<Texture2D>(new UnityTextureBuilder());
         _materialManager = new MaterialManager<Material, Texture2D>(_textureManager, new UnityMaterialBuilder(_textureManager));
-        _objectManager = new ObjectModelManager<GameObject, Material, Texture2D>(_materialManager, new UnityObjectModelBuilder());
+        _objectManager = new GfxModelManager<GameObject, Material, Texture2D>(_materialManager, new UnityGfxModelBuilder());
         _shaderManager = new ShaderManager<XShader>(new UnityShaderBuilder());
     }
 
     public MaterialManager<Material, Texture2D> MaterialManager => _materialManager;
-    public ObjectModelManager<GameObject, Material, Texture2D> ObjectManager => _objectManager;
+    public GfxModelManager<GameObject, Material, Texture2D> ObjectManager => _objectManager;
     public ShaderManager<XShader> ShaderManager => _shaderManager;
     public TextureManager<Texture2D> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => _objectManager.Preload(source, path);
@@ -522,7 +532,7 @@ public class UnityXEngine : Engine {
         try {
             Tag = task.Result;
             Caps = EngineX.Caps.None_;
-            GfxFactory = () => [new UnityGfxApi(), new UnityGfxSprite2D(), new UnityGfxSprite3D(), new UnityGfxModel(), new UnityGfxLight(), new UnityGfxTerrain()];
+            GfxFactory = () => [new UnityGfxApi(), new UnityGfxSprite(), new UnityGfxSpriteAlt(), new UnityGfxModel(), new UnityGfxLight(), new UnityGfxTerrain()];
             SfxFactory = () => [new UnitySfx()];
             LogFunc = Debug.Log;
         }

@@ -324,16 +324,17 @@ public unsafe class MgClientHost : Game, IClientHost, ISceneHost {
 // MgObjectBuilder
 // MISSING
 
-// MgGfxSprite2D
-public class MgGfxSprite2D : IOpenGfxSprite<object, object> {
+// MgGfxSprite
+public class MgGfxSprite : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public MgGfxSprite2D() {
+    public MgGfxSprite() {
         //_spriteManager = new SpriteManager<Sprite2D>(new GodotSpriteBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // MgSfx
@@ -344,7 +345,7 @@ public class MgEngine : Engine {
     public static readonly Engine This = new MgEngine();
     MgEngine() : base("MG", "MonoGame") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, new MgGfxSprite2D(), null, null, null, null];
+        GfxFactory = () => [null, new MgGfxSprite(), null, null, null, null];
         SfxFactory = () => [new MgSfx()];
         LogFunc = Console.WriteLine;
     }

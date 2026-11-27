@@ -12,6 +12,7 @@ class TestGfxApi: pass
 class TestGfxSprite:
     def preload(self, source: ISource, path: object) -> None: raise NotImplementedError()
     def create(self, source: ISource, path: object,  parent: object = None) -> tuple[object, object]: raise NotImplementedError()
+    def frame(self, texture: object, sheet, index: int): raise NotImplementedError()
 
 # TestGfxModel
 class TestGfxModel:

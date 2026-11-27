@@ -31,9 +31,9 @@ public class MirageClientHost(int frames = 1, float delta = SceneTree.DefaultDel
 #region Builders
 
 /// <summary>
-/// MirageObjectModelBuilder - asks the registered family builder for a Node tree and parks it under _Prefabs; Instance() clones it into the scene.
+/// MirageGfxModelBuilder - asks the registered family builder for a Node tree and parks it under _Prefabs; Instance() clones it into the scene.
 /// </summary>
-class MirageObjectModelBuilder : ObjectModelBuilder<Node, Material, Texture> {
+class MirageGfxModelBuilder : GfxModelBuilder<Node, Material, Texture> {
     Node _prefabObj;
 
     public override Node Instance(Node src, Node parent) {
@@ -233,23 +233,33 @@ public class MirageGfxApi : IOpenGfxApi<Node, Material> {
 }
 
 /// <summary>
-/// MirageGfxSprite2D
+/// MirageGfxSprite
 /// </summary>
-public class MirageGfxSprite2D : IOpenGfxSprite<Node, Sprite> {
+public class MirageGfxSprite : IOpenGfxSprite<Node, Sprite> {
     readonly SpriteManager<Sprite> _spriteManager = new(new MirageSpriteBuilder());
     public SpriteManager<Sprite> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(Sprite spr, object tag)> Create(ISource source, object path, Node parent = default) => _spriteManager.Create(source, path);
+    public (Sprite sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) {
+        var frame = sheet.Frames[index];
+        var s = MirageEngine.Tree.Resources.Add(new Sprite { Name = $"sheet:{index}", Width = frame.Width, Height = frame.Height, Texture = texture as Texture });
+        return (s, frame);
+    }
 }
 
 /// <summary>
-/// MirageGfxSprite3D
+/// MirageGfxSpriteAlt
 /// </summary>
-public class MirageGfxSprite3D : IOpenGfxSprite<Node, Sprite> {
+public class MirageGfxSpriteAlt : IOpenGfxSprite<Node, Sprite> {
     readonly SpriteManager<Sprite> _spriteManager = new(new MirageSpriteBuilder());
     public SpriteManager<Sprite> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(Sprite spr, object tag)> Create(ISource source, object path, Node parent = default) => _spriteManager.Create(source, path);
+    public (Sprite sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) {
+        var frame = sheet.Frames[index];
+        var s = MirageEngine.Tree.Resources.Add(new Sprite { Name = $"sheet:{index}", Width = frame.Width, Height = frame.Height, Texture = texture as Texture });
+        return (s, frame);
+    }
 }
 
 /// <summary>
@@ -257,18 +267,18 @@ public class MirageGfxSprite3D : IOpenGfxSprite<Node, Sprite> {
 /// </summary>
 public class MirageGfxModel : IOpenGfxModel<Node, Material, Texture, Shader> {
     readonly MaterialManager<Material, Texture> _materialManager;
-    readonly ObjectModelManager<Node, Material, Texture> _objectManager;
+    readonly GfxModelManager<Node, Material, Texture> _objectManager;
     readonly ShaderManager<Shader> _shaderManager;
     readonly TextureManager<Texture> _textureManager;
     public MirageGfxModel() {
         _textureManager = new TextureManager<Texture>(new MirageTextureBuilder());
         _materialManager = new MaterialManager<Material, Texture>(_textureManager, new MirageMaterialBuilder(_textureManager));
-        _objectManager = new ObjectModelManager<Node, Material, Texture>(_materialManager, new MirageObjectModelBuilder());
+        _objectManager = new GfxModelManager<Node, Material, Texture>(_materialManager, new MirageGfxModelBuilder());
         _shaderManager = new ShaderManager<Shader>(new MirageShaderBuilder());
     }
 
     public MaterialManager<Material, Texture> MaterialManager => _materialManager;
-    public ObjectModelManager<Node, Material, Texture> ObjectManager => _objectManager;
+    public GfxModelManager<Node, Material, Texture> ObjectManager => _objectManager;
     public ShaderManager<Shader> ShaderManager => _shaderManager;
     public TextureManager<Texture> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => _objectManager.Preload(source, path);
@@ -354,7 +364,7 @@ public class MirageEngine : Engine {
 
     MirageEngine() : base("MR", "Mirage") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [new MirageGfxApi(), new MirageGfxSprite2D(), new MirageGfxSprite3D(), new MirageGfxModel(), new MirageGfxLight(), new MirageGfxTerrain()];
+        GfxFactory = () => [new MirageGfxApi(), new MirageGfxSprite(), new MirageGfxSpriteAlt(), new MirageGfxModel(), new MirageGfxLight(), new MirageGfxTerrain()];
         SfxFactory = () => [new MirageSfx()];
         LogFunc = a => Tree.Log(a);
     }

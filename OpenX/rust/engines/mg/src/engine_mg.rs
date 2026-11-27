@@ -4,7 +4,7 @@
 //
 // Ported: `MgEngine`'s registration: id, name and caps.
 // Not ported: the rest of the file, the Mg backend. So `GfxFactory`
-// (C#: `[null, new MgGfxSprite2D(), null, null, null, null]`) and `SfxFactory` (C#: `[new MgSfx()]`) are left at
+// (C#: `[null, new MgGfxSprite(), null, null, null, null]`) and `SfxFactory` (C#: `[new MgSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

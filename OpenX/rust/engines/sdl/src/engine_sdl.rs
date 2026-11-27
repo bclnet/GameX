@@ -4,7 +4,7 @@
 //
 // Ported: `SdlEngine`'s registration: id, name and caps.
 // Not ported: the rest of the file, the Sdl backend. So `GfxFactory`
-// (C#: `[new SdlGfxSprite2D(), null, null, null, null, null]`) and `SfxFactory` (C#: `[new SdlSfx()]`) are left at
+// (C#: `[null, new SdlGfxSprite(), null, null, null, null]`) and `SfxFactory` (C#: `[new SdlSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

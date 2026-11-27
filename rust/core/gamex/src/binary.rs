@@ -298,7 +298,7 @@ macro_rules! archiveSource {
         impl openx_poly::core::ISource for $t {
             fn getAssetAny<'a>(&'a self, path: &'a openx_poly::core::SourcePath, option: Option<&'a (dyn std::any::Any + Sync)>) -> openx_poly::core::BoxFuture<'a, Result<Box<dyn std::any::Any + Send + Sync>, std::io::Error>> {
                 // C# returns the object when the path already is that object.
-                // `ObjectModelManager` does not use this arm: boxing the `Arc` here
+                // `GfxModelManager` does not use this arm: boxing the `Arc` here
                 // would hide the concrete `TypeId`. See `SourcePath::Obj`.
                 if let openx_poly::core::SourcePath::Obj(obj) = path {
                     let obj = obj.clone();

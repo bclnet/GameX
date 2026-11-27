@@ -4,7 +4,7 @@
 //
 // Ported: `O3deEngine`'s registration and `O3deShellEngine`: id, name and caps.
 // Not ported: the rest of the file, the O3de backend. So `GfxFactory`
-// (C#: `[null, null, new O3deGfxSprite3D(), new O3deGfxModel(), null, null]`) and `SfxFactory` (C#: `[new O3deSfx()]`) are left at
+// (C#: `[null, null, new O3deGfxSpriteAlt(), new O3deGfxModel(), null, null]`) and `SfxFactory` (C#: `[new O3deSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

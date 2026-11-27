@@ -14,8 +14,9 @@ pub mod gfx_texture;
 pub mod prelude {
     pub use crate::gfx::{
         GfX, GfxAlphaMode, GfxAttach, GfxBlendMode, Backend, AnyBox, AnyArc, Color,
-        ObjectSpriteBuilder, ObjectSpriteManager,
-        IObjectModel, ObjectModelBuilder, ObjectModelManager,
+        GfxUnknownBuilder, GfxUnknownManager,
+        GfxSpriteSheetFrame, GfxSpriteSheetAnim, GfxSpriteSheet,
+        IGfxModel, GfxModelBuilder, GfxModelManager,
         GfxShader, ShaderBuilder, ShaderManager,
         ISprite, SpriteBuilder, SpriteManager,
         TextureAsDds, TextureAsBytes, ITexture, ITextureSelect, ITextureFrames, TextureBuilder, TextureManager,

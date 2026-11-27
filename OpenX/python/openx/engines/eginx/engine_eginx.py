@@ -2,7 +2,7 @@ from __future__ import annotations
 import traceback
 from openx.core import ISource, Engine
 from openx.engines.system import SystemSfx
-from openx.gfx import IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel, ObjectModelBuilder, ObjectModelManager, MaterialBuilder, MaterialManager, ShaderBuilder, ShaderManager, TextureManager, TextureBuilder
+from openx.gfx import IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel, GfxModelBuilder, GfxModelManager, MaterialBuilder, MaterialManager, ShaderBuilder, ShaderManager, TextureManager, TextureBuilder
 from openx.client import IClientHost, ISceneHost
 from openx.gfx.egin import Game, GraphicsDeviceManager
 
@@ -45,18 +45,19 @@ class EginXGfxApi(IOpenGfxApi):
     def __init__(self): pass
     def attach(self, method: GfxAttach, src: object, args: list[object]) -> object: raise NotImplementedError()
 
-# EginXGfxSprite2D
-class EginXGfxSprite2D(IOpenGfxSprite):
+# EginXGfxSprite
+class EginXGfxSprite(IOpenGfxSprite):
     def __init__(self):
         self.spriteManager: SpriteManager = SpriteManager(OpenGLTextureBuilder())
     def preload(self, source: ISource, path: object) -> None: self.spriteManager.preload(path)
     def create(self, source: ISource, path: object, level: range = None) -> int: return self.spriteManager.create(path)[0]
+    def frame(self, texture: object, sheet, index: int): return (texture, sheet.frames[index])
 
 # EginXEngine
 class EginXEngine(Engine):
     def __init__(self):
         super().__init__('EX', 'EginX')
-        self.gfxFactory = staticmethod(lambda: [EginXGfxApi(), EginXGfxSprite2D(), None, None, None, None])
+        self.gfxFactory = staticmethod(lambda: [None, EginXGfxSprite(), None, None, None, None])
         self.sfxFactory = staticmethod(lambda: [SystemSfx()])
 EginXEngine.this = EginXEngine()
 

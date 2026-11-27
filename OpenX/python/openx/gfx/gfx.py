@@ -18,8 +18,8 @@ class B_Texture: pass
 # GfX:
 class GfX:
     XApi = 0
-    XSprite2D = 1
-    XSprite3D = 2
+    XSprite = 1
+    XSpriteAlt = 2
     XModel = 3
     XLight = 4
     XTerrain = 5
@@ -35,19 +35,19 @@ class GfxBlendMode(Enum): Zero = 0; One = 1; SrcColor = 0x0300; OneMinusSrcColor
 
 #endregion
 
-#region ObjectSprite
+#region GfxUnknown
 
-# ObjectSpriteBuilder
-class ObjectSpriteBuilder:
+# GfxUnknownBuilder
+class GfxUnknownBuilder:
     def instance(self, src: B_Object) -> B_Object: pass
     def create(self, path: object) -> B_Object: pass
     def ensure(self) -> None: pass
 
-# ObjectSpriteManager
-class ObjectSpriteManager:
+# GfxUnknownManager
+class GfxUnknownManager:
     _cached: dict[object, (B_Object, object)] = {}
-    def __init__(self, builder: ObjectSpriteBuilder):
-        self._builder: ObjectSpriteBuilder = builder
+    def __init__(self, builder: GfxUnknownBuilder):
+        self._builder: GfxUnknownBuilder = builder
         self._tasks: dict[object, object] = {}
 
     async def create(self, source: ISource, path: object, parent: B_Object = None) -> tuple[B_Object, object]:
@@ -72,24 +72,24 @@ class ObjectSpriteManager:
 
 #endregion
 
-#region ObjectModel
+#region GfxModel
 
-# IObjectModel
-class IObjectModel:
+# IGfxModel
+class IGfxModel:
     def create(self, platform: str, func: callable) -> object: pass
 
-# ObjectModelBuilder
-class ObjectModelBuilder:
+# GfxModelBuilder
+class GfxModelBuilder:
     def instance(self, src: B_Object) -> B_Object: pass
     def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> B_Object: pass
     def ensure(self) -> None: pass
 
-# ObjectModelManager
-class ObjectModelManager:
+# GfxModelManager
+class GfxModelManager:
     _cached: dict[object, (B_Object, object)] = {}
-    def __init__(self, materialManager: MaterialManager, builder: ObjectModelBuilder):
+    def __init__(self, materialManager: MaterialManager, builder: GfxModelBuilder):
         self._materialManager: MaterialManager = materialManager
-        self._builder: ObjectModelBuilder = builder
+        self._builder: GfxModelBuilder = builder
         self._tasks: dict[object, object] = {}
 
     async def create(self, source: ISource, path: object, static_: bool, parent: B_Object = None) -> tuple[B_Object, object]:
@@ -172,6 +172,25 @@ class ShaderManager:
         argx = ','.join([k for k, v in args.items() if v]) if args else None
         key = (source, path, argx)
         return (self._builder.create(path, args or self.emptyArgs), None)
+
+#endregion
+
+#region GfxSpriteSheet
+
+# The atlas. One texture, the cells cut from it, and the animations that play those cells.
+class GfxSpriteSheet:
+    # One cell. x, y are pixels from the top left. pivot is 0..1. duration is seconds.
+    class Frame:
+        def __init__(self):
+            self.x = 0; self.y = 0; self.width = 0; self.height = 0; self.pivot = None; self.duration = 0.0
+
+    # Named list of indexes into frames.
+    class Anim:
+        def __init__(self):
+            self.name = None; self.frames = None
+
+    def __init__(self):
+        self.texture = None; self.frames = None; self.anims = None
 
 #endregion
 
@@ -446,11 +465,12 @@ class IOpenGfxSprite(IOpenGfx):
     spriteManager: SpriteManager
     def preload(self, source: ISource, path: object) -> None: pass
     def create(self, source: ISource, path: object, parent: B_Object = None) -> B_Object: pass
+    def frame(self, texture: object, sheet: GfxSpriteSheet, index: int) -> tuple[B_Sprite, GfxSpriteSheet.Frame]: return (texture, sheet.frames[index])
 
 # IOpenGfxModel
 class IOpenGfxModel(IOpenGfx):
     materialManager: MaterialManager
-    objectManager: ObjectModelManager
+    objectManager: GfxModelManager
     shaderManager: ShaderManager
     textureManager: TextureManager
     def preload(self, source: ISource, path: object) -> None: pass

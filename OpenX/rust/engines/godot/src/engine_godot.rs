@@ -4,7 +4,7 @@
 //
 // Ported: `GodotEngine`'s registration and `GodotShellEngine`: id, name and caps.
 // Not ported: the rest of the file, the Godot backend. So `GfxFactory`
-// (C#: `[new GodotGfxApi(), new GodotGfxSprite2D(), new GodotGfxSprite3D(), new GodotGfxModel(), null, null]`) and `SfxFactory` (C#: `[new GodotSfx()]`) are left at
+// (C#: `[new GodotGfxApi(), new GodotGfxSprite(), new GodotGfxSpriteAlt(), new GodotGfxModel(), null, null]`) and `SfxFactory` (C#: `[new GodotSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

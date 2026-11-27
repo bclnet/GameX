@@ -36,7 +36,7 @@ public static class SceneText {
         [nameof(MeshRenderer)] = () => new MeshRenderer(),
         [nameof(SkinnedMeshRenderer)] = () => new SkinnedMeshRenderer(),
         [nameof(Sprite2D)] = () => new Sprite2D(),
-        [nameof(Sprite3D)] = () => new Sprite3D(),
+        [nameof(SpriteAlt)] = () => new SpriteAlt(),
         [nameof(Light)] = () => new Light(),
         [nameof(LightProbe)] = () => new LightProbe(),
         [nameof(Camera)] = () => new Camera(),

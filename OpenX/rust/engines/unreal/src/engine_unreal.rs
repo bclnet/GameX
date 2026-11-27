@@ -5,7 +5,7 @@
 //
 // Ported: `UnrealEngine`'s registration and `UnrealShellEngine`: id, name and caps.
 // Not ported: the rest of the file, the Unreal backend. So `GfxFactory`
-// (C#: `[new UnrealGfxApi(), null, new UnrealGfxSprite3D(), new UnrealGfxModel(), null, null]`) and `SfxFactory` (C#: `[new UnrealSfx()]`) are left at
+// (C#: `[new UnrealGfxApi(), null, new UnrealGfxSpriteAlt(), new UnrealGfxModel(), null, null]`) and `SfxFactory` (C#: `[new UnrealSfx()]`) are left at
 // `Engine`'s default, no factory, until those types exist in Rust.
 
 use std::sync::LazyLock;

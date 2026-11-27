@@ -4,7 +4,7 @@
 // Ported: `VulkanEngine` registration (id, name, caps) and `createInstance`,
 // `VulkanShellEngine`, `VulkanTexture`, `VulkanTextureBuilder`, and
 // `VulkanGfxModel`'s `TextureManager`.
-// Not ported: `VulkanClientHost`, `VulkanGfxApi`, `VulkanGfxSprite3D`, `VulkanSfx`,
+// Not ported: `VulkanClientHost`, `VulkanGfxApi`, `VulkanGfxSpriteAlt`, `VulkanSfx`,
 // `GfxFactory`, `SfxFactory`, and the material, object, and shader managers.
 // Those stay unconstructed, as in C#. The texture keeps bytes. It is not a device image.
 

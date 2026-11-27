@@ -151,7 +151,7 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
 #region Binary_Src
 //was:Resource/Resource
 
-public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indirect<IMaterial>, Indirect<IMesh>, Indirect<IObjectModel>, Indirect<IParticleSystem> {
+public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indirect<IMaterial>, Indirect<IMesh>, Indirect<IGfxModel>, Indirect<IParticleSystem> {
     internal const ushort KnownHeaderVersion = 12;
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) {
         if (r.BaseStream.Length < 6) return null;
@@ -256,7 +256,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
     ITexture Indirect<ITexture>.Value => DATA as ITexture;
     IMaterial Indirect<IMaterial>.Value => DATA as IMaterial;
     IMesh Indirect<IMesh>.Value => DataType == ResourceType.Mesh ? new D_Mesh(this) as IMesh : null;
-    IObjectModel Indirect<IObjectModel>.Value => DATA as IObjectModel;
+    IGfxModel Indirect<IGfxModel>.Value => DATA as IGfxModel;
     IParticleSystem Indirect<IParticleSystem>.Value => DATA as IParticleSystem;
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {

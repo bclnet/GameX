@@ -48,16 +48,17 @@ public class ExClientHost : Game, IClientHost, ISceneHost {
 // EginXObjectBuilder
 // MISSING
 
-// EginXGfxSprite2D
-public class EginXGfxSprite2D : IOpenGfxSprite<object, object> {
+// EginXGfxSprite
+public class EginXGfxSprite : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public EginXGfxSprite2D() {
+    public EginXGfxSprite() {
         //_spriteManager = new SpriteManager<Sprite2D>(new GodotSpriteBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = null) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // EginXEngine
@@ -65,7 +66,7 @@ public class EginXEngine : Engine {
     public static readonly Engine This = new EginXEngine();
     EginXEngine() : base("EX", "EginX") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, new EginXGfxSprite2D(), null, null, null, null];
+        GfxFactory = () => [null, new EginXGfxSprite(), null, null, null, null];
         SfxFactory = () => [new SystemSfx()];
     }
 }

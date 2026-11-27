@@ -1189,7 +1189,7 @@ before — `opengl` (2,453 lines) and `sdl` are viable via `glow`/`glutin` and
 factory array with `null` at index 5 and the terrain object at 6:
 
 ```csharp
-GfxFactory = () => [new OpenGLGfxApi(), null, new OpenGLGfxSprite3D(),
+GfxFactory = () => [new OpenGLGfxApi(), null, new OpenGLGfxSpriteAlt(),
                     new OpenGLGfxModel(), null, null, new OpenGLGfxTerrain()];
 //                   0                   1     2                        3
 //                   4     5     6 <- terrain lands here
@@ -1208,7 +1208,7 @@ registers an `openx::engine::Engine`, whose `gfxFactory` is C#'s `GfxFactory`.
 
 Two smaller findings from the same layer:
 
-- **`SdlGfxSprite2D._spriteManager` is never assigned.** It is a `readonly`
+- **`SdlGfxSprite._spriteManager` is never assigned.** It is a `readonly`
   field with an empty constructor, so `SpriteManager` returns null and every
   forwarding method throws. The file opens with
   `#pragma warning disable CS0649, CS0169` — suppressing exactly the

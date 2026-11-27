@@ -23,16 +23,17 @@ public class SdlClientHost : IClientHost {
 // SdlObjectBuilder
 // MISSING
 
-// SdlGfxSprite2D
-public class SdlGfxSprite2D : IOpenGfxSprite<object, object> {
+// SdlGfxSprite
+public class SdlGfxSprite : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public SdlGfxSprite2D() {
+    public SdlGfxSprite() {
         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // SdlSfx
@@ -43,7 +44,7 @@ public class SdlEngine : Engine {
     public static readonly Engine This = new SdlEngine();
     SdlEngine() : base("SD", "SDL 3") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [new SdlGfxSprite2D(), null, null, null, null, null];
+        GfxFactory = () => [null, new SdlGfxSprite(), null, null, null, null];
         SfxFactory = () => [new SdlSfx()];
     }
 }

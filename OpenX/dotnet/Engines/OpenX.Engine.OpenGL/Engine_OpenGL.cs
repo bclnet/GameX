@@ -33,7 +33,7 @@ public class OpenGLClientHost : IClientHost {
 /// <summary>
 /// OpenGLObjectBuilder
 /// </summary>
-class OpenGLObjectBuilder : ObjectModelBuilder<object, GLRenderMaterial, int> {
+class OpenGLObjectBuilder : GfxModelBuilder<object, GLRenderMaterial, int> {
     public override object Instance(object prefab, object parent) => prefab;
     public async override Task<object> Create(ISource source, object path, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager) {
         var builder = OpenGLX.BuildersByType[path.GetType()];
@@ -388,16 +388,17 @@ public class OpenGLGfxApi : IOpenGfxApi<object, GLRenderMaterial> {
     public void Destroy(object src) { }
 }
 
-// OpenGLGfxSprite3D
-public class OpenGLGfxSprite3D : IOpenGfxSprite<object, int> {
+// OpenGLGfxSpriteAlt
+public class OpenGLGfxSpriteAlt : IOpenGfxSprite<object, int> {
     readonly SpriteManager<int> _spriteManager;
-    public OpenGLGfxSprite3D() {
+    public OpenGLGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<int>(source, new OpenGLSpriteBuilder());
     }
 
     public SpriteManager<int> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(int spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (int sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) => ((int)texture, sheet.Frames[index]);
 }
 
 /// <summary>
@@ -405,19 +406,19 @@ public class OpenGLGfxSprite3D : IOpenGfxSprite<object, int> {
 /// </summary>
 public class OpenGLGfxModel : IOpenGfxModel<object, GLRenderMaterial, int, GfxShader> {
     readonly MaterialManager<GLRenderMaterial, int> _materialManager;
-    readonly ObjectModelManager<object, GLRenderMaterial, int> _objectManager;
+    readonly GfxModelManager<object, GLRenderMaterial, int> _objectManager;
     readonly ShaderManager<GfxShader> _shaderManager;
     readonly TextureManager<int> _textureManager;
     public OpenGLGfxModel() {
         _textureManager = new TextureManager<int>(new OpenGLTextureBuilder());
         _materialManager = new MaterialManager<GLRenderMaterial, int>(_textureManager, new OpenGLMaterialBuilder(_textureManager));
-        _objectManager = new ObjectModelManager<object, GLRenderMaterial, int>(_materialManager, new OpenGLObjectBuilder());
+        _objectManager = new GfxModelManager<object, GLRenderMaterial, int>(_materialManager, new OpenGLObjectBuilder());
         _shaderManager = new ShaderManager<GfxShader>(new OpenGLShaderBuilder());
         MeshBufferCache = new GLMeshBufferCache();
     }
 
     public MaterialManager<GLRenderMaterial, int> MaterialManager => _materialManager;
-    public ObjectModelManager<object, GLRenderMaterial, int> ObjectManager => _objectManager;
+    public GfxModelManager<object, GLRenderMaterial, int> ObjectManager => _objectManager;
     public ShaderManager<GfxShader> ShaderManager => _shaderManager;
     public TextureManager<int> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => _objectManager.Preload(source, path);
@@ -455,7 +456,7 @@ public class OpenGLEngine : Engine {
     public static readonly Engine This = new OpenGLEngine();
     OpenGLEngine() : base("GL", "OpenGL") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [new OpenGLGfxApi(), null, new OpenGLGfxSprite3D(), new OpenGLGfxModel(), null, new OpenGLGfxTerrain()];
+        GfxFactory = () => [new OpenGLGfxApi(), null, new OpenGLGfxSpriteAlt(), new OpenGLGfxModel(), null, new OpenGLGfxTerrain()];
         SfxFactory = () => [new SystemSfx()];
     }
 }

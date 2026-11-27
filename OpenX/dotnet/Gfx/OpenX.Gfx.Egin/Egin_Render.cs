@@ -58,7 +58,7 @@ public interface IVBIB {
 /// <summary>
 /// IEginModel
 /// </summary>
-public interface IEginModel : IObjectModel {
+public interface IEginModel : IGfxModel {
     IVBIB RemapBoneIndices(IVBIB vbib, int meshIndex);
 }
 

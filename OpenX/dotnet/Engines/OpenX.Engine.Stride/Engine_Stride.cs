@@ -69,22 +69,23 @@ class StrideTextureBuilder : TextureBuilder<Texture> {
 
 // StrideMaterialBuilder : MISSING
 
-// StrideGfxSprite3D
-public class StrideGfxSprite3D : IOpenGfxSprite<object, object> {
+// StrideGfxSpriteAlt
+public class StrideGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public StrideGfxSprite3D() {
+    public StrideGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite2D>(new GodotSpriteBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // StrideGfxModel
 public class StrideGfxModel : IOpenGfxModel<Entity, Material, Texture, int> {
     readonly MaterialManager<Material, Texture> _materialManager = default;
-    readonly ObjectModelManager<Entity, Material, Texture> _objectManager = default;
+    readonly GfxModelManager<Entity, Material, Texture> _objectManager = default;
     readonly ShaderManager<int> _shaderManager = default;
     readonly TextureManager<Texture> _textureManager;
     public StrideGfxModel() {
@@ -95,7 +96,7 @@ public class StrideGfxModel : IOpenGfxModel<Entity, Material, Texture, int> {
     }
 
     public MaterialManager<Material, Texture> MaterialManager => _materialManager;
-    public ObjectModelManager<Entity, Material, Texture> ObjectManager => _objectManager;
+    public GfxModelManager<Entity, Material, Texture> ObjectManager => _objectManager;
     public ShaderManager<int> ShaderManager => _shaderManager;
     public TextureManager<Texture> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -117,7 +118,7 @@ public class StrideEngine : Engine {
         Log = GlobalLogger.GetLogger(typeof(StrideEngine).FullName);
         Log.Debug("Start Stride");
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new StrideGfxSprite3D(), new StrideGfxModel(), null, null];
+        GfxFactory = () => [null, null, new StrideGfxSpriteAlt(), new StrideGfxModel(), null, null];
         SfxFactory = () => [new StrideSfx()];
         LogFunc = a => Log.Info(a);
     }

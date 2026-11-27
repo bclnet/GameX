@@ -924,7 +924,7 @@ Differences:
 * glow has no double uniforms, so `GLRenderMaterial`'s `Uniform1d` int params
   are set as floats.
 * `ObjectRenderer` passes the loaded object as `SourcePath::Obj` (identity
-  key). `ObjectModelManager` gives that object to the builder without
+  key). `GfxModelManager` gives that object to the builder without
   re-boxing it, so the `TypeId` stays concrete. Nothing is registered in
   `BuildersByType` until `Binary_Nif` is ported, so `Start` logs the miss
   and the view stays empty.

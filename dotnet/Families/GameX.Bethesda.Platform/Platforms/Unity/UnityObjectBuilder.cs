@@ -5,7 +5,7 @@
 
 //namespace GameX.Bethesda.Engines.Unity;
 
-//public class UnityObjectBuilder : ObjectModelBuilderBase<GameObject, Material, Texture2D>
+//public class UnityObjectBuilder : GfxModelBuilderBase<GameObject, Material, Texture2D>
 //{
 //    GameObject _prefabObject;
 //    readonly int _markerLayer;

@@ -23,22 +23,23 @@ public class OgreClientHost : IClientHost {
 
 #region Engine
 
-// OgreGfxSprite3D
-public class OgreGfxSprite3D : IOpenGfxSprite<object, object> {
+// OgreGfxSpriteAlt
+public class OgreGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public OgreGfxSprite3D() {
+    public OgreGfxSpriteAlt() {
         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
     }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 // OgreGfxModel
 public class OgreGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public OgreGfxModel() {
@@ -49,7 +50,7 @@ public class OgreGfxModel : IOpenGfxModel<object, object, object, object> {
     }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -68,7 +69,7 @@ public class OgreEngine : Engine {
     public static readonly Engine This = new OgreEngine();
     OgreEngine() : base("OG", "Ogre") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new OgreGfxSprite3D(), new OgreGfxModel(), null, null];
+        GfxFactory = () => [null, null, new OgreGfxSpriteAlt(), new OgreGfxModel(), null, null];
         SfxFactory = () => [new OgreSfx()];
     }
 }

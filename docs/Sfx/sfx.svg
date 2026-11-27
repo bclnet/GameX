@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 460" font-family="Segoe UI, sans-serif" font-size="13">
+  <title>OpenX Sfx types</title>
+  <desc>AudioBuilder, AudioManager, IOpenSfx, OpenAL, Ogg, and which engines construct a real audio builder.</desc>
+  <rect width="980" height="460" fill="#f7f6f3"/>
+  <text x="24" y="32" font-size="18" font-weight="600">OpenX.Sfx</text>
+  <text x="24" y="52" fill="#444">One factory slot. See docs/Gfx/Design.md for the matching Gfx notes.</text>
+
+  <rect x="24" y="68" width="14" height="14" fill="#1b7f4e"/>
+  <text x="44" y="80">builder constructs and can play</text>
+  <rect x="280" y="68" width="14" height="14" fill="#c47b00"/>
+  <text x="300" y="80">manager exists, builder throws</text>
+  <rect x="540" y="68" width="14" height="14" fill="#4a6fa5"/>
+  <text x="560" y="80" fill="#222">library, not a factory slot</text>
+
+  <g transform="translate(24,108)">
+    <rect width="220" height="120" fill="#fff" stroke="#1b7f4e"/>
+    <text x="12" y="22" font-weight="600">Audio</text>
+    <text x="12" y="44">The loaded sound.</text>
+    <text x="12" y="64">AudioBuilder.Create</text>
+    <text x="12" y="84">AudioBuilder.Delete</text>
+    <text x="12" y="104" fill="#444">OpenX.Sfx</text>
+
+    <rect x="240" width="220" height="120" fill="#fff" stroke="#1b7f4e"/>
+    <text x="252" y="22" font-weight="600">AudioManager</text>
+    <text x="252" y="44">Cache, preload, delete.</text>
+    <text x="252" y="64">One manager per engine.</text>
+    <text x="252" y="104" fill="#444">OpenX.Sfx</text>
+
+    <rect x="480" width="220" height="120" fill="#fff" stroke="#1b7f4e"/>
+    <text x="492" y="22" font-weight="600">IOpenSfx</text>
+    <text x="492" y="44">IOpenSfx&lt;Audio&gt;</text>
+    <text x="492" y="64">Owns AudioManager.</text>
+    <text x="492" y="84">CreateAudio.</text>
+    <text x="492" y="104" fill="#444">SfxFactory slot 0</text>
+
+    <rect x="720" width="220" height="120" fill="#fff" stroke="#4a6fa5"/>
+    <text x="732" y="22" font-weight="600">OpenAL and Ogg</text>
+    <text x="732" y="44">OpenX.Sfx.Al</text>
+    <text x="732" y="64">OpenX.Sfx.Ogg</text>
+    <text x="732" y="84">Decoders and the device.</text>
+    <text x="732" y="104" fill="#444">Not engine slots.</text>
+  </g>
+
+  <text x="24" y="268" font-size="16" font-weight="600">Engines</text>
+  <rect x="24" y="280" width="450" height="88" fill="#fff" stroke="#1b7f4e"/>
+  <text x="36" y="302" font-weight="600">Mirage</text>
+  <text x="36" y="324">MirageSfx constructs AudioManager</text>
+  <text x="36" y="344">with MirageAudioBuilder. This one plays.</text>
+
+  <rect x="490" y="280" width="450" height="88" fill="#fff" stroke="#c47b00"/>
+  <text x="502" y="302" font-weight="600">Every other engine</text>
+  <text x="502" y="324">SystemSfx, or a subclass of it.</text>
+  <text x="502" y="344">SystemAudioBuilder.Create throws.</text>
+
+  <text x="24" y="400" fill="#444">Unity, Godot, MonoGame, SDL, Unreal, Ogre, Stride, bgfx, wgpu, Diligent, Raylib, O3DE, Vulkan use SystemSfx.</text>
+  <text x="24" y="420" fill="#444">OpenGL and EginX put SystemSfx straight into the factory. There is no second sfx slot.</text>
+</svg>

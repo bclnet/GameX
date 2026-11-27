@@ -74,9 +74,9 @@ public class Sprite2D : Component {
 }
 
 /// <summary>
-/// Sprite3D
+/// SpriteAlt
 /// </summary>
-public class Sprite3D : Sprite2D { }
+public class SpriteAlt : Sprite2D { }
 
 /// <summary>
 /// Light

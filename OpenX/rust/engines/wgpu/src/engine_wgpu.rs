@@ -3,7 +3,7 @@
 //
 // Ported: `WgpuEngine` registration (id, name, caps), `createInstance`,
 // and `WgpuShellEngine`.
-// Not ported: `WgpuClientHost`, `WgpuGfxSprite3D`, `WgpuGfxModel`, `WgpuSfx`,
+// Not ported: `WgpuClientHost`, `WgpuGfxSpriteAlt`, `WgpuGfxModel`, `WgpuSfx`,
 // `GfxFactory`, and `SfxFactory`. Those stay at `Engine`'s default.
 
 use std::sync::LazyLock;

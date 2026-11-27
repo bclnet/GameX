@@ -26,15 +26,16 @@ public class BgfxClientHost : IClientHost {
 #region Engine
 
 /// <summary>
-/// BgfxGfxSprite3D
+/// BgfxGfxSpriteAlt
 /// </summary>
-public class BgfxGfxSprite3D : IOpenGfxSprite<object, object> {
+public class BgfxGfxSpriteAlt : IOpenGfxSprite<object, object> {
     readonly SpriteManager<object> _spriteManager;
-    public BgfxGfxSprite3D() { }
+    public BgfxGfxSpriteAlt() { }
 
     public SpriteManager<object> SpriteManager => _spriteManager;
     public void Preload(ISource source, object path) => _spriteManager.Preload(source, path);
     public Task<(object spr, object tag)> Create(ISource source, object path, object parent = default) => _spriteManager.Create(source, path);
+    public (object sprite, GfxSpriteSheet.Frame frame) Frame(object texture, GfxSpriteSheet sheet, int index) { var frame = sheet.Frames[index]; return (texture, frame); }
 }
 
 /// <summary>
@@ -42,13 +43,13 @@ public class BgfxGfxSprite3D : IOpenGfxSprite<object, object> {
 /// </summary>
 public class BgfxGfxModel : IOpenGfxModel<object, object, object, object> {
     readonly MaterialManager<object, object> _materialManager;
-    readonly ObjectModelManager<object, object, object> _objectManager;
+    readonly GfxModelManager<object, object, object> _objectManager;
     readonly ShaderManager<object> _shaderManager;
     readonly TextureManager<object> _textureManager;
     public BgfxGfxModel() { }
 
     public MaterialManager<object, object> MaterialManager => _materialManager;
-    public ObjectModelManager<object, object, object> ObjectManager => _objectManager;
+    public GfxModelManager<object, object, object> ObjectManager => _objectManager;
     public ShaderManager<object> ShaderManager => _shaderManager;
     public TextureManager<object> TextureManager => _textureManager;
     public void Preload(ISource source, object path) => throw new NotImplementedException();
@@ -71,7 +72,7 @@ public class BgfxEngine : Engine {
     public static readonly Engine This = new BgfxEngine();
     BgfxEngine() : base("BX", "Bgfx") {
         Caps = EngineX.Caps.Drawing;
-        GfxFactory = () => [null, null, new BgfxGfxSprite3D(), new BgfxGfxModel(), null, null];
+        GfxFactory = () => [null, null, new BgfxGfxSpriteAlt(), new BgfxGfxModel(), null, null];
         SfxFactory = () => [new BgfxSfx()];
     }
 }

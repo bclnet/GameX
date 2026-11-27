@@ -1513,6 +1513,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-uncore",
+ "openx-gfx",
  "openx-vfx",
 ]
 
@@ -1584,6 +1585,7 @@ dependencies = [
  "gamex",
  "gamex-resource",
  "gamex-uncore",
+ "openx-gfx",
 ]
 
 [[package]]
@@ -1938,6 +1940,7 @@ version = "0.1.0"
 dependencies = [
  "gamex",
  "gamex-uncore",
+ "openx-gfx",
 ]
 
 [[package]]

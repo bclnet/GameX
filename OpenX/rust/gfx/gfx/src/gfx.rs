@@ -342,6 +342,14 @@ pub struct GfxSpriteSheet {
     pub anims: Vec<GfxSpriteSheetAnim>,
 }
 
+/// C# `class GfxSpriteImage`. RGBA8, top row first. `rgba` is width * height * 4.
+#[derive(Clone, Debug, Default)]
+pub struct GfxSpriteImage {
+    pub width: i32,
+    pub height: i32,
+    pub rgba: Vec<u8>,
+}
+
 //#endregion
 
 //#region Sprite
@@ -466,6 +474,67 @@ pub trait ITexture: Send + Sync {
     fn maxId(&self) -> i32 { 0 }
     /// C# `ITextureSelect.Select(int id)`.
     fn select(&self, _id: i32) {}
+}
+
+impl ITexture for GfxSpriteImage {
+    fn width(&self) -> i32 { self.width }
+    fn height(&self) -> i32 { self.height }
+    fn depth(&self) -> i32 { 1 }
+    fn mipMaps(&self) -> i32 { 1 }
+    fn texFlags(&self) -> TextureFlags { TextureFlags::empty() }
+    fn create(&self, _platform: &str, func: &mut dyn FnMut(&dyn Any)) -> Result<(), Error> {
+        func(self);
+        Ok(())
+    }
+}
+
+impl GfxSpriteSheet {
+    /// C# `GfxSpriteSheet.Pack`. Cells are `(rgba, width, height, duration)`. An empty anim list becomes one clip named `all`.
+    pub fn pack(cells: &[(Vec<u8>, i32, i32, f32)], anims: &[(String, Vec<i32>)]) -> Self {
+        const MAX_ROW: i32 = 2048;
+        let mut frames = Vec::with_capacity(cells.len());
+        let mut placed: Vec<(i32, i32, i32, i32)> = Vec::with_capacity(cells.len());
+        let mut x = 0i32;
+        let mut y = 0i32;
+        let mut row_h = 0i32;
+        let mut atlas_w = 0i32;
+        for (rgba, w, h, duration) in cells {
+            if rgba.is_empty() || *w <= 0 || *h <= 0 {
+                frames.push(GfxSpriteSheetFrame::default());
+                placed.push((0, 0, 0, 0));
+                continue;
+            }
+            if x > 0 && x + *w > MAX_ROW { y += row_h; x = 0; row_h = 0; }
+            frames.push(GfxSpriteSheetFrame { x, y, width: *w, height: *h, pivot: Vec2::new(0.5, 0.5), duration: *duration });
+            placed.push((x, y, *w, *h));
+            x += *w;
+            if *h > row_h { row_h = *h; }
+            if x > atlas_w { atlas_w = x; }
+        }
+        let mut atlas_h = y + row_h;
+        if atlas_w == 0 || atlas_h == 0 { atlas_w = 1; atlas_h = 1; }
+        let mut image = vec![0u8; (atlas_w as usize) * (atlas_h as usize) * 4];
+        for ((rgba, _, _, _), (px, py, pw, ph)) in cells.iter().zip(placed.iter()) {
+            if *pw == 0 || rgba.is_empty() { continue; }
+            for row in 0..*ph {
+                let src = (row as usize) * (*pw as usize) * 4;
+                if src >= rgba.len() { break; }
+                let n = ((*pw as usize) * 4).min(rgba.len() - src);
+                let dst = (((py + row) as usize) * (atlas_w as usize) + (*px as usize)) * 4;
+                image[dst..dst + n].copy_from_slice(&rgba[src..src + n]);
+            }
+        }
+        let anim_list = if anims.is_empty() {
+            vec![GfxSpriteSheetAnim { name: "all".to_string(), frames: (0..frames.len() as i32).collect() }]
+        } else {
+            anims.iter().map(|(name, indexes)| GfxSpriteSheetAnim { name: name.clone(), frames: indexes.clone() }).collect()
+        };
+        Self {
+            texture: Arc::new(GfxSpriteImage { width: atlas_w, height: atlas_h, rgba: image }),
+            frames,
+            anims: anim_list,
+        }
+    }
 }
 
 /// C# `interface ITextureSelect : ITexture`.

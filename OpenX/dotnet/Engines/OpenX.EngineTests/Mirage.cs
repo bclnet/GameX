@@ -5,6 +5,7 @@ using OpenX.Gfx.Mirage;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -239,5 +240,80 @@ Root
         host.Run();
         Assert.AreEqual(5, n);
         Assert.AreEqual(5, MirageEngine.Tree.Frame);
+    }
+
+    [TestMethod]
+    public void SpriteSheetRenderer_WritesTheAtlasSample() {
+        var keep = MirageEngine.KeepPixels;
+        try {
+            MirageEngine.KeepPixels = true;
+            var cells = new (byte[] rgba, int width, int height, float duration)[] {
+                (Cell(255, 0, 0), 32, 32, 0.1f),
+                (Cell(0, 255, 0), 32, 32, 0.1f),
+                (Cell(0, 0, 255), 32, 32, 0.1f),
+                (Cell(255, 255, 0), 32, 32, 0.1f),
+            };
+            var sheet = GfxSpriteSheet.Pack(cells, null);
+            var anim = sheet.Anims[0];
+            var r = new SpriteSheetRenderer(EngineX.Gfx, Source, sheet);
+            r.Start();
+            Assert.AreEqual("sheet", r.Sheet.Name);
+            Assert.AreEqual(128, r.Sheet.Width);
+            Assert.AreEqual(32, r.Sheet.Height);
+            Assert.AreEqual("RGBA32", r.Sheet.Format);
+            Assert.AreEqual(128 * 32 * 4, r.Sheet.Bytes);
+            At(r.Sheet, 0, 255, 0, 0);
+            At(r.Sheet, 32, 0, 255, 0);
+            At(r.Sheet, 64, 0, 0, 255);
+            At(r.Sheet, 96, 255, 255, 0);
+            StringAssert.Contains(MirageEngine.Tree.ToText(), $"{anim.Name} {anim.Frames.Length}");
+            var png = SceneView.TexturePng(r.Sheet);
+            var dir = DocsGfx();
+            var pngPath = Path.Combine(dir, "sheet-sample.png");
+            File.WriteAllBytes(pngPath, png);
+            var html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta charset=\"utf-8\"><title>GfxSpriteSheet sample</title></head>\n<body>\n<h1>GfxSpriteSheet sample</h1>\n<p>anim: " + anim.Name + "</p>\n<p>frames: " + anim.Frames.Length + "</p>\n<img src=\"sheet-sample.png\" alt=\"GfxSpriteSheet atlas\">\n</body>\n</html>\n";
+            File.WriteAllText(Path.Combine(dir, "sheet-sample.html"), html);
+            Assert.IsTrue(PngHas(png, 255, 0, 0), "red");
+            Assert.IsTrue(PngHas(png, 0, 255, 0), "green");
+            Assert.IsTrue(PngHas(png, 0, 0, 255), "blue");
+            Assert.IsTrue(PngHas(png, 255, 255, 0), "yellow");
+        }
+        finally { MirageEngine.KeepPixels = keep; }
+
+        static byte[] Cell(byte r, byte g, byte b) {
+            var px = new byte[32 * 32 * 4];
+            for (var i = 0; i < px.Length; i += 4) { px[i] = r; px[i + 1] = g; px[i + 2] = b; px[i + 3] = 255; }
+            return px;
+        }
+
+        static void At(Texture tex, int x, byte r, byte g, byte b) {
+            var i = x * 4;
+            Assert.AreEqual(r, tex.Pixels[i]);
+            Assert.AreEqual(g, tex.Pixels[i + 1]);
+            Assert.AreEqual(b, tex.Pixels[i + 2]);
+            Assert.AreEqual((byte)255, tex.Pixels[i + 3]);
+        }
+
+#pragma warning disable CA1416
+        static bool PngHas(byte[] png, byte r, byte g, byte b) {
+            using var ms = new MemoryStream(png);
+            using var bmp = new Bitmap(ms);
+            for (var y = 0; y < bmp.Height; y++)
+                for (var x = 0; x < bmp.Width; x++) {
+                    var c = bmp.GetPixel(x, y);
+                    if (c.R == r && c.G == g && c.B == b && c.A == 255) return true;
+                }
+            return false;
+        }
+#pragma warning restore CA1416
+
+        static string DocsGfx() {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null) {
+                if (File.Exists(Path.Combine(dir.FullName, "CLAUDE.md"))) return Path.Combine(dir.FullName, "docs", "Gfx");
+                dir = dir.Parent;
+            }
+            throw new DirectoryNotFoundException("docs/Gfx");
+        }
     }
 }

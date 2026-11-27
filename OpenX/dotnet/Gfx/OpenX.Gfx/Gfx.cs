@@ -262,6 +262,63 @@ public class GfxSpriteSheet {
     public ITexture Texture;
     public Frame[] Frames;
     public Anim[] Anims;
+
+    /// <summary>
+    /// Packs RGBA8 cells into one atlas. A row wraps at 2048 pixels. Pivot is the cell center.
+    /// An empty anim list becomes one clip named all.
+    /// </summary>
+    public static GfxSpriteSheet Pack(IReadOnlyList<(byte[] rgba, int width, int height, float duration)> cells, IReadOnlyList<(string name, int[] frames)> anims) {
+        const int maxRow = 2048;
+        cells ??= [];
+        var frames = new Frame[cells.Count];
+        var placed = new (int x, int y, int w, int h)[cells.Count];
+        int x = 0, y = 0, rowH = 0, atlasW = 0;
+        for (var i = 0; i < cells.Count; i++) {
+            var c = cells[i];
+            if (c.width <= 0 || c.height <= 0 || c.rgba == null) { frames[i] = new Frame(); continue; }
+            if (x > 0 && x + c.width > maxRow) { y += rowH; x = 0; rowH = 0; }
+            placed[i] = (x, y, c.width, c.height);
+            frames[i] = new Frame { X = x, Y = y, Width = c.width, Height = c.height, Pivot = new Vector2(0.5f, 0.5f), Duration = c.duration };
+            x += c.width;
+            if (c.height > rowH) rowH = c.height;
+            if (x > atlasW) atlasW = x;
+        }
+        var atlasH = y + rowH;
+        if (atlasW == 0 || atlasH == 0) { atlasW = 1; atlasH = 1; }
+        var rgba = new byte[atlasW * atlasH * 4];
+        for (var i = 0; i < cells.Count; i++) {
+            var c = cells[i];
+            var p = placed[i];
+            if (p.w == 0 || c.rgba == null) continue;
+            for (var row = 0; row < p.h; row++) {
+                var src = row * p.w * 4;
+                if (src >= c.rgba.Length) break;
+                var n = Math.Min(p.w * 4, c.rgba.Length - src);
+                Buffer.BlockCopy(c.rgba, src, rgba, ((p.y + row) * atlasW + p.x) * 4, n);
+            }
+        }
+        var animList = anims == null || anims.Count == 0
+            ? [new Anim { Name = "all", Frames = Enumerable.Range(0, frames.Length).ToArray() }]
+            : anims.Select(a => new Anim { Name = a.name, Frames = a.frames }).ToArray();
+        return new GfxSpriteSheet {
+            Texture = new GfxSpriteImage { Width = atlasW, Height = atlasH, Rgba = rgba },
+            Frames = frames,
+            Anims = animList,
+        };
+    }
+}
+
+/// <summary>
+/// RGBA8 image used as GfxSpriteSheet.Texture. Rgba is width * height * 4, top row first.
+/// </summary>
+public class GfxSpriteImage : ITexture {
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public byte[] Rgba = [];
+    public int Depth => 1;
+    public int MipMaps => 1;
+    public TextureFlags TexFlags => 0;
+    public T Create<T>(string platform, Func<object, T> func) => func(this);
 }
 
 #endregion

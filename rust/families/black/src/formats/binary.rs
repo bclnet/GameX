@@ -12,6 +12,8 @@
 // Frm reads `Header.FrameOffset` before `Header` is assigned in C# and ignores
 // it. This reader does not seek. `HasFrames` and `NextFrame` stay false.
 // `ITexture::select` does not retarget: `Select(0)` already filled Bytes.
+// `toSheet` packs RGBA8 cells. FrmFrame has no delay (0.1s). Six facings are
+// ne, e, se, sw, w, nw when the frame count is 6 * FramesPerDirection.
 
 use std::io::{self, Cursor, Error, ErrorKind, Read, Seek, SeekFrom};
 use std::sync::atomic::Ordering;
@@ -20,7 +22,7 @@ use bytemuck::{Pod, Zeroable};
 use gamex::binary::{ArcBinary, Archive, BinaryArchive, Stream, Task};
 use gamex::meta::{fileName, FileSource, IHaveMetaInfo, MetaContent, MetaInfo, MetaManager, Tag};
 use gamex_uncore::formats::compression::Compression;
-use openx_gfx::gfx::{AnyArc, ITexture, TextureAsBytes};
+use openx_gfx::gfx::{AnyArc, GfxSpriteSheet, ITexture, TextureAsBytes};
 use openx_gfx::gfx_texture::{TextureFlags, TextureFormat, TexturePixel};
 use openx_poly::prelude::{BinaryReaderExt, IStruct};
 use openx_vfx::vfx::VfsRead;
@@ -408,6 +410,7 @@ static DEFAULT_PALLET: Mutex<Option<Arc<Binary_Pal2>>> = Mutex::new(None);
 pub struct Binary_Frm {
     pub Header: FrmHeader,
     pub Frames: Vec<(FrmFrame, Vec<u8>)>,
+    pub Pallet: Option<[u32; 256]>,
     pub Bytes: Vec<u8>,
     pub Width: i32,
     pub Height: i32,
@@ -444,7 +447,18 @@ impl Binary_Frm {
             i += 1;
         }
         let (bytes, width, height) = selectFrame(&frames, 0)?;
-        Ok(Self { Header: header, Frames: frames, Bytes: bytes, Width: width, Height: height, me: Weak::new() })
+        Ok(Self { Header: header, Frames: frames, Pallet: Some(pallet.Rgba32), Bytes: bytes, Width: width, Height: height, me: Weak::new() })
+    }
+
+    /// Expands each frame to RGBA8 and packs one anim per facing, or `all`.
+    pub fn toSheet(&self) -> GfxSpriteSheet {
+        const DURATION: f32 = 0.1;
+        let mut cells = Vec::with_capacity(self.Frames.len());
+        for (frame, pixels) in &self.Frames {
+            let rgba = expandFrm(frame, pixels, self.Pallet.as_ref());
+            cells.push((rgba, frame.Width as i32, frame.Height as i32, DURATION));
+        }
+        GfxSpriteSheet::pack(&cells, &frmAnims(self.Header.FramesPerDirection, self.Frames.len()))
     }
 
     const FORMAT: (TextureFormat, TexturePixel) = (TextureFormat::RGBA32, TexturePixel::Unknown);
@@ -452,6 +466,36 @@ impl Binary_Frm {
     pub fn create<T>(&self, _platform: &str, func: impl FnOnce(Box<dyn std::any::Any>) -> T) -> io::Result<T> {
         Ok(func(Box::new(TextureAsBytes { bytes: self.Bytes.clone(), format: Arc::new(Self::FORMAT) as AnyArc, spans: vec![] })))
     }
+}
+
+fn expandFrm(frame: &FrmFrame, pixels: &[u8], pallet: Option<&[u32; 256]>) -> Vec<u8> {
+    let n = frame.Width as usize * frame.Height as usize;
+    if n == 0 { return Vec::new(); }
+    if pixels.len() >= n * 4 { return pixels[..n * 4].to_vec(); }
+    let mut rgba = vec![0u8; n * 4];
+    for i in 0..n {
+        let ix = if i < pixels.len() { pixels[i] } else { 0 };
+        let c = match pallet {
+            Some(p) => p[ix as usize],
+            None if ix == 0 => 0,
+            None => 0xFF00_0000 | ((ix as u32) << 16) | ((ix as u32) << 8) | ix as u32,
+        };
+        rgba[i * 4..i * 4 + 4].copy_from_slice(&c.to_le_bytes());
+    }
+    rgba
+}
+
+// Orientation 0..5. Six anims only when every facing was stored.
+fn frmAnims(fpd: u16, n: usize) -> Vec<(String, Vec<i32>)> {
+    if fpd > 0 && n == 6 * fpd as usize {
+        const FACING: [&str; 6] = ["ne", "e", "se", "sw", "w", "nw"];
+        return FACING.iter().enumerate().map(|(d, name)| {
+            let start = d * fpd as usize;
+            let frames = (0..fpd as usize).map(|i| (start + i) as i32).collect();
+            ((*name).to_string(), frames)
+        }).collect();
+    }
+    vec![("all".to_string(), (0..n as i32).collect())]
 }
 
 fn selectFrame(frames: &[(FrmFrame, Vec<u8>)], id: usize) -> io::Result<(Vec<u8>, i32, i32)> {
@@ -721,6 +765,8 @@ impl IHaveMetaInfo for Binary_Map {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use openx_gfx::gfx::{GfxSpriteImage, GfxSpriteSheet};
+    use std::any::Any;
 
     #[test]
     fn mapRejectsOtherVersionsAndSkipsAbsentElevations() {
@@ -745,5 +791,76 @@ mod tests {
         b.extend_from_slice(&[0u8; 44 * 4]);
         assert_eq!(b.len(), 0xEC);
         b
+    }
+
+    #[test]
+    fn frmToSheetPacksFakeFrames() {
+        let gray = bareFrm(2, vec![
+            (frmFrame(2, 1), vec![0, 8]),
+            (frmFrame(2, 1), vec![0, 16]),
+        ], None);
+        let sheet = gray.toSheet();
+        assert_eq!(sheet.anims.len(), 1);
+        assert_eq!(sheet.anims[0].name, "all");
+        assert_eq!(sheet.anims[0].frames, vec![0, 1]);
+        assert_eq!(sheet.frames[0].duration, 0.1);
+        assert_eq!(sheet.frames[1].duration, 0.1);
+        let img = sheetImage(&sheet);
+        assert_eq!(img.width, 4);
+        assert_eq!(img.height, 1);
+        assert_eq!(&img.rgba[0..4], &[0, 0, 0, 0]);
+        assert_eq!(&img.rgba[4..8], &[8, 8, 8, 255]);
+        assert_eq!(&img.rgba[8..12], &[0, 0, 0, 0]);
+        assert_eq!(&img.rgba[12..16], &[16, 16, 16, 255]);
+
+        let mut pal = [0u32; 256];
+        pal[0] = shiftColor(1, 2, 3, 0);
+        pal[1] = shiftColor(10, 20, 30, 0xFF);
+        let painted = bareFrm(1, vec![(frmFrame(1, 2), vec![0, 1])], Some(pal));
+        let paintedSheet = painted.toSheet();
+        assert_eq!(paintedSheet.anims[0].name, "all");
+        let paintedImg = sheetImage(&paintedSheet);
+        assert_eq!(&paintedImg.rgba[0..4], &shiftColor(1, 2, 3, 0).to_le_bytes());
+        assert_eq!(&paintedImg.rgba[4..8], &shiftColor(10, 20, 30, 0xFF).to_le_bytes());
+
+        let kept = bareFrm(1, vec![(frmFrame(1, 1), vec![9, 8, 7, 6])], None);
+        assert_eq!(&sheetImage(&kept.toSheet()).rgba[0..4], &[9, 8, 7, 6]);
+
+        let facing = bareFrm(1, (0..6).map(|i| (frmFrame(1, 1), vec![i + 1])).collect(), None);
+        let facingSheet = facing.toSheet();
+        let names: Vec<&str> = facingSheet.anims.iter().map(|a| a.name.as_str()).collect();
+        assert_eq!(names, ["ne", "e", "se", "sw", "w", "nw"]);
+        for (d, anim) in facingSheet.anims.iter().enumerate() {
+            assert_eq!(anim.frames, vec![d as i32]);
+        }
+        let facingImg = sheetImage(&facingSheet);
+        assert_eq!(facingImg.width, 6);
+        assert_eq!(&facingImg.rgba[0..4], &[1, 1, 1, 255]);
+        assert_eq!(&facingImg.rgba[20..24], &[6, 6, 6, 255]);
+    }
+
+    fn frmFrame(w: u16, h: u16) -> FrmFrame {
+        FrmFrame { Width: w, Height: h, Size: w as u32 * h as u32, PixelShiftX: 0, PixelShiftY: 0 }
+    }
+
+    fn bareFrm(fpd: u16, frames: Vec<(FrmFrame, Vec<u8>)>, pallet: Option<[u32; 256]>) -> Binary_Frm {
+        Binary_Frm {
+            Header: FrmHeader {
+                Version: 0, Fps: 10, ActionFrame: 0, FramesPerDirection: fpd,
+                PixelShiftX: [0; 6], PixelShiftY: [0; 6], FrameOffset: [0; 6], SizeOfFrame: 0,
+            },
+            Frames: frames,
+            Pallet: pallet,
+            Bytes: vec![],
+            Width: 0,
+            Height: 0,
+            me: Weak::new(),
+        }
+    }
+
+    fn sheetImage(sheet: &GfxSpriteSheet) -> GfxSpriteImage {
+        let mut found = None;
+        sheet.texture.create("", &mut |any| { found = any.downcast_ref::<GfxSpriteImage>().cloned(); }).unwrap();
+        found.expect("GfxSpriteImage")
     }
 }

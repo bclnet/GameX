@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openx.core import _pathExtension
 from gamex import Archive, BinaryArchive, ITransformAsset
-from gamex.families.Beamdog.formats.binary import Binary_Da2, Binary_Dat, Binary_Key
+from gamex.families.Beamdog.formats.binary import Binary_Bam, Binary_Da2, Binary_Dat, Binary_Key
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # BeamdogArchive
@@ -24,6 +24,7 @@ class BeamdogArchive(BinaryArchive, ITransformAsset):
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match _pathExtension(source.path).lower():
+            case '.bam': return 0, Binary_Bam.factory
             case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

@@ -189,9 +189,12 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFrames, ITextureSelect {
     #endregion
 
     static Binary_Pal2 DefaultPallet;
+    // Orientation 0..5. Six anims only when every facing was stored.
+    static readonly string[] Facing = ["ne", "e", "se", "sw", "w", "nw"];
 
     public FrmHeader Header;
     public (FrmFrame f, byte[] b)[] Frames;
+    public uint[] Pallet;
     byte[] Bytes;
 
     public unsafe Binary_Frm(BinaryReader r, FileSource f, Archive s) {
@@ -215,9 +218,52 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFrames, ITextureSelect {
         }
         Header = header;
         Frames = [.. frames];
+        Pallet = rgba32;
 
         // select a frame
         Select(0);
+    }
+
+    // FrmFrame has no delay. Cells are RGBA8. Index bytes use Pallet (VGA << 2, index 0 clear) or gray.
+    public GfxSpriteSheet ToSheet() {
+        const float duration = 0.1f;
+        var cells = new List<(byte[] rgba, int width, int height, float duration)>(Frames.Length);
+        foreach (var (frame, pixels) in Frames)
+            cells.Add((Expand(frame, pixels), frame.Width, frame.Height, duration));
+        return GfxSpriteSheet.Pack(cells, Anims());
+    }
+
+    byte[] Expand(FrmFrame frame, byte[] pixels) {
+        var n = frame.Width * frame.Height;
+        if (n == 0) return [];
+        if (pixels != null && pixels.Length >= n * 4) return pixels;
+        var rgba = new byte[n * 4];
+        for (var i = 0; i < n; i++) {
+            var ix = pixels != null && i < pixels.Length ? pixels[i] : (byte)0;
+            var c = Pallet != null ? Pallet[ix] : ix == 0 ? 0u : 0xFF000000u | (uint)(ix << 16) | (uint)(ix << 8) | ix;
+            rgba[i * 4] = (byte)c;
+            rgba[i * 4 + 1] = (byte)(c >> 8);
+            rgba[i * 4 + 2] = (byte)(c >> 16);
+            rgba[i * 4 + 3] = (byte)(c >> 24);
+        }
+        return rgba;
+    }
+
+    (string name, int[] frames)[] Anims() {
+        var fpd = Header.FramesPerDirection;
+        var n = Frames.Length;
+        if (fpd > 0 && n == 6 * fpd) {
+            var anims = new (string name, int[] frames)[6];
+            for (var d = 0; d < 6; d++) {
+                var frames = new int[fpd];
+                for (var i = 0; i < fpd; i++) frames[i] = d * fpd + i;
+                anims[d] = (Facing[d], frames);
+            }
+            return anims;
+        }
+        var all = new int[n];
+        for (var i = 0; i < n; i++) all[i] = i;
+        return [("all", all)];
     }
 
     async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryArchive s) {

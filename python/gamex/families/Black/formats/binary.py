@@ -5,7 +5,7 @@ from struct import pack_into
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource, IHaveMetaInfo, MetaContent, MetaInfo
 from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib
-from openx.gfx import ITexture, ITextureFrames, ITextureSelect, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel
+from openx.gfx import GfxSpriteSheet, ITexture, ITextureFrames, ITextureSelect, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel
 
 # typedefs
 class BinaryReader: pass
@@ -183,9 +183,37 @@ class Binary_Frm(IHaveMetaInfo, ITextureFrames, ITextureSelect):
             i += 1
         self.header = header
         self.frames = frames
+        self.pallet = rgba32
         self.fps = header.fps
         self.maxId = 1 if len(frames) == 1 else header.framesPerDirection
         self.select(0)
+
+    # FrmFrame has no delay. Index bytes use the VGA palette, or gray when none is in scope.
+    def toSheet(self):
+        cells = [(self._rgba(frame, pixels), frame.width, frame.height, 0.1) for frame, pixels in self.frames]
+        return GfxSpriteSheet.pack(cells, self._anims())
+
+    def _rgba(self, frame, pixels):
+        n = frame.width * frame.height
+        if n <= 0: return b''
+        if pixels is not None and len(pixels) >= n * 4:
+            raw = bytes(pixels)
+            return raw if len(raw) == n * 4 else raw[:n * 4]
+        out = bytearray(n * 4)
+        for i in range(n):
+            ix = pixels[i] if pixels is not None and i < len(pixels) else 0
+            c = self.pallet[ix] if self.pallet is not None else (0 if ix == 0 else (0xFF000000 | (ix << 16) | (ix << 8) | ix))
+            pack_into('<I', out, i * 4, c & 0xFFFFFFFF)
+        return bytes(out)
+
+    # Orientation 0..5. Six anims only when every facing was stored.
+    def _anims(self):
+        fpd = self.header.framesPerDirection
+        n = len(self.frames)
+        if fpd > 0 and n == 6 * fpd:
+            names = ('ne', 'e', 'se', 'sw', 'w', 'nw')
+            return [(names[d], list(range(d * fpd, (d + 1) * fpd))) for d in range(6)]
+        return [('all', list(range(n)))]
 
     @staticmethod
     async def getPalletObjAsync(path: str, s: Archive) -> Binary_Pal2:
@@ -362,3 +390,52 @@ def _mapName(raw: bytes) -> str:
     return ''.join(chr(b) if b < 128 else '?' for b in raw)
 
 #endregion - end::Binary_Map[]
+
+def _frmHeader(fpd: int):
+    t = [0] * 23
+    t[1] = 10
+    t[3] = fpd
+    return Binary_Frm.FrmHeader(tuple(t))
+
+def _frmFrame(w: int, h: int):
+    return Binary_Frm.FrmFrame((w, h, w * h, 0, 0))
+
+def _bareFrm(fpd: int, frames, pallet):
+    frm = Binary_Frm.__new__(Binary_Frm)
+    frm.header = _frmHeader(fpd)
+    frm.frames = frames
+    frm.pallet = pallet
+    return frm
+
+def checkFakeFrmSheet() -> None:
+    gray = _bareFrm(2, [(_frmFrame(2, 1), bytes([0, 8])), (_frmFrame(2, 1), bytes([0, 16]))], None)
+    sheet = gray.toSheet()
+    assert [a.name for a in sheet.anims] == ['all']
+    assert list(sheet.anims[0].frames) == [0, 1]
+    assert sheet.frames[0].duration == 0.1 and sheet.frames[1].duration == 0.1
+    assert sheet.texture.width == 4 and sheet.texture.height == 1
+    assert sheet.texture.rgba[0:4] == b'\x00\x00\x00\x00'
+    assert sheet.texture.rgba[4:8] == bytes([8, 8, 8, 255])
+    assert sheet.texture.rgba[8:12] == b'\x00\x00\x00\x00'
+    assert sheet.texture.rgba[12:16] == bytes([16, 16, 16, 255])
+
+    pal = [0] * 256
+    pal[0] = _vgaColor(1, 2, 3, 0)
+    pal[1] = _vgaColor(10, 20, 30, 0xFF)
+    painted = _bareFrm(1, [(_frmFrame(1, 2), bytes([0, 1]))], pal)
+    raw = painted.toSheet().texture.rgba
+    assert raw[0:4] == bytes([4, 8, 12, 0])
+    assert raw[4:8] == bytes([40, 80, 120, 255])
+
+    kept = _bareFrm(1, [(_frmFrame(1, 1), bytes([9, 8, 7, 6]))], None)
+    assert kept.toSheet().texture.rgba[0:4] == bytes([9, 8, 7, 6])
+
+    facing = _bareFrm(1, [(_frmFrame(1, 1), bytes([i + 1])) for i in range(6)], None)
+    facingSheet = facing.toSheet()
+    assert [a.name for a in facingSheet.anims] == ['ne', 'e', 'se', 'sw', 'w', 'nw']
+    assert [list(a.frames) for a in facingSheet.anims] == [[i] for i in range(6)]
+    assert facingSheet.texture.rgba[0:4] == bytes([1, 1, 1, 255])
+    assert facingSheet.texture.rgba[20:24] == bytes([6, 6, 6, 255])
+
+if __name__ == '__main__':
+    checkFakeFrmSheet()

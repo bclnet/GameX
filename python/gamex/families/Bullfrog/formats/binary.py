@@ -4,7 +4,7 @@ from enum import Enum
 from io import BytesIO
 from openx.core import unsafe, BinaryReader
 from openx.core.poly.log import info as logInfo
-from openx.gfx import Raster, ITextureFrames, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel
+from openx.gfx import Raster, ITextureFrames, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel, GfxSpriteSheet
 from gamex import ArcBinaryT, Archive, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.families.Bullfrog.formats.utils import Rnc
 
@@ -837,6 +837,10 @@ class Binary_SyndicateX(IHaveMetaInfo):
         SUBTILE_HEIGHT = 16
         SUBTILE_ROW_LENGTH = BLOCK_LENGTH * SUBTILE_WIDTH // PIXELS_PER_BLOCK
         self.obj = None
+        self.sprites = None
+        self.frames = None
+        self.anims = None
+        self.paletteRecords = None
         data = Rnc.read(r)
         with BinaryReader(BytesIO(data)) as r2:
             streamSize = r2.length
@@ -862,7 +866,8 @@ class Binary_SyndicateX(IHaveMetaInfo):
                     samples.append(bytes(sample))
                 self.obj = samples
             elif kind == self.Kind.Palette:
-                self.obj = self.Palette(r2.readSArray(self.X_Palette, 256))
+                self.paletteRecords = r2.readSArray(self.X_Palette, 256)
+                self.obj = self.Palette(self.paletteRecords)
             elif kind == self.Kind.Font:
                 self.obj = self.Font(r2.readSArray(self.X_Font, 128), r2.readToEnd())
             elif kind == self.Kind.Req:
@@ -973,7 +978,8 @@ class Binary_SyndicateX(IHaveMetaInfo):
                                     i += PIXELS_PER_BLOCK
                         return self.Sprite(width, height, stride, pixels)
                     count = int(streamSize // self.X_SpriteTab._struct[1])
-                    self.obj = [loadSprite(t, False) for t in r2.readSArray(self.X_SpriteTab, count)]
+                    self.sprites = [loadSprite(t, False) for t in r2.readSArray(self.X_SpriteTab, count)]
+                    self.obj = self.sprites
             elif kind == self.Kind.SpriteElement:
                 def element(t):
                     return self.SpriteElement(
@@ -986,9 +992,11 @@ class Binary_SyndicateX(IHaveMetaInfo):
                 self.obj = [element(t) for t in r2.readSArray(self.X_SpriteElement, count)]
             elif kind == self.Kind.SpriteFrame:
                 count = int(streamSize // self.X_SpriteFrame._struct[1])
-                self.obj = [self.SpriteFrame(t.firstElement, t.width, t.height, t.flags, t.nextElement) for t in r2.readSArray(self.X_SpriteFrame, count)]
+                self.frames = [self.SpriteFrame(t.firstElement, t.width, t.height, t.flags, t.nextElement) for t in r2.readSArray(self.X_SpriteFrame, count)]
+                self.obj = self.frames
             elif kind == self.Kind.SpriteAnim:
-                self.obj = r2.readPArray(None, '<H', int(streamSize // 2))
+                self.anims = r2.readPArray(None, '<H', int(streamSize // 2))
+                self.obj = self.anims
             elif kind == self.Kind.Mission:
                 # Encoding.ASCII replaces each byte above 127 with '?'.
                 text = ''.join(chr(b) if b < 128 else '?' for b in r2.readToEnd())
@@ -1010,6 +1018,45 @@ class Binary_SyndicateX(IHaveMetaInfo):
                     r2.readS(self.X_GameMapinfo),
                     r2.readSArray(self.X_GameObjective, 10),
                     r2.readBytes(1896))
+
+    # One cell per loaded sprite. A palette already on this object is used; otherwise each index is grayscale with alpha 255.
+    # SpriteFrame and SpriteAnim are separate files, so a tab open leaves them unset and pack names the clip all.
+    def toSheet(self):
+        sprites = self.sprites
+        if sprites is None and isinstance(self.obj, list) and (not self.obj or isinstance(self.obj[0], self.Sprite)): sprites = self.obj
+        sprites = sprites or []
+        records = self.paletteRecords
+        if records is None and isinstance(self.obj, self.Palette): records = self.obj.records
+        frames = self.frames
+        if frames is None and isinstance(self.obj, list) and self.obj and isinstance(self.obj[0], self.SpriteFrame): frames = self.obj
+        animIdx = self.anims
+        if animIdx is None and isinstance(self.obj, list) and self.obj and isinstance(self.obj[0], int): animIdx = self.obj
+        cells = []
+        for s in sprites:
+            cells.append((self._expand(s, records), 0 if s is None else s.width, 0 if s is None else s.height, 0.1))
+        anims = None
+        if frames is not None and animIdx is not None:
+            anims = [(str(i), [int(index)]) for i, index in enumerate(animIdx)]
+        return GfxSpriteSheet.pack(cells, anims)
+
+    @staticmethod
+    def _expand(s, records):
+        if s is None or s.width <= 0 or s.height <= 0 or not s.pixels: return None
+        w, h = s.width, s.height
+        stride = s.stride if s.stride > 0 else w
+        rgba = bytearray(w * h * 4)
+        pixels = s.pixels
+        for y in range(h):
+            for x in range(w):
+                src = y * stride + x
+                index = pixels[src] if src < len(pixels) else 0
+                o = (y * w + x) * 4
+                if records is not None and index < len(records):
+                    c = records[index]
+                    rgba[o] = c.r; rgba[o + 1] = c.g; rgba[o + 2] = c.b; rgba[o + 3] = 255
+                else:
+                    rgba[o] = rgba[o + 1] = rgba[o + 2] = index; rgba[o + 3] = 255
+        return bytes(rgba)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'Bullfrog')),

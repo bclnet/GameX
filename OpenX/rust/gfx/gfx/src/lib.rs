@@ -15,7 +15,7 @@ pub mod prelude {
     pub use crate::gfx::{
         GfX, GfxAlphaMode, GfxAttach, GfxBlendMode, Backend, AnyBox, AnyArc, Color,
         GfxUnknownBuilder, GfxUnknownManager,
-        GfxSpriteSheetFrame, GfxSpriteSheetAnim, GfxSpriteSheet,
+        GfxSpriteSheetFrame, GfxSpriteSheetAnim, GfxSpriteSheet, GfxSpriteImage,
         IGfxModel, GfxModelBuilder, GfxModelManager,
         GfxShader, ShaderBuilder, ShaderManager,
         ISprite, SpriteBuilder, SpriteManager,

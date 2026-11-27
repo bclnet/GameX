@@ -1,4 +1,5 @@
 ﻿using GameX.Uncore.Formats;
+using OpenX.Gfx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -418,6 +419,97 @@ public class Binary_Da2 : ArcBinary<Binary_Da2> {
         }
         return Encoding.ASCII.GetString(bytes.ToArray());
     }
+}
+
+#endregion
+
+// PST irongolm.bif GLOW3 frame 0 is 10 00 10 00 08 00 08 00 2A 04 00 00: 16x16, data offset 0x42A, bit 31 clear, 98 payload bytes. Header byte 0x0B is 0.
+// pillar.bif BONE has the same 0 and a clear bit 31, and its payload length equals width*height with no 0 byte, so that byte is the RLE color, not "0 means uncompressed".
+// 668 of 669 PST V1 BAMs store 0 there; one stores 28. Uncompressed is bit 31 set: irongolm.bif entry 1 frame 0 is 96 00 96 00 01 00 01 00 E0 05 00 80 (0x800005E0), 32 frames, 720000 pixels, file 721504.
+// Bit 31 clear is RLE and is not decoded. Cycles follow the frames as uint16 count plus uint16 lookup start. GLOW3 at file+36 is 01 00 00 00 and the lookup at 1064 is 00 00. BONE's lookup is 32 bytes for 16 uint16 indexes.
+
+#region Binary_Bam
+
+public class Binary_Bam : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult<object>(new Binary_Bam(r));
+
+    public readonly int FrameCount;
+    readonly GfxSpriteSheet _sheet;
+    public GfxSpriteSheet ToSheet() => _sheet;
+
+    public Binary_Bam(BinaryReader r) {
+        var sigBytes = r.ReadBytes(8);
+        if (sigBytes.Length != 8) throw new FormatException("Binary_Bam: truncated");
+        var sig = Encoding.ASCII.GetString(sigBytes);
+        if (sig == "BAMCV1  ") throw new FormatException("Binary_Bam: compressed BAMC");
+        if (sig != "BAM V1  ") throw new FormatException("Binary_Bam: not BAM V1");
+        FrameCount = r.ReadUInt16();
+        var cycleCount = r.ReadByte();
+        var rleColor = r.ReadByte();
+        var frameOfs = r.ReadUInt32();
+        var paletteOfs = r.ReadUInt32();
+        var lookupOfs = r.ReadUInt32();
+        var len = r.BaseStream.Length;
+        void Need(long at, long n) { if (at < 0 || n < 0 || at + n > len) throw new FormatException("Binary_Bam: truncated"); }
+
+        Need(frameOfs, 12L * FrameCount + 4L * cycleCount);
+        r.Seek(frameOfs);
+        var frames = new (int w, int h, uint data)[FrameCount];
+        for (var i = 0; i < FrameCount; i++) {
+            var w = r.ReadUInt16();
+            var h = r.ReadUInt16();
+            _ = r.ReadInt16();
+            _ = r.ReadInt16();
+            frames[i] = (w, h, r.ReadUInt32());
+        }
+        var heads = new (int count, int first)[cycleCount];
+        for (var i = 0; i < cycleCount; i++) heads[i] = (r.ReadUInt16(), r.ReadUInt16());
+
+        Need(paletteOfs, 1024);
+        r.Seek(paletteOfs);
+        var pal = r.ReadBytes(1024);
+        if (pal.Length != 1024) throw new FormatException("Binary_Bam: truncated");
+
+        var cells = new List<(byte[] rgba, int width, int height, float duration)>(FrameCount);
+        foreach (var (w, h, data) in frames) {
+            if ((data & 0x80000000) == 0) throw new FormatException($"Binary_Bam: compressed RLE (color {rleColor})");
+            var n = (long)w * h;
+            if (n > int.MaxValue) throw new FormatException("Binary_Bam: truncated");
+            var at = (long)(data & 0x7FFFFFFFu);
+            Need(at, n);
+            r.Seek(at);
+            var idx = r.ReadBytes((int)n);
+            if (idx.Length != n) throw new FormatException("Binary_Bam: truncated");
+            var rgba = new byte[idx.Length * 4];
+            for (var i = 0; i < idx.Length; i++) {
+                var p = idx[i];
+                var o = p * 4;
+                rgba[i * 4] = pal[o + 2];
+                rgba[i * 4 + 1] = pal[o + 1];
+                rgba[i * 4 + 2] = pal[o];
+                rgba[i * 4 + 3] = p == 0 ? (byte)0 : pal[o + 3] == 0 ? (byte)255 : pal[o + 3];
+            }
+            cells.Add((rgba, w, h, 0.1f));
+        }
+
+        var anims = new List<(string name, int[] frames)>();
+        if (lookupOfs != 0) {
+            foreach (var (count, first) in heads) {
+                Need(lookupOfs + 2L * first, 2L * count);
+                r.Seek(lookupOfs + 2L * first);
+                var idx = new int[count];
+                for (var k = 0; k < count; k++) idx[k] = r.ReadUInt16();
+                anims.Add(($"{anims.Count}", idx));
+            }
+        }
+        _sheet = GfxSpriteSheet.Pack(cells, anims);
+    }
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new("Binary_Bam", items: [
+            new($"Frames: {FrameCount}"),
+        ])
+    ];
 }
 
 #endregion

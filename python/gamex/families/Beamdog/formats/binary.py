@@ -2,6 +2,7 @@ from __future__ import annotations
 import os
 from io import BytesIO
 from openx.core import BinaryReader, _pathExtension
+from openx.gfx import GfxSpriteSheet
 from gamex import ArcBinaryT, FileSource, MetaInfo, IHaveMetaInfo
 from gamex.families.Uncore.formats.binary import Binary_Zip
 from gamex.families.Uncore.formats.compression import decompressZlib
@@ -317,6 +318,78 @@ class Binary_Da2(ArcBinaryT):
 
 #endregion
 
+# PST irongolm.bif GLOW3 frame 0 is 10 00 10 00 08 00 08 00 2A 04 00 00: 16x16, data offset 0x42A, bit 31 clear, 98 payload bytes. Header byte 0x0B is 0.
+# pillar.bif BONE has the same 0 and a clear bit 31, and its payload length equals width*height with no 0 byte, so that byte is the RLE color, not "0 means uncompressed".
+# 668 of 669 PST V1 BAMs store 0 there; one stores 28. Uncompressed is bit 31 set: irongolm.bif entry 1 frame 0 is 96 00 96 00 01 00 01 00 E0 05 00 80 (0x800005E0), 32 frames, 720000 pixels, file 721504.
+# Bit 31 clear is RLE and is not decoded. Cycles follow the frames as uint16 count plus uint16 lookup start. GLOW3 at file+36 is 01 00 00 00 and the lookup at 1064 is 00 00. BONE's lookup is 32 bytes for 16 uint16 indexes.
+
+#region Binary_Bam
+
+# Binary_Bam
+class Binary_Bam(IHaveMetaInfo):
+    @staticmethod
+    async def factory(r: BinaryReader, f: FileSource, s): return Binary_Bam(r)
+
+    def __init__(self, r: BinaryReader):
+        sig = bytes(r.readBytes(8))
+        if len(sig) != 8: raise Exception('Binary_Bam: truncated')
+        if sig == b'BAMCV1  ': raise Exception('Binary_Bam: compressed BAMC')
+        if sig != b'BAM V1  ': raise Exception('Binary_Bam: not BAM V1')
+        self.frameCount = r.readUInt16()
+        cycleCount = r.readByte()
+        rleColor = r.readByte()
+        frameOfs = r.readUInt32()
+        paletteOfs = r.readUInt32()
+        lookupOfs = r.readUInt32()
+        length = r.length
+        def need(at, n):
+            if at < 0 or n < 0 or at + n > length: raise Exception('Binary_Bam: truncated')
+        need(frameOfs, 12 * self.frameCount + 4 * cycleCount)
+        r.seek(frameOfs)
+        frames = []
+        for _ in range(self.frameCount):
+            w = r.readUInt16(); h = r.readUInt16(); r.readInt16(); r.readInt16()
+            frames.append((w, h, r.readUInt32()))
+        heads = [(r.readUInt16(), r.readUInt16()) for _ in range(cycleCount)]
+        need(paletteOfs, 1024)
+        r.seek(paletteOfs)
+        pal = r.readBytes(1024)
+        if len(pal) != 1024: raise Exception('Binary_Bam: truncated')
+        cells = []
+        for w, h, data in frames:
+            if (data & 0x80000000) == 0: raise Exception(f'Binary_Bam: compressed RLE (color {rleColor})')
+            n = w * h
+            at = data & 0x7FFFFFFF
+            need(at, n)
+            r.seek(at)
+            idx = r.readBytes(n)
+            if len(idx) != n: raise Exception('Binary_Bam: truncated')
+            rgba = bytearray(n * 4)
+            for i, p in enumerate(idx):
+                o = p * 4
+                rgba[i * 4] = pal[o + 2]
+                rgba[i * 4 + 1] = pal[o + 1]
+                rgba[i * 4 + 2] = pal[o]
+                rgba[i * 4 + 3] = 0 if p == 0 else (255 if pal[o + 3] == 0 else pal[o + 3])
+            cells.append((bytes(rgba), w, h, 0.1))
+        anims = []
+        if lookupOfs != 0:
+            for count, first in heads:
+                need(lookupOfs + 2 * first, 2 * count)
+                r.seek(lookupOfs + 2 * first)
+                anims.append((str(len(anims)), [r.readUInt16() for _ in range(count)]))
+        self._sheet = GfxSpriteSheet.pack(cells, anims)
+
+    def toSheet(self): return self._sheet
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo('Binary_Bam', items = [
+            MetaInfo(f'Frames: {self.frameCount}'),
+        ])
+    ]
+
+#endregion
+
 #region Binary_XXX
 
 # Binary_XXX
@@ -328,3 +401,37 @@ class Binary_XXX(ArcBinaryT):
         raise NotImplementedError()
 
 #endregion
+
+def _sampleBam() -> bytes:
+    import struct
+    pal = bytearray(1024)
+    pal[0:4] = bytes([9, 8, 7, 4])
+    pal[4:8] = bytes([0, 0, 255, 0])
+    buf = bytearray(b'BAM V1  ')
+    buf += struct.pack('<HBBIII', 2, 1, 0, 24, 52, 1076)
+    buf += struct.pack('<HHhhI', 2, 2, 0, 0, 1080 | 0x80000000)
+    buf += struct.pack('<HHhhI', 2, 2, 1, 1, 1084 | 0x80000000)
+    buf += struct.pack('<HH', 2, 0)
+    buf += pal
+    buf += struct.pack('<HH', 0, 1)
+    buf += bytes([0, 1, 1, 1, 1, 1, 1, 0])
+    return bytes(buf)
+
+def _checkBam() -> None:
+    bam = Binary_Bam(BinaryReader(BytesIO(_sampleBam())))
+    sheet = bam.toSheet()
+    assert len(sheet.frames) == 2
+    assert sheet.frames[0].duration == 0.1
+    assert len(sheet.anims) == 1 and list(sheet.anims[0].frames) == [0, 1]
+    rgba = sheet.texture.rgba
+    assert rgba[3] == 0 and bytes(rgba[0:4]) == bytes([7, 8, 9, 0])
+    assert rgba[7] == 255
+    raw = bytearray(_sampleBam())
+    assert int.from_bytes(raw[32:36], 'little') == 1080 | 0x80000000
+    raw[35] = 0
+    try: Binary_Bam(BinaryReader(BytesIO(bytes(raw))))
+    except Exception as e:
+        if 'compressed RLE' not in str(e): raise
+    else: raise Exception('compressed BAM did not throw')
+
+if __name__ == '__main__': _checkBam()

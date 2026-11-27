@@ -250,6 +250,12 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
         Select(0);
     }
 
+    // Cells already decoded. A null palette expands indexes as grayscale.
+    public Binary_Nwx(IReadOnlyList<(int width, int height, bool flip, byte[] data)> cells, (byte r, byte g, byte b)[] palette) {
+        Cells = cells.ToList();
+        Palette = palette;
+    }
+
     readonly (byte r, byte g, byte b)[] Palette;
     readonly List<(int width, int height, bool flip, byte[] data)> Cells;
     bool Flip;
@@ -266,34 +272,32 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) {
-        int width = Width, height = Height;
-        var data = CellData;
+    public T Create<T>(string platform, Func<object, T> func)
+        => func(new TextureAsBytes(Rgba(Width, Height, Flip, CellData), Format, null));
 
+    // Column-major indexes. flip writes top-down; otherwise the same walk is stored backwards. Index 0 is transparent.
+    byte[] Rgba(int width, int height, bool flip, byte[] data) {
         var bytes = new byte[width * height * 4];
-        if (Flip) {
-            var i = 0;
-            for (var row = 0; row < height; row++)
-                for (var col = 0; col < width; col++, i += 4) {
-                    var pixel = data[col * height + row];
-                    bytes[i + 0] = Palette[pixel].r;
-                    bytes[i + 1] = Palette[pixel].g;
-                    bytes[i + 2] = Palette[pixel].b;
-                    bytes[i + 3] = pixel == 0 ? (byte)0 : (byte)255;
-                }
+        var i = flip ? 0 : bytes.Length - 4;
+        var step = flip ? 4 : -4;
+        for (var row = 0; row < height; row++)
+            for (var col = 0; col < width; col++, i += step) {
+                var pixel = data[col * height + row];
+                if (Palette == null) bytes[i] = bytes[i + 1] = bytes[i + 2] = pixel;
+                else { bytes[i] = Palette[pixel].r; bytes[i + 1] = Palette[pixel].g; bytes[i + 2] = Palette[pixel].b; }
+                bytes[i + 3] = pixel == 0 ? (byte)0 : (byte)255;
+            }
+        return bytes;
+    }
+
+    /// <summary>One frame per cell, duration 0.1s.</summary>
+    public GfxSpriteSheet ToSheet() {
+        var cells = new (byte[] rgba, int width, int height, float duration)[Cells.Count];
+        for (var i = 0; i < Cells.Count; i++) {
+            var c = Cells[i];
+            cells[i] = (Rgba(c.width, c.height, c.flip, c.data), c.width, c.height, 0.1f);
         }
-        else {
-            var i = bytes.Length - 4;
-            for (var row = 0; row < height; row++)
-                for (var col = 0; col < width; col++, i -= 4) {
-                    var pixel = data[col * height + row];
-                    bytes[i + 0] = Palette[pixel].r;
-                    bytes[i + 1] = Palette[pixel].g;
-                    bytes[i + 2] = Palette[pixel].b;
-                    bytes[i + 3] = pixel == 0 ? (byte)0 : (byte)255;
-                }
-        }
-        return func(new TextureAsBytes(bytes, Format, null));
+        return GfxSpriteSheet.Pack(cells, null);
     }
     public int MaxId => -1;
     public void Select(int id) => (Width, Height, Flip, CellData) = Cells[id % Cells.Count];
@@ -307,6 +311,29 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
             //new($"Height: {Height}"),
         ])
     ];
+}
+
+public static class Binary_NwxSheetTest {
+    public static void TwoCells() {
+        var pal = new (byte r, byte g, byte b)[] { (0, 0, 0), (10, 20, 30), (40, 50, 60), (70, 80, 90) };
+        var sheet = new Binary_Nwx(new (int width, int height, bool flip, byte[] data)[] {
+            (2, 1, true, [1, 2]),
+            (1, 2, false, [3, 0]),
+        }, pal).ToSheet();
+        if (sheet.Frames.Length != 2) throw new InvalidOperationException("frames");
+        if (sheet.Frames[0].Duration != 0.1f || sheet.Frames[1].Duration != 0.1f) throw new InvalidOperationException("duration");
+        if (sheet.Frames[0].Width != 2 || sheet.Frames[0].Height != 1 || sheet.Frames[0].X != 0) throw new InvalidOperationException("frame0");
+        if (sheet.Frames[1].X != 2 || sheet.Frames[1].Width != 1 || sheet.Frames[1].Height != 2) throw new InvalidOperationException("frame1");
+        if (sheet.Anims.Length != 1 || sheet.Anims[0].Name != "all" || sheet.Anims[0].Frames.Length != 2) throw new InvalidOperationException("anim");
+        var img = (GfxSpriteImage)sheet.Texture;
+        var expect = new byte[] {
+            10, 20, 30, 255, 40, 50, 60, 255, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 70, 80, 90, 255,
+        };
+        if (img.Width != 3 || img.Height != 2 || !img.Rgba.AsSpan().SequenceEqual(expect)) throw new InvalidOperationException("rgba " + BitConverter.ToString(img.Rgba));
+        var gray = (GfxSpriteImage)new Binary_Nwx([(1, 1, true, new byte[] { 7 })], null).ToSheet().Texture;
+        if (gray.Width != 1 || !gray.Rgba.AsSpan().SequenceEqual(new byte[] { 7, 7, 7, 255 })) throw new InvalidOperationException("gray");
+    }
 }
 
 #endregion

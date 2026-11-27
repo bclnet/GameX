@@ -4,8 +4,8 @@
 //
 // PARTIAL PORT: `getArcBinary` dispatches `.key` / `.bif` to `Binary_Key`,
 // `.dat` to `Binary_Dat`, and `.gob` / `.lmp` to `Binary_Da2`. Those readers
-// are regions in `formats/binary.rs`. `assetFactory` is still `UncoreArchive` for every
-// extension. `ITransformAsset` is not wired: `UnknownTransform` is a stub,
+// are regions in `formats/binary.rs`. `assetFactory` sends `.bam` to `Binary_Bam`
+// and every other extension to `UncoreArchive`. `ITransformAsset` is not wired: `UnknownTransform` is a stub,
 // the same choice as Arkane. C# finds `BeamdogArchive` by name through
 // Type.GetType; `register` adds it under the same spec string.
 
@@ -15,7 +15,7 @@ use gamex::binary::{newArchive, ArcBinary, Archive, AssetFactory, BinaryArchive,
 use gamex::family::{registerType, ArchiveFactory, FamilyGame};
 use gamex::meta::{extension, FileSource, Tag};
 use gamex_uncore::uncore::UncoreArchive;
-use crate::formats::binary::{Binary_Da2, Binary_Dat, Binary_Key};
+use crate::formats::binary::{Binary_Bam, Binary_Da2, Binary_Dat, Binary_Key};
 
 pub fn register() {
     registerType::<ArchiveFactory>("GameX.Beamdog.BeamdogArchive, GameX.Beamdog", |parent, state| Ok(BeamdogArchive::new(parent, state)? as Arc<dyn Archive>));
@@ -45,6 +45,7 @@ impl BeamdogArchive {
 
     pub fn assetFactory(source: &FileSource, game: &FamilyGame) -> (Tag, Option<AssetFactory>) {
         match extension(&source.path).to_lowercase().as_str() {
+            ".bam" => (Tag::Int(0), Some(Binary_Bam::factory)),
             _ => UncoreArchive::assetFactory(source, game),
         }
     }

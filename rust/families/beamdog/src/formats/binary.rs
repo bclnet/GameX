@@ -2,7 +2,7 @@
 // PORT-SHA: 39d9e56345f6a781
 // PORT-STATUS: done
 //
-// Binary_Key, Binary_Dat, and Binary_Da2 are regions of this file.
+// Binary_Key, Binary_Dat, Binary_Da2, and Binary_Bam are regions of this file.
 // Left out of the C# reader too: tileset payloads, KEY V1.1, "BIF " V1.0
 // (.cbf), and encrypted bifs. Binary_Dat throws unless the magic is a zip
 // local header. Binary_Abc and Binary_XXX stay the unused stubs.
@@ -12,7 +12,8 @@ use std::collections::HashMap;
 use std::io::{self, Cursor, Error, ErrorKind, Read, Seek, SeekFrom};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, LazyLock};
-use gamex::binary::{ArcBinary, BinaryArchive, Stream, Task};
+use gamex::binary::{ArcBinary, Archive, BinaryArchive, Stream, Task};
+use openx_gfx::gfx::GfxSpriteSheet;
 use gamex::meta::{directoryName, extension, FileSource, IHaveMetaInfo, MetaInfo, MetaManager, Tag};
 use gamex_uncore::formats::binary::Binary_Zip;
 use gamex_uncore::formats::compression::Compression;
@@ -318,6 +319,14 @@ fn ext(resType: u16) -> &'static str {
 
 fn readU32(r: &mut (impl Read + ?Sized)) -> io::Result<u32> { let mut b = [0u8; 4]; r.read_exact(&mut b)?; Ok(u32::from_le_bytes(b)) }
 fn readU16(r: &mut (impl Read + ?Sized)) -> io::Result<u16> { let mut b = [0u8; 2]; r.read_exact(&mut b)?; Ok(u16::from_le_bytes(b)) }
+fn readI16(r: &mut (impl Read + ?Sized)) -> io::Result<i16> { let mut b = [0u8; 2]; r.read_exact(&mut b)?; Ok(i16::from_le_bytes(b)) }
+fn readU8(r: &mut (impl Read + ?Sized)) -> io::Result<u8> { let mut b = [0u8; 1]; r.read_exact(&mut b)?; Ok(b[0]) }
+fn lenOf(r: &mut (impl Seek + ?Sized)) -> io::Result<u64> {
+    let pos = r.stream_position()?;
+    let end = r.seek(SeekFrom::End(0))?;
+    r.seek(SeekFrom::Start(pos))?;
+    Ok(end)
+}
 fn readExact(r: &mut (impl Read + ?Sized), n: usize) -> io::Result<Vec<u8>> { let mut b = vec![0u8; n]; r.read_exact(&mut b)?; Ok(b) }
 fn readSome(r: &mut (impl Read + ?Sized), n: usize) -> io::Result<Vec<u8>> {
     let mut b = vec![0u8; n];
@@ -539,6 +548,98 @@ fn cString(rec: &[u8], start: usize, max: usize) -> String {
 
 // #endregion
 
+// PST irongolm.bif GLOW3 frame 0 is 10 00 10 00 08 00 08 00 2A 04 00 00: 16x16, data offset 0x42A, bit 31 clear, 98 payload bytes. Header byte 0x0B is 0.
+// pillar.bif BONE has the same 0 and a clear bit 31, and its payload length equals width*height with no 0 byte, so that byte is the RLE color, not "0 means uncompressed".
+// 668 of 669 PST V1 BAMs store 0 there; one stores 28. Uncompressed is bit 31 set: irongolm.bif entry 1 frame 0 is 96 00 96 00 01 00 01 00 E0 05 00 80 (0x800005E0), 32 frames, 720000 pixels, file 721504.
+// Bit 31 clear is RLE and is not decoded. Cycles follow the frames as uint16 count plus uint16 lookup start. GLOW3 at file+36 is 01 00 00 00 and the lookup at 1064 is 00 00. BONE's lookup is 32 bytes for 16 uint16 indexes.
+
+// #region Binary_Bam
+
+pub struct Binary_Bam {
+    frames: usize,
+    sheet: GfxSpriteSheet,
+}
+
+impl Binary_Bam {
+    pub fn factory<'a>(r: &'a mut Stream, _f: Arc<FileSource>, _s: &'a dyn Archive) -> Task<'a, Tag> {
+        Box::pin(async move { Ok(Tag::Info(Arc::new(Self::new(r)?))) })
+    }
+
+    pub fn new<R: Read + Seek + ?Sized>(r: &mut R) -> io::Result<Self> {
+        let sig = readExact(r, 8)?;
+        if sig == b"BAMCV1  " { return Err(Error::new(ErrorKind::InvalidData, "Binary_Bam: compressed BAMC")); }
+        if sig != b"BAM V1  " { return Err(Error::new(ErrorKind::InvalidData, "Binary_Bam: not BAM V1")); }
+        let frameCount = readU16(r)? as usize;
+        let cycleCount = readU8(r)? as usize;
+        let rleColor = readU8(r)?;
+        let frameOfs = readU32(r)? as u64;
+        let paletteOfs = readU32(r)? as u64;
+        let lookupOfs = readU32(r)? as u64;
+        let len = lenOf(r)?;
+        fn need(len: u64, at: u64, n: u64) -> io::Result<()> {
+            match at.checked_add(n) {
+                Some(end) if end <= len => Ok(()),
+                _ => Err(Error::new(ErrorKind::InvalidData, "Binary_Bam: truncated")),
+            }
+        }
+        need(len, frameOfs, (frameCount as u64) * 12 + (cycleCount as u64) * 4)?;
+        seekTo(r, frameOfs)?;
+        let mut frames = Vec::with_capacity(frameCount);
+        for _ in 0..frameCount {
+            let w = readU16(r)?;
+            let h = readU16(r)?;
+            let _cx = readI16(r)?;
+            let _cy = readI16(r)?;
+            frames.push((w, h, readU32(r)?));
+        }
+        let mut heads = Vec::with_capacity(cycleCount);
+        for _ in 0..cycleCount { heads.push((readU16(r)?, readU16(r)?)); }
+        need(len, paletteOfs, 1024)?;
+        seekTo(r, paletteOfs)?;
+        let pal = readExact(r, 1024)?;
+        let mut cells = Vec::with_capacity(frameCount);
+        for (w, h, data) in frames {
+            if data & 0x80000000 == 0 { return Err(Error::new(ErrorKind::InvalidData, format!("Binary_Bam: compressed RLE (color {rleColor})"))); }
+            let n = (w as u64) * (h as u64);
+            let at = (data & 0x7FFFFFFF) as u64;
+            need(len, at, n)?;
+            seekTo(r, at)?;
+            let idx = readExact(r, n as usize)?;
+            let mut rgba = vec![0u8; idx.len() * 4];
+            for (i, p) in idx.into_iter().enumerate() {
+                let o = p as usize * 4;
+                rgba[i * 4] = pal[o + 2];
+                rgba[i * 4 + 1] = pal[o + 1];
+                rgba[i * 4 + 2] = pal[o];
+                rgba[i * 4 + 3] = if p == 0 { 0 } else if pal[o + 3] == 0 { 255 } else { pal[o + 3] };
+            }
+            cells.push((rgba, w as i32, h as i32, 0.1f32));
+        }
+        let mut anims = Vec::new();
+        if lookupOfs != 0 {
+            for (count, first) in heads {
+                need(len, lookupOfs + 2 * first as u64, 2 * count as u64)?;
+                seekTo(r, lookupOfs + 2 * first as u64)?;
+                let mut idx = Vec::with_capacity(count as usize);
+                for _ in 0..count { idx.push(readU16(r)? as i32); }
+                anims.push((anims.len().to_string(), idx));
+            }
+        }
+        let sheet = GfxSpriteSheet::pack(&cells, &anims);
+        Ok(Self { frames: frameCount, sheet })
+    }
+
+    pub fn toSheet(&self) -> &GfxSpriteSheet { &self.sheet }
+}
+
+impl IHaveMetaInfo for Binary_Bam {
+    fn getInfoNodes(&self, _resource: Option<&dyn MetaManager>, _file: Option<&Arc<FileSource>>, _tag: &Tag) -> Vec<MetaInfo> {
+        vec![MetaInfo::new(Some(format!("Frames: {}", self.frames)), Tag::None, vec![], false)]
+    }
+}
+
+// #endregion
+
 // #region Binary_XXX
 
 pub struct Binary_XXX;
@@ -659,6 +760,74 @@ mod da2Tests {
     fn unknownMagicNamesTheBytes() {
         let err = readBuf("a.gob", vec![0xFFu8; GobStride]).unwrap_err();
         assert!(err.to_string().contains("FFFFFFFF"), "{}", err);
+    }
+}
+
+#[cfg(test)]
+mod bamTests {
+    use super::*;
+    use openx_gfx::gfx::GfxSpriteImage;
+    use std::io::Cursor;
+
+    fn putU16(b: &mut Vec<u8>, v: u16) { b.extend_from_slice(&v.to_le_bytes()); }
+    fn putU32(b: &mut Vec<u8>, v: u32) { b.extend_from_slice(&v.to_le_bytes()); }
+
+    // 2 frames, 2x2, one cycle. Palette index 0 stores alpha 4 and must come out 0.
+    fn sampleBam() -> Vec<u8> {
+        let mut pal = vec![0u8; 1024];
+        pal[0..4].copy_from_slice(&[9, 8, 7, 4]);
+        pal[4..8].copy_from_slice(&[0, 0, 255, 0]);
+        let mut b = Vec::new();
+        b.extend_from_slice(b"BAM V1  ");
+        putU16(&mut b, 2);
+        b.push(1);
+        b.push(0);
+        putU32(&mut b, 24);
+        putU32(&mut b, 52);
+        putU32(&mut b, 1076);
+        putU16(&mut b, 2); putU16(&mut b, 2); putU16(&mut b, 0); putU16(&mut b, 0); putU32(&mut b, 1080 | 0x80000000);
+        putU16(&mut b, 2); putU16(&mut b, 2); putU16(&mut b, 1); putU16(&mut b, 1); putU32(&mut b, 1084 | 0x80000000);
+        putU16(&mut b, 2); putU16(&mut b, 0);
+        b.extend_from_slice(&pal);
+        putU16(&mut b, 0); putU16(&mut b, 1);
+        b.extend_from_slice(&[0, 1, 1, 1, 1, 1, 1, 0]);
+        b
+    }
+
+    fn rgbaOf(sheet: &GfxSpriteSheet) -> Vec<u8> {
+        let mut rgba = Vec::new();
+        sheet.texture.create("", &mut |any| {
+            if let Some(img) = any.downcast_ref::<GfxSpriteImage>() { rgba = img.rgba.clone(); }
+        }).unwrap();
+        rgba
+    }
+
+    #[test]
+    fn uncompressedBamToSheet() {
+        let mut cursor = Cursor::new(sampleBam());
+        let bam = Binary_Bam::new(&mut cursor).unwrap();
+        let sheet = bam.toSheet();
+        assert_eq!(sheet.frames.len(), 2);
+        assert_eq!(sheet.frames[0].duration, 0.1f32);
+        assert_eq!(sheet.anims.len(), 1);
+        assert_eq!(sheet.anims[0].frames, vec![0, 1]);
+        let rgba = rgbaOf(sheet);
+        assert_eq!(rgba[3], 0);
+        assert_eq!(&rgba[0..4], &[7, 8, 9, 0]);
+        assert_eq!(rgba[7], 255);
+    }
+
+    #[test]
+    fn compressedBamThrows() {
+        let mut raw = sampleBam();
+        let off = u32::from_le_bytes(raw[32..36].try_into().unwrap());
+        assert_eq!(off, 1080 | 0x80000000);
+        raw[35] = 0; // bit 31 of frame 0's data offset
+        let mut cursor = Cursor::new(raw);
+        match Binary_Bam::new(&mut cursor) {
+            Err(err) => assert!(err.to_string().contains("compressed RLE"), "{err}"),
+            Ok(_) => panic!("compressed BAM did not throw"),
+        }
     }
 }
 

@@ -29,6 +29,7 @@ public static class MirageRenderer {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
             "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0.., false),
             "Sprite" => new SpriteRenderer(gfx, source, obj),
+            "SpriteSheet" => new SpriteSheetRenderer(gfx, source, obj),
             "Object" => new ObjectRenderer(gfx, source, obj),
             "Model" => new ModelRenderer(gfx, source, obj),
             "Level" => new LevelRenderer(gfx, source, obj),

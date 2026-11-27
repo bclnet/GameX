@@ -34,6 +34,7 @@ public class BeamdogArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> 
 
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
+            ".bam" => (0, Binary_Bam.Factory),
             _ => UncoreArchive.AssetFactory(source, game),
         };
 

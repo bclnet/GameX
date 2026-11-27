@@ -159,6 +159,48 @@ public class SpriteRenderer(IOpenGfx[] gfx, ISource source, object obj) : Mirage
 
 #endregion
 
+#region SpriteSheetRenderer
+
+/// <summary>
+/// SpriteSheetRenderer - copies a GfxSpriteSheet atlas into a Texture named sheet, and notes the first anim.
+/// </summary>
+public class SpriteSheetRenderer : MirageRenderer {
+    readonly MirageGfxSprite GfxSprite;
+    readonly object Obj;
+    public Texture Sheet { get; private set; }
+
+    public SpriteSheetRenderer(IOpenGfx[] gfx, ISource source, object obj) : base("SpriteSheet") {
+        GfxSprite = (MirageGfxSprite)gfx[GfX.XSprite];
+        Obj = obj;
+    }
+
+    public override void Start() {
+        base.Start();
+        if (Obj is not GfxSpriteSheet sheet) return;
+        var image = sheet.Texture as GfxSpriteImage;
+        var pixels = image?.Rgba;
+        var copy = pixels == null ? null : (byte[])pixels.Clone();
+        Sheet = Tree.Resources.Add(new Texture {
+            Name = "sheet",
+            Width = image?.Width ?? 0,
+            Height = image?.Height ?? 0,
+            Format = "RGBA32",
+            Bytes = copy?.Length ?? 0,
+            Pixels = copy,
+        });
+        var anim = sheet.Anims is { Length: > 0 } ? sheet.Anims[0] : null;
+        var animName = string.IsNullOrEmpty(anim?.Name) ? "anim" : anim.Name;
+        var count = anim?.Frames?.Length ?? sheet.Frames?.Length ?? 0;
+        Node.AddChild($"{animName} {count}");
+        if (sheet.Frames is { Length: > 0 }) {
+            var (sprite, _) = GfxSprite.Frame(Sheet, sheet, 0);
+            Node.AddComponent(new Sprite2D { Sprite = sprite });
+        }
+    }
+}
+
+#endregion
+
 #region AudioRenderer
 
 /// <summary>

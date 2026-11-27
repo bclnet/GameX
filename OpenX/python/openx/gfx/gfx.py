@@ -192,6 +192,54 @@ class GfxSpriteSheet:
     def __init__(self):
         self.texture = None; self.frames = None; self.anims = None
 
+    # cells: (rgba bytes, width, height, duration). An empty anim list becomes one clip named all.
+    @staticmethod
+    def pack(cells, anims=None):
+        maxRow = 2048
+        cells = list(cells or [])
+        frames = []
+        placed = []
+        x = y = rowH = atlasW = 0
+        for rgba, w, h, duration in cells:
+            if not rgba or w <= 0 or h <= 0:
+                frames.append(GfxSpriteSheet.Frame()); placed.append((0, 0, 0, 0)); continue
+            if x > 0 and x + w > maxRow:
+                y += rowH; x = 0; rowH = 0
+            frame = GfxSpriteSheet.Frame()
+            frame.x = x; frame.y = y; frame.width = w; frame.height = h; frame.duration = duration
+            frame.pivot = (0.5, 0.5)
+            frames.append(frame); placed.append((x, y, w, h))
+            x += w
+            if h > rowH: rowH = h
+            if x > atlasW: atlasW = x
+        atlasH = y + rowH
+        if atlasW == 0 or atlasH == 0: atlasW = atlasH = 1
+        image = bytearray(atlasW * atlasH * 4)
+        for (rgba, w, h, _), (px, py, pw, ph) in zip(cells, placed):
+            if pw == 0 or not rgba: continue
+            raw = bytes(rgba)
+            for row in range(ph):
+                src = row * pw * 4
+                if src >= len(raw): break
+                n = min(pw * 4, len(raw) - src)
+                dst = ((py + row) * atlasW + px) * 4
+                image[dst:dst + n] = raw[src:src + n]
+        animList = []
+        for name, indexes in (anims or []):
+            anim = GfxSpriteSheet.Anim(); anim.name = name; anim.frames = list(indexes); animList.append(anim)
+        if not animList:
+            anim = GfxSpriteSheet.Anim(); anim.name = "all"; anim.frames = list(range(len(frames))); animList.append(anim)
+        sheet = GfxSpriteSheet()
+        tex = GfxSpriteImage(); tex.width = atlasW; tex.height = atlasH; tex.rgba = bytes(image)
+        sheet.texture = tex; sheet.frames = frames; sheet.anims = animList
+        return sheet
+
+# RGBA8 image used as GfxSpriteSheet.texture. rgba is width * height * 4, top row first.
+class GfxSpriteImage:
+    def __init__(self):
+        self.width = 0; self.height = 0; self.rgba = b""; self.depth = 1; self.mipMaps = 1; self.texFlags = 0
+    def create(self, platform, func): return func(self)
+
 #endregion
 
 #region Sprite

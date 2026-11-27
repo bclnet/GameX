@@ -208,15 +208,17 @@ static class Review {
             }
             catch { /* the asset can still be a texture without a meta tree */ }
         }
+        if (asset is GfxSpriteSheet) return "SpriteSheet";
         if (asset is ITexture) return "Texture";
         if (asset is GameX.Arkane.Formats.Danae.Binary_Ftl or GameX.Gamebryo.Formats.Binary_Nif) return "Model";
         if (asset is GameX.Arkane.Formats.Danae.Binary_Fts or GameX.ID.Formats.Binary_BspX) return "Level";
         return null;
     }
 
-    // Level is an FTS or an idTech BSP, Model is an FTL or a NIF, Texture is an ITexture, Object is a registered builder. Anything else falls through.
+    // SpriteSheet is a GfxSpriteSheet. Level is an FTS or an idTech BSP, Model is an FTL or a NIF, Texture is an ITexture, Object is a registered builder. Anything else falls through.
     static string Fits(string renderer, object asset) => renderer switch {
         null => null,
+        "SpriteSheet" => asset is GfxSpriteSheet ? renderer : null,
         "Texture" => asset is ITexture ? renderer : null,
         "Model" => asset is GameX.Arkane.Formats.Danae.Binary_Ftl or GameX.Gamebryo.Formats.Binary_Nif ? renderer : null,
         "Level" => asset is GameX.Arkane.Formats.Danae.Binary_Fts or GameX.ID.Formats.Binary_BspX ? renderer : null,
@@ -254,6 +256,7 @@ static class Review {
     static string Map(string type) => type switch {
         "Texture" or "VideoTexture" or "Image" => "Texture",
         "Sprite" => "Sprite",
+        "SpriteSheet" => "SpriteSheet",
         "Model" or "Mesh" => "Model",
         "Level" => "Level",
         "Object" => "Object",

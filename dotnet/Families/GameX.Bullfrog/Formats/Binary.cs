@@ -1065,6 +1065,10 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
     #endregion
 
     public object Obj;
+    public Sprite[] Sprites;
+    public SpriteFrame[] Frames;
+    public ushort[] Anims;
+    public X_Palette[] PaletteRecords;
 
     public Binary_SyndicateX(BinaryReader r, FileSource f, Archive s, Kind kind) {
         const int NUMOFTILES = 256;
@@ -1095,9 +1099,8 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
                     break;
                 }
             case Kind.Palette:
-                Obj = new Palette {
-                    Records = r2.ReadSArray<X_Palette>(256)
-                };
+                PaletteRecords = r2.ReadSArray<X_Palette>(256);
+                Obj = new Palette { Records = PaletteRecords };
                 break;
             case Kind.Font:
                 Obj = new Font {
@@ -1255,9 +1258,10 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
                         };
                     }
 
-                    Obj = r2.ReadSArray<X_SpriteTab>((int)streamSize / sizeof(X_SpriteTab)).Select(t =>
+                    Sprites = r2.ReadSArray<X_SpriteTab>((int)streamSize / sizeof(X_SpriteTab)).Select(t =>
                         LoadSprite(r3, ref t, false)
                     ).ToArray();
+                    Obj = Sprites;
                     break;
                 }
             case Kind.SpriteElement: {
@@ -1271,17 +1275,19 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
                     break;
                 }
             case Kind.SpriteFrame: {
-                    Obj = r2.ReadSArray<X_SpriteFrame>((int)streamSize / sizeof(X_SpriteFrame)).Select(t => new SpriteFrame {
+                    Frames = r2.ReadSArray<X_SpriteFrame>((int)streamSize / sizeof(X_SpriteFrame)).Select(t => new SpriteFrame {
                         FirstElement = t.FirstElement,
                         Width = t.Width,
                         Height = t.Height,
                         Flags = t.Flags,
                         NextElement = t.NextElement,
                     }).ToArray();
+                    Obj = Frames;
                     break;
                 }
             case Kind.SpriteAnim: {
-                    Obj = r2.ReadPArray<ushort>("H", (int)streamSize / sizeof(ushort));
+                    Anims = r2.ReadPArray<ushort>("H", (int)streamSize / sizeof(ushort));
+                    Obj = Anims;
                     break;
                 }
             case Kind.Mission: {
@@ -1317,6 +1323,49 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static uint BitValue(uint value, int index) => (value >> index) & 1;
+
+    /// <summary>
+    /// One cell per loaded sprite. A palette already on this object is used; otherwise each index is grayscale with alpha 255.
+    /// SpriteFrame and SpriteAnim are separate files, so a tab open leaves them unset and Pack names the clip all.
+    /// </summary>
+    public GfxSpriteSheet ToSheet() {
+        var sprites = Sprites ?? Obj as Sprite[] ?? [];
+        var records = PaletteRecords ?? (Obj as Palette)?.Records;
+        var frames = Frames ?? Obj as SpriteFrame[];
+        var animIdx = Anims ?? Obj as ushort[];
+        var cells = new (byte[] rgba, int width, int height, float duration)[sprites.Length];
+        for (var i = 0; i < sprites.Length; i++) {
+            var s = sprites[i];
+            cells[i] = (Expand(s, records), s?.Width ?? 0, s?.Height ?? 0, 0.1f);
+        }
+        List<(string name, int[] frames)> anims = null;
+        if (frames != null && animIdx != null) {
+            anims = new(animIdx.Length);
+            for (var i = 0; i < animIdx.Length; i++) anims.Add(($"{i}", [(int)animIdx[i]]));
+        }
+        return GfxSpriteSheet.Pack(cells, anims);
+    }
+
+    static byte[] Expand(Sprite s, X_Palette[] records) {
+        if (s == null || s.Width <= 0 || s.Height <= 0 || s.Pixels == null) return null;
+        var w = s.Width;
+        var h = s.Height;
+        var stride = s.Stride > 0 ? s.Stride : w;
+        var rgba = new byte[w * h * 4];
+        var pixels = s.Pixels;
+        for (var y = 0; y < h; y++)
+            for (var x = 0; x < w; x++) {
+                var src = y * stride + x;
+                var index = src < pixels.Length ? pixels[src] : (byte)0;
+                var o = (y * w + x) * 4;
+                if (records != null && index < records.Length) {
+                    var c = records[index];
+                    rgba[o] = c.R; rgba[o + 1] = c.G; rgba[o + 2] = c.B; rgba[o + 3] = 255;
+                }
+                else { rgba[o] = rgba[o + 1] = rgba[o + 2] = index; rgba[o + 3] = 255; }
+            }
+        return rgba;
+    }
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)

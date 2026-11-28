@@ -98,13 +98,14 @@ static class Review {
             Log.Func = m => { MirageEngine.Tree.Log(m); Console.Error.WriteLine(m ?? ""); };
             var archive = family.GetArchive(uri);
             var asset = archive.GetAsset<object>(path).GetAwaiter().GetResult();
-            var used = RendererType(type, asset);
+            var view = ForRenderer(asset);
+            var used = RendererType(type, view);
             string error = null;
             if (asset == null) error = "asset was null";
             else if (used == null) { if (!Describe(asset)) error = "no renderer for " + (type ?? asset.GetType().Name); }
             else {
                 try {
-                    var renderer = MirageRenderer.CreateRenderer(null, EngineX.Gfx, archive, asset, used);
+                    var renderer = MirageRenderer.CreateRenderer(null, EngineX.Gfx, archive, view, used);
                     if (renderer == null) { if (!Describe(asset)) error = "no renderer for " + used; }
                     else renderer.Start();
                 }
@@ -114,7 +115,7 @@ static class Review {
                     if (!MissingBuilder(msg) || !Describe(asset)) error = msg;
                 }
             }
-            return Shot(family.Id, uri, path, used, sampleNote, error, asset);
+            return Shot(family.Id, uri, path, used, sampleNote, error, asset, view);
         }
         catch (Exception e) { return Text(true, e.GetBaseException().Message); }
     }
@@ -130,7 +131,25 @@ static class Review {
 
     public static JsonObject Text(bool error, string text) => Content(error, text, null);
 
-    static JsonObject Shot(string family, string uri, string path, string type, string sampleNote, string error, object asset) {
+    // A loaded tab, FRM, NWX, or BAM stays that object. The view is its sheet when ToSheet returned cells.
+    static object ForRenderer(object asset) {
+        if (asset is GfxSpriteSheet) return asset;
+        GfxSpriteSheet sheet;
+        try {
+            sheet = asset switch {
+                GameX.Bullfrog.Formats.Binary_SyndicateX x => x.ToSheet(),
+                GameX.Black.Formats.Binary_Frm frm => frm.ToSheet(),
+                GameX.Lucas.Formats.Binary_Nwx nwx => nwx.ToSheet(),
+                GameX.Beamdog.Formats.Binary_Bam bam => bam.ToSheet(),
+                _ => null,
+            };
+        }
+        catch { return asset; }
+        if (sheet?.Frames == null || !sheet.Frames.Any(f => f.Width > 0 && f.Height > 0)) return asset;
+        return sheet;
+    }
+
+    static JsonObject Shot(string family, string uri, string path, string type, string sampleNote, string error, object asset, object view) {
         var tree = MirageEngine.Tree;
         var scene = tree.ToText() ?? "";
         var resources = string.Join("\n", tree.Resources.All.OrderBy(r => r.Kind, StringComparer.Ordinal).ThenBy(r => r.Name, StringComparer.Ordinal).Select(r => r.ToString()));
@@ -147,6 +166,11 @@ static class Review {
         sb.Append("path: ").Append(path).Append('\n');
         sb.Append("type: ").Append(type ?? "").Append('\n');
         if (asset != null) sb.Append("asset: ").Append(asset.GetType().Name).Append('\n');
+        if (view is GfxSpriteSheet sheet) {
+            sb.Append("sheet: ").Append(sheet.Frames.Length).Append(" frames");
+            if (sheet.Anims is { Length: > 0 }) sb.Append(", ").Append(string.Join(", ", sheet.Anims.Select(a => a.Name)));
+            sb.Append('\n');
+        }
         if (!string.IsNullOrEmpty(sampleNote)) sb.Append(sampleNote).Append('\n');
         if (!string.IsNullOrEmpty(error)) sb.Append("error: ").Append(error).Append('\n');
         sb.Append('\n').Append(Trim(resources, 4000)).Append("\n\n").Append(Trim(scene, 8000));

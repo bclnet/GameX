@@ -65,7 +65,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\Engines\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-all.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenX*.dll&quot; &quot;$(SolutionDir)..\Engines\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-all.txt&#xD;&#xA;" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-all.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenX*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-all.txt&#xD;&#xA;" />
   </Target>
 
 </Project>

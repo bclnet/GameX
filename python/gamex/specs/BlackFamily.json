@@ -47,12 +47,17 @@
   },
   "P:T": {
     "name": "Planescape: Torment",
-    "url": [
-      "https://en.wikipedia.org/wiki/Planescape:_Torment",
-      "https://store.steampowered.com/app/466300"
-    ],
+    "url": "https://en.wikipedia.org/wiki/Planescape:_Torment",
     "date": "1999-12-10",
-    "arcExt": ".x"
+    "engine": "Infinity",
+    "arcExt": ".key",
+    "files": {
+      "key": [
+        "Gog:1207658887",
+        "WinReg:GOG.com/Games/1207658887",
+        "Local:Planescape Torment"
+      ]
+    }
   },
   "ID": {
     "name": "Icewind Dale",
@@ -61,13 +66,22 @@
       "https://store.steampowered.com/app/321800"
     ],
     "date": "2000-06-29",
-    "arcExt": ".x"
-  },
-  "ID:HoW": {
-    "name": "Icewind Dale: Heart of Winter",
-    "url": "https://en.wikipedia.org/wiki/Icewind_Dale:_Heart_of_Winter",
-    "date": "2001-02-21",
-    "arcExt": ".x"
+    "engine": "Infinity",
+    "arcExt": ".key",
+    "dlc": {
+      "HoW": {
+        "name": "Heart of Winter",
+        "url": "https://en.wikipedia.org/wiki/Icewind_Dale:_Heart_of_Winter",
+        "date": "2001-02-21"
+      }
+    },
+    "files": {
+      "key": [
+        "Gog:1207658887",
+        "WinReg:GOG.com/Games/1207658887",
+        "Local:Icewind Dale"
+      ]
+    }
   },
   "ID2": {
     "name": "Icewind Dale II",
@@ -79,6 +93,19 @@
     "name": "Baldur's Gate: Dark Alliance II",
     "url": "https://en.wikipedia.org/wiki/Baldur%27s_Gate:_Dark_Alliance_II",
     "date": "2004-01-20",
-    "arcExt": ".x"
+    "engine": "Snowblind",
+    "arcExt": [
+      ".gob",
+      ".lmp"
+    ],
+    "files": {
+      "key": [
+        "Steam:1889930",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1889930",
+        "Gog:1745438757",
+        "WinReg:GOG.com/Games/1745438757",
+        "Local:Baldur's Gate - Dark Alliance II"
+      ]
+    }
   }
 }

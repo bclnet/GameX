@@ -74,11 +74,13 @@ public partial class FamilyManager {
         ForcePath = "sample:0",
         Family = "Beamdog",
         Game = "MDK2:HD", // MDK2 HD
-        //Game = "P:T", // Baldur's Gate: Enhanced Edition
-        //Game = "ID", // Baldur's Gate II: Enhanced Edition
-        //Game = "ID:HoW", // Icewind Dale: Heart of Winter
-        //Game = "ID2", // Icewind Dale II
-        //Game = "BG:DA2", // Baldur's Gate: Dark Alliance II
+        //Game = "BG:EE", // Baldur's Gate: Enhanced Edition
+        //Game = "BG2:EE", // Baldur's Gate II: Enhanced Edition
+        //Game = "ID:EE", // Icewind Dale: Enhanced Edition
+        //Game = "P:TEE", // Planescape: Torment Enhanced Edition
+        //Game = "NWN:EE", // Neverwinter Nights: Enhanced Edition
+        //Game = "AA", // Neverwinter Nights: Enhanced Edition
+        //Game = "M", // Mythforce
     };
 #elif Bethesda
     public static GlobalOption Option = new() {

@@ -18,13 +18,12 @@
     "MDK2:W": {
       "name": "MDK2 (wii)",
       "url": "https://en.wikipedia.org/wiki/MDK2#Wii_port_and_MDK2_HD",
-      "date": "May 9, 2011"
+      "date": "2011-05-09"
     },
     "MDK2:HD": {
       "name": "MDK2 HD",
       "url": "https://en.wikipedia.org/wiki/MDK2#Wii_port_and_MDK2_HD",
-      "date": "October 1, 2011",
-      "searchBy": "AllDir",
+      "date": "2011-10-01",
       "arcExt": ".dat",
       "files": {
         "key": [
@@ -34,32 +33,55 @@
         ]
       }
     },
-    "P:T": {
-      "name": "Planescape: Torment",
-      "url": [
-        "https://en.wikipedia.org/wiki/Planescape:_Torment",
-        "https://store.steampowered.com/app/466300"
-      ],
-      "date": "1999-12-10",
+    "BG:EE": {
+      "name": "Baldur's Gate: Enhanced Edition",
+      "url": "https://en.wikipedia.org/wiki/Baldur's_Gate:_Enhanced_Edition",
+      "date": "2013-01-16",
       "engine": "Infinity",
       "arcExt": ".key",
+      "dlc": {
+        "SoD": {
+          "name": "Siege of Dragonspear",
+          "url": "https://en.wikipedia.org/wiki/Baldur's_Gate:_Siege_of_Dragonspear",
+          "date": "2016-03-31"
+        }
+      },
       "files": {
         "key": [
-          "Steam:466300",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 466300",
-          "Gog:1207658887",
-          "WinReg:GOG.com/Games/1207658887",
-          "Local:Planescape Torment"
+          "Steam:228280",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 228280",
+          "Gog:1207666353",
+          "WinReg:GOG.com/Games/1207666353",
+          "Local:Baldur's Gate - Enhanced Edition"
         ]
       }
     },
-    "ID": {
-      "name": "Icewind Dale",
+    "BG2:EE": {
+      "name": "Baldur's Gate II: Enhanced Edition",
+      "url": "https://en.wikipedia.org/wiki/Baldur's_Gate_II:_Enhanced_Edition",
+      "date": "2013-11-15",
+      "engine": "Snowblind",
+      "arcExt": [
+        ".gob",
+        ".lmp"
+      ],
+      "files": {
+        "key": [
+          "Steam:257350",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 257350",
+          "Gog:1207666373",
+          "WinReg:GOG.com/Games/1207666373",
+          "Local:Baldur's Gate II - Enhanced Edition"
+        ]
+      }
+    },
+    "ID:EE": {
+      "name": "Icewind Dale: Enhanced Edition",
       "url": [
         "https://en.wikipedia.org/wiki/Icewind_Dale",
         "https://store.steampowered.com/app/321800"
       ],
-      "date": "2000-06-29",
+      "date": "2014-10-30",
       "engine": "Infinity",
       "arcExt": ".key",
       "files": {
@@ -68,37 +90,80 @@
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 321800",
           "Gog:1207666683",
           "WinReg:GOG.com/Games/1207666683",
-          "Local:Icewind Dale"
+          "Local:Icewind Dale Enhanced Edition"
         ]
       }
     },
-    "ID:HoW": {
-      "name": "Icewind Dale: Heart of Winter",
-      "url": "https://en.wikipedia.org/wiki/Icewind_Dale:_Heart_of_Winter",
-      "date": "2001-02-21",
+    "P:TEE": {
+      "name": "Planescape: Torment Enhanced Edition",
+      "url": [
+        "https://en.wikipedia.org/wiki/Planescape:_Torment#Enhanced_Edition",
+        "https://store.steampowered.com/app/466300"
+      ],
+      "date": "2017-04-11",
       "engine": "Infinity",
-      "arcExt": ".key"
-    },
-    "ID2": {
-      "name": "Icewind Dale II",
-      "url": "https://en.wikipedia.org/wiki/Icewind_Dale_II",
-      "date": "2002-08-27",
-      "engine": "Infinity",
-      "arcExt": ".key"
-    },
-    "BG:DA2": {
-      "name": "Baldur's Gate: Dark Alliance II",
-      "url": "https://en.wikipedia.org/wiki/Baldur%27s_Gate:_Dark_Alliance_II",
-      "date": "2004-01-20",
-      "engine": "Snowblind",
-      "arcExt": [".gob", ".lmp"],
+      "arcExt": ".key",
       "files": {
         "key": [
-          "Steam:1889930",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1889930",
-          "Gog:1745438757",
-          "WinReg:GOG.com/Games/1745438757",
-          "Local:Baldur's Gate - Dark Alliance II"
+          "Steam:466300",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 466300",
+          "Gog:1132393016",
+          "WinReg:GOG.com/Games/1132393016",
+          "Local:Planescape Torment"
+        ]
+      }
+    },
+    "NWN:EE": {
+      "name": "Neverwinter Nights: Enhanced Edition",
+      "url": "https://en.wikipedia.org/wiki/Neverwinter_Nights_(2002_video_game)#Editions_and_re-releases",
+      "date": "2018-03-27",
+      "engine": "xx",
+      "arcExt": ".xx",
+      "dlc": {
+        "ID": {
+          "name": "Infinite Dungeons",
+          "key": "WinReg:GOG.com/Games/1172160536"
+        },
+        "HoN": {
+          "name": "Heroes of Neverwinter",
+          "key": "WinReg:GOG.com/Games/1182523016"
+        }
+      },
+      "files": {
+        "key": [
+          "Steam:704450",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 704450",
+          "Gog:1097893768",
+          "WinReg:GOG.com/Games/1097893768",
+          "Local:XX"
+        ]
+      }
+    },
+    "AA": {
+      "name": "Axis & Allies 1942 Online",
+      "url": "https://en.wikipedia.org/wiki/Axis_&_Allies#Video_games",
+      "date": "2021-11-09",
+      "engine": "xx",
+      "arcExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:898920",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 898920",
+          "Local:AxisAllies"
+        ]
+      }
+    },
+    "M": {
+      "name": "Mythforce",
+      "url": "https://en.wikipedia.org/wiki/Mythforce",
+      "date": "2023-09-12",
+      "engine": "Unreal:5",
+      "arcExt": ".key",
+      "files": {
+        "key": [
+          "Steam:363860",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 363860",
+          "Local:Mythforce"
         ]
       }
     }

@@ -1,50 +1,38 @@
 ﻿{
-  "MDK2:W": {
-    "name": "MDK2 (wii)",
-    "files": []
-  },
   "MDK2:HD": {
     "name": "MDK2 HD",
     "files": []
   },
   "P:T": {
     "name": "Planescape: Torment",
-    "files": [
-      {
-        "path": "chitin.key",
-        "type": "Key"
-      }
-    ]
+    "files": []
   },
-  "ID": {
-    "name": "Icewind Dale",
-    "files": [
-      {
-        "path": "chitin.key",
-        "type": "Key"
-      }
-    ]
+  "BG:EE": {
+    "name": "Baldur's Gate: Enhanced Edition",
+    "files": []
   },
-  "ID:HoW": {
-    "name": "Icewind Dale: Heart of Winter",
-    "files": [
-      {
-        "path": "chitin.key",
-        "type": "Key"
-      }
-    ]
+  "BG2:EE": {
+    "name": "Baldur's Gate II: Enhanced Edition",
+    "files": []
   },
-  "ID2": {
-    "name": "Icewind Dale II",
-    "files": [
-      {
-        "path": "chitin.key",
-        "type": "Key"
-      }
-    ]
+  "ID:EE": {
+    "name": "Icewind Dale: Enhanced Edition",
+    "files": []
   },
-  "BG:DA2": {
-    "name": "Baldur's Gate: Dark Alliance II",
+  "P:TEE": {
+    "name": "Planescape: Torment Enhanced Edition",
+    "files": []
+  },
+  "NWN:EE": {
+    "name": "Neverwinter Nights: Enhanced Edition",
+    "files": []
+  },
+  "AA": {
+    "name": "Axis & Allies 1942 Online",
+    "files": []
+  },
+  "M": {
+    "name": "Mythforce",
     "files": []
   }
 }
